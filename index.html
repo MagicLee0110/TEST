@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Simple HTML Page</title>
+    <title>Index Page</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -25,8 +25,22 @@
 </head>
 <body>
     <div class="container">
-        <h1>Hello, GitHub Pages!</h1>
-        <p>This is a simple HTML page deployed using GitHub Actions.</p>
+        <h1>Input Page</h1>
+        <input type="text" id="userInput" placeholder="Enter something">
+        <button onclick="submitInput()">Submit</button>
     </div>
+
+    <script>
+        function submitInput() {
+            // Get the input value
+            var userInput = document.getElementById("userInput").value;
+            
+            // Store the value in localStorage
+            localStorage.setItem("userInput", userInput);
+            
+            // Redirect to receive.html
+            window.location.href = "receive.html";
+        }
+    </script>
 </body>
 </html>
