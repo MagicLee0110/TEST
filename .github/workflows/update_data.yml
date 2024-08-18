@@ -1,30 +1,28 @@
-# .github/workflows/update_data.yml
 name: Update Data
 
 on:
-  repository_dispatch:
-    types: [update_data]
+  push:
+    branches:
+      - main
 
 jobs:
   update-data:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
 
-      - name: Save input data
-        run: |
-          echo "${{ github.event.client_payload.message }}" > siteB/data.txt
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
-      - name: Commit and push changes
-        run: |
-          git config --global user.name "GitHub Actions"
-          git config --global user.email "actions@github.com"
-          git add siteB/data.txt
-          git commit -m "Update data from site A"
-          git push
+    - name: Run update script
+      run: |
+        python update_data.py
