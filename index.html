@@ -1,15 +1,14 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>輸入頁面</title>
+    <title>Input Page</title>
 </head>
 <body>
-    <h1>輸入數據</h1>
+    <h1>Input Page</h1>
     <form action="/submit" method="post">
-        <input type="text" name="input_data" required>
-        <button type="submit">提交</button>
+        <label for="input_data">Enter Data:</label>
+        <input type="text" id="input_data" name="input_data">
+        <button type="submit">Submit</button>
     </form>
 </body>
 </html>
