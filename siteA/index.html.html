@@ -1,0 +1,44 @@
+<!-- siteA/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>網站 A - 輸入文字</title>
+</head>
+<body>
+    <h1>輸入文字</h1>
+    <form id="inputForm">
+        <input type="text" id="messageInput" placeholder="輸入文字">
+        <button type="submit">提交</button>
+    </form>
+
+    <script>
+        document.getElementById('inputForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const message = document.getElementById('messageInput').value;
+
+            fetch('https://api.github.com/repos/YOUR_USERNAME/YOUR_REPO/dispatches', {
+                method: 'POST',
+                headers: {
+                    'Authorization': 'token YOUR_GITHUB_TOKEN',
+                    'Accept': 'application/vnd.github.everest-preview+json',
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    event_type: 'update_data',
+                    client_payload: {
+                        message: message
+                    }
+                })
+            }).then(response => {
+                if (response.ok) {
+                    alert('提交成功！');
+                } else {
+                    alert('提交失敗，請再試一次。');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
