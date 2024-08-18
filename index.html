@@ -31,12 +31,20 @@
     </div>
 
     <script>
+        function setCookie(name, value, days) {
+            var expires = "";
+            if (days) {
+                var date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "") + expires + "; path=/";
+        }
+
         function submitInput() {
-            // Get the input value
             var userInput = document.getElementById("userInput").value;
-            
-            // Redirect to receive.html with the input value as a query parameter
-            window.location.href = "receive.html?input=" + encodeURIComponent(userInput);
+            setCookie("userInput", userInput, 1); // Set cookie with 1 day expiration
+            window.location.href = "receive.html";
         }
     </script>
 </body>
