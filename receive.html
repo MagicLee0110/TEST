@@ -31,15 +31,19 @@
     </div>
 
     <script>
-        // Get the stored value from localStorage
-        var storedInput = localStorage.getItem("userInput");
+        function getQueryParameter(name) {
+            const urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(name);
+        }
+
+        // Get the input value from the URL query parameter
+        var storedInput = getQueryParameter("input");
 
         // Display the value
         document.getElementById("displayInput").textContent = storedInput;
 
         function goBack() {
-            // Clear the stored value and redirect to index.html
-            localStorage.removeItem("userInput");
+            // Redirect to index.html
             window.location.href = "index.html";
         }
     </script>
