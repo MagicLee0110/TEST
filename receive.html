@@ -31,19 +31,26 @@
     </div>
 
     <script>
-        function getQueryParameter(name) {
-            const urlParams = new URLSearchParams(window.location.search);
-            return urlParams.get(name);
+        function getCookie(name) {
+            var nameEQ = name + "=";
+            var ca = document.cookie.split(';');
+            for (var i = 0; i < ca.length; i++) {
+                var c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
         }
 
-        // Get the input value from the URL query parameter
-        var storedInput = getQueryParameter("input");
+        // Get the stored value from cookies
+        var storedInput = getCookie("userInput");
 
         // Display the value
         document.getElementById("displayInput").textContent = storedInput;
 
         function goBack() {
-            // Redirect to index.html
+            // Clear the cookie and redirect to index.html
+            document.cookie = "userInput=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/";
             window.location.href = "index.html";
         }
     </script>
