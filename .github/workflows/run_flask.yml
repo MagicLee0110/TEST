@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  run:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -26,3 +26,9 @@ jobs:
     - name: Run Flask app
       run: |
         nohup python app.py &
+    
+    - name: Test the app
+      run: |
+        sleep 10
+        curl -X POST -F "input_data=Test" http://127.0.0.1:5000/submit
+        curl http://127.0.0.1:5000/display
