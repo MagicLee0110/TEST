@@ -35,11 +35,8 @@
             // Get the input value
             var userInput = document.getElementById("userInput").value;
             
-            // Store the value in localStorage
-            localStorage.setItem("userInput", userInput);
-            
-            // Redirect to receive.html
-            window.location.href = "receive.html";
+            // Redirect to receive.html with the input value as a query parameter
+            window.location.href = "receive.html?input=" + encodeURIComponent(userInput);
         }
     </script>
 </body>
