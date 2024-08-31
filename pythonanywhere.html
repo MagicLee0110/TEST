@@ -3,31 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Visitor Tracker</title>
-    <script>
-        // 當頁面加載時，向 PythonAnywhere 的 /track 路由發送訪問者數據
-        window.onload = function() {
-            fetch('https://yourusername.pythonanywhere.com/track', {  // 替換為你的 PythonAnywhere 網址
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    "visitor": "GitHub Visitor",
-                    "url": window.location.href,
-                    "userAgent": navigator.userAgent
-                })
-            })
-            .then(response => response.json())
-            .then(data => console.log('Success:', data))
-            .catch((error) => {
-                console.error('Error:', error);
-            });
-        }
-    </script>
+    <title>Send Visitor Info</title>
 </head>
 <body>
-    <h1>Welcome to My GitHub Page</h1>
-    <p>This page is tracking visitors and sending the data to PythonAnywhere.</p>
+    <h1>Welcome to the PythonAnywhere Visitor Logger</h1>
+    <script>
+        // 收集訪客資訊，例如 IP 地址、時間戳等
+        const visitorData = {
+            ip: '123.456.789.0',  // 示例 IP 地址，可使用其他方式獲取真實 IP
+            timestamp: new Date().toISOString(),
+            referrer: document.referrer,
+            userAgent: navigator.userAgent
+        };
+
+        // 發送訪客資訊到 PythonAnywhere 伺服器
+        fetch('https://your-pythonanywhere-domain.com/log_visitor', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(visitorData)
+        })
+        .then(response => response.text())
+        .then(data => console.log('Visitor logged:', data))
+        .catch(error => console.error('Error logging visitor:', error));
+    </script>
 </body>
 </html>
