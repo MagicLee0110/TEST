@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to My GitHub Page</title>
+    <script>
+        // 在頁面加載時向 PythonAnywhere 後端發送請求
+        window.onload = function() {
+            fetch('https://yourusername.pythonanywhere.com/')
+                .then(response => response.text())
+                .then(data => console.log("Visitor logged:", data))
+                .catch(error => console.error('Error:', error));
+        };
+    </script>
+</head>
+<body>
+    <h1>Hello, World!</h1>
+    <p>Welcome to my GitHub Page!</p>
+</body>
+</html>
