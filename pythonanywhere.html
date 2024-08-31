@@ -8,16 +8,16 @@
 <body>
     <h1>Welcome to the PythonAnywhere Visitor Logger</h1>
     <script>
-        // 收集訪客資訊，例如 IP 地址、時間戳等
+        // 收集訪客資訊
         const visitorData = {
-            ip: '123.456.789.0',  // 示例 IP 地址，可使用其他方式獲取真實 IP
+            ip: '123.456.789.0',  // 示例 IP 地址
             timestamp: new Date().toISOString(),
             referrer: document.referrer,
             userAgent: navigator.userAgent
         };
 
         // 發送訪客資訊到 PythonAnywhere 伺服器
-        fetch('https://mentallist02.pythonanywhere.com/visitor.html', {
+        fetch('https://mentalist02.pythonanywhere.com/visitors', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
