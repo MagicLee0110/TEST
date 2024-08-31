@@ -5,12 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Welcome to My GitHub Page</title>
     <script>
-        // 在頁面加載時向 PythonAnywhere 後端發送請求
+        // 在頁面加載時向 PythonAnywhere 後端發送訪問者信息
         window.onload = function() {
-            fetch('https://yourusername.pythonanywhere.com/')
-                .then(response => response.text())
-                .then(data => console.log("Visitor logged:", data))
-                .catch(error => console.error('Error:', error));
+            const visitorData = {
+                ip: "N/A",  // 可以擴展為獲取訪問者的真實IP
+                user_agent: navigator.userAgent,
+                referrer: document.referrer,
+                url: window.location.href
+            };
+
+            fetch('https://mentalist02.pythonanywhere.com/track', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(visitorData)
+            })
+            .then(response => response.json())
+            .then(data => console.log("Visitor logged:", data))
+            .catch(error => console.error('Error:', error));
         };
     </script>
 </head>
