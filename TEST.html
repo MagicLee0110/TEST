@@ -3,20 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Photos</title> <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Photos</title>
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#000000">
 
     <style>
         :root {
-            --ios-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             --safe-area-top: env(safe-area-inset-top);
             --safe-area-bottom: env(safe-area-inset-bottom);
         }
 
         * {
             box-sizing: border-box;
-            user-select: none; /* 禁止選取文字 */
+            user-select: none;
             -webkit-tap-highlight-color: transparent;
         }
 
@@ -30,49 +32,178 @@
             background-color: #000;
         }
 
-        /* --- 內部主畫面 (解鎖後看到的內容) --- */
+        /* 背景圖層 - 為了讓密碼畫面也能共用模糊背景 */
+        #wallpaper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            /* 請在此更換你的背景圖片 URL */
+            background-image: url('https://images.unsplash.com/photo-1512641406448-6574e777bec6?q=80&w=2574&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            z-index: 0;
+        }
+
+        /* --- 1. 真正的內容 (相簿) --- */
         #home-screen {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #000; /* 修改這裡為你想要的相簿背景色 */
-            z-index: 1;
-            display: flex;
+            background-color: #000;
+            z-index: 10;
+            display: none; /* 預設隱藏，解鎖後顯示 */
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            color: white;
             padding-top: var(--safe-area-top);
+            animation: fadeIn 0.5s ease;
         }
 
-        /* 這裡放之前的相簿 CSS */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .album-header {
+            width: 100%;
+            padding: 10px 20px;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
         .album-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 2px;
             width: 100%;
-            padding: 10px;
         }
         .placeholder-img {
             width: 100%;
             aspect-ratio: 1/1;
             background-color: #333;
-            border-radius: 2px;
+            /* 假裝有照片 */
+            background-image: linear-gradient(45deg, #333 25%, #444 25%, #444 50%, #333 50%, #333 75%, #444 75%, #444 100%);
+            background-size: 20px 20px;
         }
 
-        /* --- 鎖定畫面 (Lock Screen) --- */
+        /* --- 2. 密碼輸入畫面 (Passcode) --- */
+        #passcode-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 50;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            /* 毛玻璃效果核心 */
+            backdrop-filter: blur(40px) brightness(0.9);
+            -webkit-backdrop-filter: blur(40px) brightness(0.9);
+            opacity: 0;
+            pointer-events: none; /* 未啟動時不可點 */
+            transition: opacity 0.3s ease;
+            color: white;
+            padding-top: 50px;
+        }
+
+        .passcode-active {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+
+        .passcode-title {
+            font-size: 20px;
+            margin-bottom: 20px;
+            font-weight: 500;
+        }
+
+        /* 6個圓點 */
+        .dots-container {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 40px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border: 1.5px solid white;
+            border-radius: 50%;
+            transition: background-color 0.2s;
+        }
+        .dot.filled {
+            background-color: white;
+        }
+
+        /* 錯誤時的搖晃動畫 */
+        .shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
+        /* 數字鍵盤 */
+        .keypad {
+            display: grid;
+            grid-template-columns: repeat(3, 80px);
+            gap: 25px;
+        }
+
+        .key {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.15);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.1s;
+        }
+        .key:active {
+            background-color: rgba(255, 255, 255, 0.4);
+        }
+
+        .key-num {
+            font-size: 32px;
+            font-weight: 400;
+            line-height: 1;
+        }
+        .key-letters {
+            font-size: 10px;
+            letter-spacing: 2px;
+            font-weight: 600;
+            margin-top: 2px;
+            opacity: 0.9;
+        }
+        
+        .key-bottom-text {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 500;
+            height: 80px; /* 為了對齊 */
+        }
+
+        /* --- 3. 鎖定畫面 (Lock Screen) --- */
         #lock-screen {
             position: absolute;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            /* 鎖定畫面背景圖：建議換成一張高品質的人像或風景圖 */
-            background-image: url('https://images.unsplash.com/photo-1512641406448-6574e777bec6?q=80&w=2574&auto=format&fit=crop'); 
-            background-size: cover;
-            background-position: center;
             z-index: 100;
             display: flex;
             flex-direction: column;
@@ -81,90 +212,43 @@
             padding-top: calc(var(--safe-area-top) + 20px);
             padding-bottom: calc(var(--safe-area-bottom) + 10px);
             color: white;
-            transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease;
+            transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.5s;
         }
 
-        /* 鎖定狀態的 Class - 用於解鎖動畫 */
-        .unlocked {
+        /* 解鎖過程：鎖定畫面向上滑走 */
+        .slide-up {
             transform: translateY(-100%);
             opacity: 0;
             pointer-events: none;
         }
 
-        /* 鎖頭圖示 */
-        .padlock {
-            width: 20px;
-            height: 30px;
-            margin-bottom: 10px;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='white' viewBox='0 0 448 512'%3E%3Cpath d='M400 224h-24v-72C376 68.2 307.8 0 224 0S72 68.2 72 152v72H48c-26.5 0-48 21.5-48 48v192c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V272c0-26.5-21.5-48-48-48zm-104 0H152v-72c0-39.7 32.3-72 72-72s72 32.3 72 72v72z'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: center;
-            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
-        }
-
-        /* 日期 */
-        .date {
-            font-size: 20px;
-            font-weight: 500;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.2);
-            margin-bottom: -5px;
-        }
-
-        /* 時間 */
-        .time {
-            font-size: 90px;
-            font-weight: 600;
-            letter-spacing: -2px;
-            text-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            font-variant-numeric: tabular-nums; /* 防止數字跳動 */
-        }
-
-        /* 底部按鈕區 (手電筒、相機) */
+        .date { font-size: 20px; font-weight: 500; text-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+        .time { font-size: 90px; font-weight: 600; letter-spacing: -2px; text-shadow: 0 2px 5px rgba(0,0,0,0.2); font-variant-numeric: tabular-nums; }
+        
         .bottom-actions {
             display: flex;
             justify-content: space-between;
             width: 86%;
             margin-bottom: 20px;
         }
-
         .circle-btn {
-            width: 50px;
-            height: 50px;
-            background-color: rgba(30, 30, 30, 0.6); /* 半透明黑 */
-            backdrop-filter: blur(20px); /* 關鍵：毛玻璃效果 */
-            -webkit-backdrop-filter: blur(20px);
+            width: 50px; height: 50px;
+            background-color: rgba(30, 30, 30, 0.6);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
             border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            display: flex; align-items: center; justify-content: center;
         }
-
-        .circle-btn svg {
-            width: 24px;
-            height: 24px;
-            fill: white;
-        }
-
-        /* Home Bar (底部白條) */
+        .circle-btn svg { width: 24px; height: 24px; fill: white; }
         .home-bar {
-            width: 140px;
-            height: 5px;
-            background-color: white;
-            border-radius: 10px;
-            margin-bottom: 5px;
+            width: 140px; height: 5px; background-color: white;
+            border-radius: 10px; margin-bottom: 5px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.3);
         }
-        
-        /* 提示文字 */
         .swipe-hint {
-            font-size: 14px;
-            opacity: 0.8;
-            margin-bottom: 10px;
+            font-size: 14px; opacity: 0.8; margin-bottom: 10px;
             text-shadow: 0 1px 2px rgba(0,0,0,0.5);
             animation: bounce 2s infinite;
         }
-
         @keyframes bounce {
             0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
             40% {transform: translateY(-5px);}
@@ -175,8 +259,10 @@
 </head>
 <body>
 
+    <div id="wallpaper"></div>
+
     <div id="home-screen">
-        <h2>相簿</h2>
+        <div class="album-header">最近項目</div>
         <div class="album-grid">
             <div class="placeholder-img"></div>
             <div class="placeholder-img"></div>
@@ -184,61 +270,138 @@
             <div class="placeholder-img"></div>
             <div class="placeholder-img"></div>
             <div class="placeholder-img"></div>
+            <div class="placeholder-img"></div>
+            <div class="placeholder-img"></div>
+            <div class="placeholder-img"></div>
         </div>
     </div>
 
-    <div id="lock-screen" onclick="unlockScreen()">
-        <div style="display: flex; flex-direction: column; align-items: center;">
-            <div class="padlock"></div>
-            <div class="date" id="dateDisplay">12月27日 週六</div>
-            <div class="time" id="timeDisplay">21:12</div>
+    <div id="passcode-screen">
+        <div class="passcode-title">輸入密碼</div>
+        
+        <div class="dots-container" id="dots">
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+            <div class="dot"></div><div class="dot"></div><div class="dot"></div>
         </div>
 
+        <div class="keypad">
+            <div class="key" onclick="addNum(1)"><div class="key-num">1</div><div class="key-letters">&nbsp;</div></div>
+            <div class="key" onclick="addNum(2)"><div class="key-num">2</div><div class="key-letters">ABC</div></div>
+            <div class="key" onclick="addNum(3)"><div class="key-num">3</div><div class="key-letters">DEF</div></div>
+            <div class="key" onclick="addNum(4)"><div class="key-num">4</div><div class="key-letters">GHI</div></div>
+            <div class="key" onclick="addNum(5)"><div class="key-num">5</div><div class="key-letters">JKL</div></div>
+            <div class="key" onclick="addNum(6)"><div class="key-num">6</div><div class="key-letters">MNO</div></div>
+            <div class="key" onclick="addNum(7)"><div class="key-num">7</div><div class="key-letters">PQRS</div></div>
+            <div class="key" onclick="addNum(8)"><div class="key-num">8</div><div class="key-letters">TUV</div></div>
+            <div class="key" onclick="addNum(9)"><div class="key-num">9</div><div class="key-letters">WXYZ</div></div>
+            <div class="key-bottom-text"></div> <div class="key" onclick="addNum(0)"><div class="key-num">0</div><div class="key-letters"></div></div>
+            <div class="key-bottom-text" onclick="deleteNum()" style="cursor: pointer; font-size: 14px;">取消</div>
+        </div>
+    </div>
+
+    <div id="lock-screen" onclick="showPasscode()">
+        <div style="display: flex; flex-direction: column; align-items: center;">
+            <div style="width: 20px; height: 30px; margin-bottom: 10px; background-image: url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' fill=\'white\' viewBox=\'0 0 448 512\'%3E%3Cpath d=\'M400 224h-24v-72C376 68.2 307.8 0 224 0S72 68.2 72 152v72H48c-26.5 0-48 21.5-48 48v192c0 26.5 21.5 48 48 48h352c26.5 0 48-21.5 48-48V272c0-26.5-21.5-48-48-48zm-104 0H152v-72c0-39.7 32.3-72 72-72s72 32.3 72 72v72z\'/%3E%3C/svg%3E'); background-repeat: no-repeat;"></div>
+            <div class="date" id="dateDisplay">--月--日</div>
+            <div class="time" id="timeDisplay">--:--</div>
+        </div>
+        
         <div style="display: flex; flex-direction: column; align-items: center; width: 100%;">
             <div class="swipe-hint">向上滑動來解鎖</div>
             <div class="bottom-actions">
-                <div class="circle-btn">
-                    <svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg>
-                </div>
-                <div class="circle-btn">
-                    <svg viewBox="0 0 24 24"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 11.5V13H9v2.5L5.5 12 9 8.5V11h6V8.5l3.5 3.5-3.5 3.5z"/></svg>
-                </div>
+                <div class="circle-btn"><svg viewBox="0 0 24 24"><path d="M7 2v11h3v9l7-12h-4l4-8z"/></svg></div>
+                <div class="circle-btn"><svg viewBox="0 0 24 24"><path d="M20 4h-3.17L15 2H9L7.17 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm-5 11.5V13H9v2.5L5.5 12 9 8.5V11h6V8.5l3.5 3.5-3.5 3.5z"/></svg></div>
             </div>
             <div class="home-bar"></div>
         </div>
     </div>
 
     <script>
-        // 更新時間與日期
+        // 設定區
+        const CORRECT_PASSCODE = "123456"; // ★ 請在這裡設定你的正確密碼
+        
+        let currentInput = "";
+        const dots = document.querySelectorAll('.dot');
+        const passcodeScreen = document.getElementById('passcode-screen');
+        const lockScreen = document.getElementById('lock-screen');
+        const homeScreen = document.getElementById('home-screen');
+        const dotsContainer = document.getElementById('dots');
+
+        // 時間日期邏輯
         function updateTime() {
             const now = new Date();
-            
-            // 時間 HH:MM
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             document.getElementById('timeDisplay').innerText = `${hours}:${minutes}`;
 
-            // 日期 (格式：12月27日 週六)
             const month = now.getMonth() + 1;
             const date = now.getDate();
             const days = ['週日', '週一', '週二', '週三', '週四', '週五', '週六'];
-            const dayName = days[now.getDay()];
-            document.getElementById('dateDisplay').innerText = `${month}月${date}日 ${dayName}`;
+            document.getElementById('dateDisplay').innerText = `${month}月${date}日 ${days[now.getDay()]}`;
+        }
+        setInterval(updateTime, 1000);
+        updateTime();
+
+        // 1. 從鎖定畫面 -> 密碼畫面
+        function showPasscode() {
+            lockScreen.classList.add('slide-up'); // 鎖定畫面往上飛
+            passcodeScreen.classList.add('passcode-active'); // 密碼畫面浮現
         }
 
-        // 初始更新並每秒刷新
-        updateTime();
-        setInterval(updateTime, 1000);
+        // 2. 密碼輸入邏輯
+        function addNum(num) {
+            if (currentInput.length < 6) {
+                currentInput += num;
+                updateDots();
+                
+                // 檢查密碼
+                if (currentInput.length === 6) {
+                    setTimeout(checkPasscode, 100); // 稍微延遲讓最後一個點顯示
+                }
+            }
+        }
 
-        // 解鎖功能
-        function unlockScreen() {
-            const lockScreen = document.getElementById('lock-screen');
-            // 添加 class 觸發 CSS 動畫
-            lockScreen.classList.add('unlocked');
-            
-            // 可選：播放解鎖音效或震動 (部分瀏覽器支援)
-            if (navigator.vibrate) {
-                navigator.vibrate(10); 
+        function deleteNum() {
+            if (currentInput.length > 0) {
+                currentInput = currentInput.slice(0, -1);
+                updateDots();
+            } else {
+                // 如果沒輸入任何字按取消，回到鎖定畫面 (模擬 iOS 行為)
+                lockScreen.classList.remove('slide-up');
+                passcodeScreen.classList.remove('passcode-active');
+            }
+        }
+
+        function updateDots() {
+            dots.forEach((dot, index) => {
+                if (index < currentInput.length) {
+                    dot.classList.add('filled');
+                } else {
+                    dot.classList.remove('filled');
+                }
+            });
+        }
+
+        function checkPasscode() {
+            if (currentInput === CORRECT_PASSCODE) {
+                // 密碼正確：解鎖
+                passcodeScreen.style.opacity = '0';
+                homeScreen.style.display = 'flex';
+                // 隱藏鎖定層和密碼層
+                setTimeout(() => {
+                    lockScreen.style.display = 'none';
+                    passcodeScreen.style.display = 'none';
+                }, 500);
+            } else {
+                // 密碼錯誤：搖晃動畫 + 清空
+                dotsContainer.classList.add('shake');
+                if (navigator.vibrate) navigator.vibrate(200); // 震動回饋
+
+                setTimeout(() => {
+                    dotsContainer.classList.remove('shake');
+                    currentInput = "";
+                    updateDots();
+                }, 500);
             }
         }
     </script>
