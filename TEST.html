@@ -9,10 +9,8 @@
     <style>
         :root {
             --ios-blue: #007aff;
-            --ios-gray: #1c1c1e;
-            --text-sec: #8e8e93;
-            --glass-bg: rgba(25, 25, 25, 0.75);
-            --glass-blur: blur(25px) saturate(200%) brightness(1.2);
+            --glass-bg: rgba(30, 30, 30, 0.75);
+            --blur: blur(30px) saturate(210%);
         }
 
         * {
@@ -26,153 +24,181 @@
             background-color: #000;
             color: #fff;
             overflow-x: hidden;
-            user-select: none;
             padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* 頂部導覽 */
+        /* 頂部標題列 */
         header {
-            padding: calc(env(safe-area-inset-top) + 15px) 20px 10px;
+            padding: calc(env(safe-area-inset-top) + 20px) 16px 12px;
             display: flex;
             justify-content: space-between;
-            align-items: flex-start;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.95), rgba(0,0,0,0));
+            align-items: flex-end;
+            background: #000;
             position: sticky;
             top: 0;
             z-index: 100;
-            transition: all 0.3s;
         }
 
-        .header-left h1 { font-size: 34px; margin: 0; font-weight: 700; letter-spacing: -1.2px; }
-        .header-left .sub { font-size: 15px; color: var(--text-sec); font-weight: 600; }
+        .header-left h1 { font-size: 34px; margin: 0; font-weight: 700; letter-spacing: -1px; }
+        .header-left .count { font-size: 15px; color: #8e8e93; font-weight: 600; }
 
-        .header-right { display: flex; gap: 12px; align-items: center; margin-top: 8px; }
-        .btn-circle {
-            width: 34px; height: 34px; background: #2c2c2e; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
+        .header-right { display: flex; gap: 12px; margin-bottom: 5px; }
+        .btn-circle { width: 34px; height: 34px; background: #2c2c2e; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .btn-select { background: #2c2c2e; padding: 7px 16px; border-radius: 20px; font-size: 15px; font-weight: 600; }
+
+        /* 照片網格 */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5px;
+            padding-bottom: 200px;
         }
-        .btn-select {
-            background: #2c2c2e; color: #fff; font-size: 15px; font-weight: 600;
-            padding: 7px 16px; border-radius: 20px;
+
+        .photo-item {
+            aspect-ratio: 1/1;
+            position: relative;
+            background: #111;
+            overflow: hidden;
         }
 
-        /* 內容區切換容器 */
-        .content-view {
-            display: none;
-            animation: fadeIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-        .content-view.active { display: block; }
-
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        /* 圖庫網格 (Library) */
-        .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5px; }
-        .photo-item { aspect-ratio: 1/1; background: #111; overflow: hidden; }
         .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-item:active { transform: scale(0.96); opacity: 0.8; }
 
-        /* 選集列表 (Collections) */
-        .collections-list { padding: 10px 20px; }
-        .album-row {
-            display: flex; align-items: center; gap: 15px; margin-bottom: 20px;
+        /* 全螢幕檢視器 */
+        #viewer {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 2000;
+            display: none;
+            flex-direction: column;
+            animation: ios-zoom 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
-        .album-thumb { width: 80px; height: 80px; border-radius: 12px; background: #2c2c2e; overflow: hidden; }
-        .album-info div { font-weight: 600; font-size: 17px; }
-        .album-info span { color: var(--text-sec); font-size: 14px; }
 
-        /* iOS 26 懸浮 Dock */
+        @keyframes ios-zoom {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .viewer-header {
+            padding: calc(env(safe-area-inset-top) + 15px) 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-btn { color: var(--ios-blue); font-size: 18px; display: flex; align-items: center; cursor: pointer; }
+        .back-btn::before { content: "〈"; font-weight: bold; margin-right: 5px; }
+
+        .viewer-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .viewer-img-container { width: 100%; max-height: 50vh; display: flex; justify-content: center; }
+        .viewer-img-container img { max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 8px; }
+
+        .zodiac-info {
+            margin-top: 30px;
+            width: 100%;
+            padding: 20px;
+            background: #1c1c1e;
+            border-radius: 20px;
+        }
+
+        .zodiac-info h2 { margin-top: 0; color: var(--ios-blue); }
+        .zodiac-info p { line-height: 1.6; color: #eee; font-size: 16px; }
+
+        /* 底部 iOS 26 懸浮 Dock */
         .dock-container {
             position: fixed;
             bottom: calc(env(safe-area-inset-bottom) + 15px);
-            left: 0; width: 100%; display: flex; justify-content: center; align-items: center;
-            z-index: 1000; pointer-events: none;
+            left: 0; width: 100%; display: flex; justify-content: center; z-index: 1000; pointer-events: none;
         }
 
         .dock-glass {
-            pointer-events: auto; background: var(--glass-bg); backdrop-filter: var(--glass-blur);
-            -webkit-backdrop-filter: var(--glass-blur);
-            height: 62px; border-radius: 31px; display: flex; align-items: center; padding: 0 6px;
-            border: 0.5px solid rgba(255,255,255,0.12); box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            pointer-events: auto; background: var(--glass-bg); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
+            height: 64px; border-radius: 32px; display: flex; align-items: center; padding: 0 6px;
+            border: 0.5px solid rgba(255,255,255,0.1); box-shadow: 0 10px 40px rgba(0,0,0,0.5);
         }
 
         .dock-btn {
-            display: flex; align-items: center; padding: 0 20px; height: 50px;
-            border-radius: 25px; color: #fff; text-decoration: none; transition: 0.2s;
+            display: flex; align-items: center; padding: 0 20px; height: 52px;
+            border-radius: 26px; color: #fff; text-decoration: none; transition: 0.2s;
         }
 
-        .dock-btn.active { background: rgba(255, 255, 255, 0.15); color: var(--ios-blue); }
+        .dock-btn.active { background: rgba(255, 255, 255, 0.12); color: var(--ios-blue); }
         .dock-btn span { font-size: 14px; font-weight: 600; margin-left: 10px; }
 
-        .search-trigger {
-            pointer-events: auto; width: 62px; height: 62px; background: var(--glass-bg);
-            backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
-            border-radius: 50%; margin-left: 12px; display: flex; align-items: center;
-            justify-content: center; border: 0.5px solid rgba(255,255,255,0.12);
+        .search-circle {
+            pointer-events: auto; width: 64px; height: 64px; background: var(--glass-bg);
+            backdrop-filter: var(--blur); border-radius: 50%; margin-left: 10px;
+            display: flex; align-items: center; justify-content: center; border: 0.5px solid rgba(255,255,255,0.1);
         }
 
-        /* SVG 圖示細節 */
         .svg-icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.2; }
     </style>
 </head>
 <body>
 
-    <header id="main-header">
+    <header>
         <div class="header-left">
-            <h1 id="title">圖庫</h1>
-            <div class="sub" id="subtitle">150 個項目</div>
+            <h1>圖庫</h1>
+            <div class="count">12 個項目</div>
         </div>
         <div class="header-right">
-            <div class="btn-circle">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-                    <circle cx="12" cy="12" r="2"/>
-                    <circle cx="12" cy="5" r="2"/>
-                    <circle cx="12" cy="19" r="2"/>
-                </svg>
-            </div>
+            <div class="btn-circle">⋯</div>
             <div class="btn-select">選取</div>
         </div>
     </header>
 
-    <main id="library-view" class="content-view active">
-        <div class="photo-grid" id="photo-grid"></div>
-    </main>
+    <main class="photo-grid" id="gallery"></main>
 
-    <main id="collections-view" class="content-view">
-        <div class="collections-list">
-            <div class="album-row">
-                <div class="album-thumb"><img src="https://picsum.photos/100/100?1" width="100%"></div>
-                <div class="album-info"><div>最近項目</div><span>150</span></div>
+    <div id="viewer">
+        <div class="viewer-header">
+            <div class="back-btn" onclick="closeViewer()">圖庫</div>
+            <div style="font-weight:600">編輯</div>
+            <div style="color:var(--ios-blue)">⋯</div>
+        </div>
+        <div class="viewer-content">
+            <div class="viewer-img-container">
+                <img id="v-img" src="">
             </div>
-            <div class="album-row">
-                <div class="album-thumb"><img src="https://picsum.photos/100/100?2" width="100%"></div>
-                <div class="album-info"><div>收藏照片</div><span>42</span></div>
-            </div>
-            <div class="album-row">
-                <div class="album-thumb"><img src="https://picsum.photos/100/100?3" width="100%"></div>
-                <div class="album-info"><div>螢幕截圖</div><span>88</span></div>
+            <div class="zodiac-info">
+                <h2 id="v-title">星座名稱</h2>
+                <p id="v-desc">這裡會顯示星座介紹內容...</p>
             </div>
         </div>
-    </main>
+    </div>
 
     <div class="dock-container">
         <div class="dock-glass">
-            <a href="javascript:void(0)" class="dock-btn active" onclick="switchTab('library', this)">
+            <a href="#" class="dock-btn active" onclick="switchTab('lib')">
                 <svg class="svg-icon" viewBox="0 0 24 24">
-                    <rect x="3" y="8" width="12" height="12" rx="2.5"/>
-                    <path d="M7 4h12a2.5 2.5 0 0 1 2.5 2.5v12" opacity="0.5"/>
-                    <circle cx="9" cy="13" r="1.5" fill="currentColor" stroke="none"/>
+                    <rect x="3" y="8" width="12" height="12" rx="3"/>
+                    <rect x="6" y="5" width="12" height="12" rx="3" opacity="0.6"/>
+                    <rect x="9" y="2" width="12" height="12" rx="3" opacity="0.3"/>
                 </svg>
                 <span>圖庫</span>
             </a>
-            <a href="javascript:void(0)" class="dock-btn" onclick="switchTab('collections', this)">
+            <a href="#" class="dock-btn" onclick="switchTab('col')">
                 <svg class="svg-icon" viewBox="0 0 24 24">
-                    <rect x="4" y="4" width="16" height="16" rx="3"/>
-                    <path d="M4 10h16M4 15h16" stroke-width="1.8"/>
+                    <rect x="4" y="4" width="7" height="7" rx="1.5"/>
+                    <rect x="13" y="4" width="7" height="7" rx="1.5"/>
+                    <rect x="4" y="13" width="7" height="7" rx="1.5"/>
+                    <rect x="13" y="13" width="7" height="7" rx="1.5"/>
+                    <path d="M4 4h16v16H4z" opacity="0.1" fill="currentColor" stroke="none"/>
                 </svg>
                 <span>選集</span>
             </a>
         </div>
-        <div class="search-trigger" onclick="alert('搜尋功能已開啟')">
-            <svg class="svg-icon" viewBox="0 0 24 24" style="width:26px;height:26px;">
+        <div class="search-circle">
+            <svg class="svg-icon" viewBox="0 0 24 24" style="width:26px; height:26px;">
                 <circle cx="11" cy="11" r="7"/>
                 <line x1="21" y1="21" x2="16.65" y2="16.65" stroke-linecap="round"/>
             </svg>
@@ -180,44 +206,53 @@
     </div>
 
     <script>
-        // 切換分頁邏輯
-        function switchTab(tab, element) {
-            // 觸覺震動模擬 (僅限支援的裝置)
-            if (window.navigator.vibrate) window.navigator.vibrate(10);
+        const zodiacData = [
+            { name: "白羊座", date: "3/21 - 4/19", desc: "白羊座是黃道十二宮的第一個星座，代表著新的開始。充滿自信與勇氣，做事果斷，但也容易衝動。" },
+            { name: "金牛座", date: "4/20 - 5/20", desc: "金牛座踏實穩重，追求安定與感官的享受。極具耐心，對金錢與生活品質有著敏銳的堅持。" },
+            { name: "雙子座", date: "5/21 - 6/21", desc: "雙子座機智靈敏，好奇心旺盛。擅長社交與溝通，思維跳躍，永遠在尋求新鮮感。" },
+            { name: "巨蟹座", date: "6/22 - 7/22", desc: "巨蟹座溫柔體貼，極具母性與保護欲。對家庭與情感非常重視，內心細膩但也較為敏感。" },
+            { name: "獅子座", date: "7/23 - 8/22", desc: "獅子座天生具備領袖氣質，自信且慷慨。他們喜歡成為注目的焦點，並渴望得到他人的認可。" },
+            { name: "處女座", date: "8/23 - 9/22", desc: "處女座追求完美，做事細緻謹慎。他們有著強大的分析能力，傾向於過著有秩序、有條理的生活。" },
+            { name: "天秤座", date: "9/23 - 10/23", desc: "天秤座嚮往優雅與和諧。他們擅長協調平衡，具有極佳的審美與社交手腕。" },
+            { name: "天蠍座", date: "10/24 - 11/22", desc: "天蠍座神秘且深沈，意志力強大。他們對感情絕對忠誠，但也具備極強的洞察力和防備心。" },
+            { name: "射手座", date: "11/23 - 12/21", desc: "射手座愛好自由，充滿樂觀精神。他們追求真理與冒險，不喜歡受到束縛。" },
+            { name: "摩羯座", date: "12/22 - 1/19", desc: "摩羯座堅忍不拔，極具責任感與野心。他們是長跑型選手，會為了目標默默耕耘直到成功。" },
+            { name: "水瓶座", date: "1/20 - 2/18", desc: "水瓶座獨特且前衛，富有革新精神。他們重視友誼與社會理想，思維往往異於常人。" },
+            { name: "雙魚座", date: "2/19 - 3/20", desc: "雙魚座浪漫、充滿想像力且富有同情心。他們直覺敏銳，心靈世界豐富，但也容易感性用事。" }
+        ];
 
-            // 更新按鈕狀態
-            document.querySelectorAll('.dock-btn').forEach(btn => btn.classList.remove('active'));
-            element.classList.add('active');
+        const gallery = document.getElementById('gallery');
 
-            // 更新標題與內容
-            const lib = document.getElementById('library-view');
-            const col = document.getElementById('collections-view');
-            const title = document.getElementById('title');
-            const sub = document.getElementById('subtitle');
-
-            if (tab === 'library') {
-                lib.classList.add('active'); col.classList.remove('active');
-                title.innerText = '圖庫'; sub.innerText = '150 個項目';
-            } else {
-                col.classList.add('active'); lib.classList.remove('active');
-                title.innerText = '選集'; sub.innerText = '相簿與更多';
-            }
-        }
-
-        // 初始化圖庫照片
-        const grid = document.getElementById('photo-grid');
-        for (let i = 0; i < 30; i++) {
+        // 初始化星座圖片
+        zodiacData.forEach((z, index) => {
             const div = document.createElement('div');
             div.className = 'photo-item';
-            div.innerHTML = `<img src="https://picsum.photos/400/400?sig=${i}" loading="lazy">`;
-            grid.appendChild(div);
+            const imgUrl = `https://picsum.photos/600/600?sig=${index + 100}`;
+            div.innerHTML = `<img src="${imgUrl}" loading="lazy">`;
+            div.onclick = () => openViewer(imgUrl, z.name, z.date, z.desc);
+            gallery.appendChild(div);
+        });
+
+        function openViewer(src, name, date, desc) {
+            document.getElementById('v-img').src = src;
+            document.getElementById('v-title').innerText = `${name} (${date})`;
+            document.getElementById('v-desc').innerText = desc;
+            document.getElementById('viewer').style.display = 'flex';
         }
 
-        // 禁止原生長按選單與縮放
+        function closeViewer() {
+            document.getElementById('viewer').style.display = 'none';
+        }
+
+        function switchTab(type) {
+            document.querySelectorAll('.dock-btn').forEach(b => b.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            // 魔術擴充點：這裡可以加入特定點擊邏輯
+        }
+
+        // 禁止原生手勢與長按
         document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('touchstart', (e) => {
-            if (e.touches.length > 1) e.preventDefault();
-        }, { passive: false });
+        document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
     </script>
 </body>
 </html>
