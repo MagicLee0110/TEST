@@ -9,41 +9,37 @@
     <style>
         :root {
             --ios-blue: #0a84ff;
-            --glass-bg: rgba(20, 20, 20, 0.8);
-            --blur: blur(35px) saturate(210%);
+            --dock-bg: rgba(25, 25, 25, 0.75);
+            --blur: blur(35px) saturate(200%);
         }
 
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang TC", sans-serif;
         }
 
         body {
             margin: 0;
             background-color: #000;
             color: #fff;
-            overflow-x: hidden;
             padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* 頂部標題列 */
+        /* 頂部標題 */
         header {
-            padding: calc(env(safe-area-inset-top) + 20px) 20px 15px;
+            padding: calc(env(safe-area-inset-top) + 20px) 16px 12px;
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            background: linear-gradient(to bottom, #000 80%, rgba(0,0,0,0));
+            background: #000;
             position: sticky;
             top: 0;
             z-index: 100;
         }
 
-        .header-left h1 { font-size: 34px; margin: 0; font-weight: 700; letter-spacing: -0.8px; }
-        .header-left .count { font-size: 15px; color: #98989d; font-weight: 600; margin-top: 2px; }
-        .header-right { display: flex; gap: 12px; margin-bottom: 5px; }
-        .btn-circle { width: 36px; height: 36px; background: #2c2c2e; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px;}
-        .btn-select { background: #2c2c2e; padding: 8px 18px; border-radius: 20px; font-size: 15px; font-weight: 600; }
+        .header-left h1 { font-size: 34px; margin: 0; font-weight: 700; letter-spacing: -1px; }
+        .header-left .count { font-size: 15px; color: #8e8e93; font-weight: 600; }
 
         /* 照片網格 */
         .photo-grid {
@@ -53,103 +49,86 @@
             padding-bottom: 200px;
         }
 
+        /* 單張照片圖卡：直接顯示資訊 */
         .photo-item {
             aspect-ratio: 1/1;
             position: relative;
-            background: #1c1c1e;
             overflow: hidden;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-        }
-        
-        /* 星座圖案容器 */
-        .zodiac-pattern-thumb {
-            width: 100%; height: 100%;
-            display: flex; justify-content: center; align-items: center;
-            /* 背景與SVG將由JS動態注入 */
-        }
-        .zodiac-svg-thumb { width: 50%; height: 50%; opacity: 0.8; fill: white; }
-
-        .photo-item:active { transform: scale(0.97); filter: brightness(0.8); transition: 0.2s; }
-
-        /* 全螢幕檢視器 (iOS 26 風格) */
-        #viewer {
-            position: fixed; inset: 0; background: #000; z-index: 2000;
-            display: none; flex-direction: column;
-            animation: quickZoom 0.3s cubic-bezier(0.2, 0.9, 0.2, 1);
+            text-align: center;
+            padding: 10px;
+            transition: transform 0.1s;
         }
 
-        @keyframes quickZoom { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
-
-        .viewer-header {
-            padding: calc(env(safe-area-inset-top) + 15px) 16px;
-            display: flex; justify-content: space-between; align-items: center;
-            position: absolute; top:0; width: 100%; z-index: 10;
-        }
-        .back-btn { color: var(--ios-blue); font-size: 17px; font-weight: 500; display: flex; align-items: center; }
-        .back-btn::before { content: "〈 "; font-weight: 700; font-size: 20px; margin-right: 4px; margin-top: -2px;}
-
-        /* 新版：整合資訊的照片容器 */
-        .viewer-content {
-            flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px;
-        }
-        
-        .photo-card-integrated {
-            width: 100%; aspect-ratio: 4/5; /* 稍微長一點的比例，適合放資訊 */
-            max-height: 80vh;
-            border-radius: 24px;
-            overflow: hidden;
-            position: relative;
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        /* 縮圖中的符號 */
+        .thumb-svg {
+            width: 40%;
+            height: 40%;
+            fill: white;
+            opacity: 0.9;
+            margin-bottom: 5px;
+            filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
         }
 
-        /* 背景圖案層 */
-        #v-pattern-bg {
-            width: 100%; height: 100%;
-            position: absolute; top:0; left:0;
-            display: flex; justify-content: center; align-items: center;
-        }
-        .zodiac-svg-large { width: 60%; height: 60%; opacity: 0.4; fill: white; mix-blend-mode: overlay; }
-
-        /* 資訊覆蓋層 (Overlay) */
-        .info-overlay {
+        /* 縮圖中的文字介紹 */
+        .thumb-info {
             position: absolute;
-            bottom: 0; left: 0; width: 100%;
-            padding: 40px 25px 30px;
-            /* iOS 風格的漸層與模糊背景 */
-            background: linear-gradient(to top, rgba(0,0,0,0.85) 20%, rgba(0,0,0,0));
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-            border-top: 1px solid rgba(255,255,255,0.1);
+            bottom: 5px;
+            left: 0;
+            width: 100%;
+            padding: 0 4px;
         }
 
-        .info-overlay h2 { margin: 0 0 8px 0; color: #fff; font-size: 32px; font-weight: 700; }
-        .info-overlay .date { display: block; color: rgba(255,255,255,0.8); font-size: 15px; font-weight: 600; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px;}
-        .info-overlay p { margin: 0; color: rgba(255,255,255,0.9); font-size: 17px; line-height: 1.5; font-weight: 400;}
+        .thumb-name {
+            font-size: 13px;
+            font-weight: 800;
+            margin-bottom: 2px;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+        }
 
-        /* 底部 iOS 26 懸浮 Dock */
-        .dock-container {
-            position: fixed; bottom: calc(env(safe-area-inset-bottom) + 20px);
-            left: 0; width: 100%; display: flex; justify-content: center; z-index: 1000; pointer-events: none;
+        .thumb-desc {
+            font-size: 8.5px; /* 針對 3 欄式網格優化的小字 */
+            line-height: 1.1;
+            opacity: 0.9;
+            display: -webkit-box;
+            -webkit-line-clamp: 2; /* 最多顯示兩行 */
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.8);
         }
-        .dock-glass {
-            pointer-events: auto; background: var(--glass-bg); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
-            height: 64px; border-radius: 32px; display: flex; align-items: center; padding: 0 6px;
-            border: 0.5px solid rgba(255,255,255,0.12); box-shadow: 0 15px 40px rgba(0,0,0,0.6);
+
+        .photo-item:active { transform: scale(0.95); filter: brightness(0.8); }
+
+        /* 底部 iOS 26 控制列 */
+        .dock-wrapper {
+            position: fixed;
+            bottom: calc(env(safe-area-inset-bottom) + 20px);
+            left: 0; width: 100%; display: flex; justify-content: center; z-index: 1000;
+            pointer-events: none;
         }
+
+        .dock-capsule {
+            pointer-events: auto; background: var(--dock-bg); backdrop-filter: var(--blur);
+            -webkit-backdrop-filter: var(--blur); height: 60px; border-radius: 30px;
+            display: flex; align-items: center; padding: 0 6px; border: 0.5px solid rgba(255,255,255,0.1);
+        }
+
         .dock-btn {
-            display: flex; align-items: center; padding: 0 20px; height: 52px;
-            border-radius: 26px; color: #fff; text-decoration: none; transition: 0.2s;
+            display: flex; align-items: center; padding: 0 18px; height: 48px;
+            border-radius: 24px; color: #fff; text-decoration: none;
         }
+
         .dock-btn.active { background: rgba(255, 255, 255, 0.15); color: var(--ios-blue); }
         .dock-btn span { font-size: 14px; font-weight: 600; margin-left: 10px; }
-        .search-circle {
-            pointer-events: auto; width: 64px; height: 64px; background: var(--glass-bg);
-            backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border-radius: 50%; margin-left: 12px;
-            display: flex; align-items: center; justify-content: center; border: 0.5px solid rgba(255,255,255,0.12);
+
+        .search-trigger {
+            pointer-events: auto; width: 60px; height: 60px; background: var(--dock-bg);
+            backdrop-filter: var(--blur); border-radius: 50%; margin-left: 10px;
+            display: flex; align-items: center; justify-content: center; border: 0.5px solid rgba(255,255,255,0.1);
         }
-        .svg-icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.2; }
     </style>
 </head>
 <body>
@@ -157,36 +136,20 @@
     <header>
         <div class="header-left">
             <h1>圖庫</h1>
-            <div class="count">12 張照片</div>
+            <div class="count">12 個星座項目</div>
         </div>
         <div class="header-right">
-            <div class="btn-circle">⋯</div>
-            <div class="btn-select">選取</div>
+            <div style="background:#2c2c2e; width:34px; height:34px; border-radius:50%; display:flex; align-items:center; justify-content:center;">⋯</div>
+            <div style="background:#2c2c2e; padding:6px 14px; border-radius:20px; font-size:14px; font-weight:600;">選取</div>
         </div>
     </header>
 
     <main class="photo-grid" id="gallery"></main>
 
-    <div id="viewer">
-        <div class="viewer-header">
-            <div class="back-btn" onclick="closeViewer()">圖庫</div>
-        </div>
-        <div class="viewer-content">
-            <div class="photo-card-integrated">
-                <div id="v-pattern-bg"></div>
-                <div class="info-overlay">
-                    <h2 id="v-title">星座名稱</h2>
-                    <span class="date" id="v-date">日期</span>
-                    <p id="v-desc">星座介紹內容...</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div class="dock-container">
-        <div class="dock-glass">
+    <div class="dock-wrapper">
+        <div class="dock-capsule">
             <a href="#" class="dock-btn active">
-                <svg class="svg-icon" viewBox="0 0 24 24">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                     <rect x="3" y="8" width="12" height="12" rx="3"/>
                     <rect x="6" y="5" width="12" height="12" rx="3" opacity="0.6"/>
                     <rect x="9" y="2" width="12" height="12" rx="3" opacity="0.3"/>
@@ -194,17 +157,15 @@
                 <span>圖庫</span>
             </a>
             <a href="#" class="dock-btn">
-                <svg class="svg-icon" viewBox="0 0 24 24">
-                    <rect x="4" y="4" width="7" height="7" rx="1.5"/>
-                    <rect x="13" y="4" width="7" height="7" rx="1.5"/>
-                    <rect x="4" y="13" width="7" height="7" rx="1.5"/>
-                    <rect x="13" y="13" width="7" height="7" rx="1.5"/>
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <rect x="4" y="4" width="16" height="16" rx="3"/>
+                    <path d="M4 10h16M4 15h16" stroke-width="1.8"/>
                 </svg>
                 <span>選集</span>
             </a>
         </div>
-        <div class="search-circle">
-            <svg class="svg-icon" viewBox="0 0 24 24" style="width:26px; height:26px;">
+        <div class="search-trigger">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                 <circle cx="11" cy="11" r="7"/>
                 <line x1="21" y1="21" x2="16.65" y2="16.65" stroke-linecap="round"/>
             </svg>
@@ -212,60 +173,47 @@
     </div>
 
     <script>
-        // 星座資料：包含名稱、日期、描述、背景漸層、以及 SVG 路徑
         const zodiacData = [
-            { name: "白羊座", date: "3/21 - 4/19", desc: "充滿自信與勇氣的開創者，熱情如火，行動力極強，永遠衝在最前方。", bg: "linear-gradient(45deg, #ff416c, #ff4b2b)", svg: "M12 2c-4 0-7 3-7 7 0 2 1 4 3 5l-2 4h2l2-4h2l2 4h2l-2-4c2-1 3-3 3-5 0-4-3-7-7-7zm0 2c3 0 5 2 5 5s-2 5-5 5-5-2-5-5 2-5 5-5z" },
-            { name: "金牛座", date: "4/20 - 5/20", desc: "穩重踏實的實踐者，追求安定的生活與感官享受，有著堅定的意志與耐心。", bg: "linear-gradient(45deg, #11998e, #38ef7d)", svg: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-4-7h8v2H8v-2zm0-4h8v2H8V9z" },
-            { name: "雙子座", date: "5/21 - 6/21", desc: "機智靈敏的溝通者，好奇心旺盛，思維跳躍，喜歡追求新鮮事物與資訊。", bg: "linear-gradient(45deg, #ffe259, #ffa751)", svg: "M7 2h2v20H7V2zm8 0h2v20h-2V2z" },
-            { name: "巨蟹座", date: "6/22 - 7/22", desc: "溫柔體貼的守護者，重視家庭與情感連結，內心細膩敏感，具有強烈的保護欲。", bg: "linear-gradient(45deg, #2193b0, #6dd5ed)", svg: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4 5c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2zm-8 10c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" },
-            { name: "獅子座", date: "7/23 - 8/22", desc: "天生的領袖，自信慷慨，喜歡成為眾人注目的焦點，展現出王者的風範與熱情。", bg: "linear-gradient(45deg, #f2994a, #f2c94c)", svg: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2V7zm0 8h2v2h-2v-2z" },
-            { name: "處女座", date: "8/23 - 9/22", desc: "追求完美的分析家，注重細節，做事謹慎有條理，具有清晰的邏輯與服務精神。", bg: "linear-gradient(45deg, #7F7FD5, #86A8E7, #91EAE4)", svg: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" },
-            { name: "天秤座", date: "9/23 - 10/23", desc: "優雅和諧的協調者，追求公平與美感，擅長社交，在各種關係中尋求平衡點。", bg: "linear-gradient(45deg, #834d9b, #d04ed6)", svg: "M12 2L2 22h20L12 2zm0 4l6 12H6l6-12z" },
-            { name: "天蠍座", date: "10/24 - 11/22", desc: "神秘深沉的觀察者，意志力堅強，愛恨分明，對認定的人事物有著絕對的執著與忠誠。", bg: "linear-gradient(45deg, #000000, #434343)", svg: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 16c-3.31 0-6-2.69-6-6s2.69-6 6-6 6 2.69 6 6-2.69 6-6 6z" },
-            { name: "射手座", date: "11/23 - 12/21", desc: "愛好自由的冒險家，樂觀開朗，追求真理與智慧，嚮往廣闊的世界與不受拘束的生活。", bg: "linear-gradient(45deg, #5614b0, #dbd65c)", svg: "M12 2L2 12h20L12 2zm0 4l6 6H6l6-6zm0 8l4 4H8l4-4z" },
-            { name: "摩羯座", date: "12/22 - 1/19", desc: "堅忍不拔的實踐家，具有強烈的責任感與企圖心，為了達成目標願意長期默默耕耘。", bg: "linear-gradient(45deg, #2C3E50, #4CA1AF)", svg: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" },
-            { name: "水瓶座", date: "1/20 - 2/18", desc: "獨特前衛的革新者，思維新穎，重視群體與人道主義，不按牌理出牌的理性主義者。", bg: "linear-gradient(45deg, #00c6ff, #0072ff)", svg: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-3-3 1.41-1.41L10 14.17l5.59-5.59L17 10l-7 7z" },
-            { name: "雙魚座", date: "2/19 - 3/20", desc: "浪漫夢幻的藝術家，富有同情心與想像力，直覺敏銳，容易沉浸在自己的情感世界中。", bg: "linear-gradient(45deg, #a8c0ff, #3f2b96)", svg: "M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z" }
+            { name: "白羊座", desc: "自信勇敢，果斷熱情，衝鋒陷陣。", bg: "linear-gradient(135deg, #ff416c, #ff4b2b)", svg: "M12 4c-3 0-5 2-5 5 0 2 2 4 4 4v4h2v-4c2 0 4-2 4-4 0-3-2-5-5-5z" },
+            { name: "金牛座", desc: "穩重踏實，追求安定與感官享受。", bg: "linear-gradient(135deg, #11998e, #38ef7d)", svg: "M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8z" },
+            { name: "雙子座", desc: "機智靈敏，好奇心旺盛，擅社交。", bg: "linear-gradient(135deg, #ffe259, #ffa751)", svg: "M8 4h2v16H8zm6 0h2v16h-2z" },
+            { name: "巨蟹座", desc: "溫柔體貼，重視家庭，內心細膩。", bg: "linear-gradient(135deg, #2193b0, #6dd5ed)", svg: "M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm3 6c1.1 0 2 .9 2 2s-.9 2-2 2-2-.9-2-2 .9-2 2-2z" },
+            { name: "獅子座", desc: "領袖氣質，自信慷慨，目光焦點。", bg: "linear-gradient(135deg, #f2994a, #f2c94c)", svg: "M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 18c-4.4 0-8-3.6-8-8s3.6-8 8-8 8 3.6 8 8-3.6 8-8 8z" },
+            { name: "處女座", desc: "完美主義，謹慎條理，分析力強。", bg: "linear-gradient(135deg, #7F7FD5, #91EAE4)", svg: "M12 2v20M8 6h8M8 18h8" },
+            { name: "天秤座", desc: "優雅和諧，追求公平，具美感。", bg: "linear-gradient(135deg, #834d9b, #d04ed6)", svg: "M4 20h16M12 4v16" },
+            { name: "天蠍座", desc: "神秘深沈，意志強大，絕對執著。", bg: "linear-gradient(135deg, #000000, #434343)", svg: "M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm0 14c-2.2 0-4-1.8-4-4s1.8-4 4-4 4 1.8 4 4-1.8 4-4 4z" },
+            { name: "射手座", desc: "愛好自由，樂觀冒險，追求真理。", bg: "linear-gradient(135deg, #5614b0, #dbd65c)", svg: "M12 4l-8 8h16l-8-8zm0 16l-4-4h8l-4 4z" },
+            { name: "摩羯座", desc: "堅忍不拔，責任感強，雄心勃勃。", bg: "linear-gradient(135deg, #2C3E50, #4CA1AF)", svg: "M12 2v10l-4 4h8l-4-4z" },
+            { name: "水瓶座", desc: "獨特前衛，革新精神，人道主義。", bg: "linear-gradient(135deg, #00c6ff, #0072ff)", svg: "M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10 10-4.5 10-10S17.5 2 12 2zm-2 13l-3-3 1.5-1.5L10 12l5.5-5.5 1.5 1.5-7 7z" },
+            { name: "雙魚座", desc: "浪漫夢幻，想像力豐，感性體貼。", bg: "linear-gradient(135deg, #a8c0ff, #3f2b96)", svg: "M12 2v20M12 12H2m20 0H12" }
         ];
 
         const gallery = document.getElementById('gallery');
 
-        // 生成縮圖網格
-        zodiacData.forEach((z, index) => {
+        zodiacData.forEach((z) => {
             const div = document.createElement('div');
             div.className = 'photo-item';
-            // 動態生成代表圖案
+            div.style.background = z.bg;
+            
             div.innerHTML = `
-                <div class="zodiac-pattern-thumb" style="background:${z.bg}">
-                    <svg class="zodiac-svg-thumb" viewBox="0 0 24 24">
-                        <path d="${z.svg}"></path>
-                    </svg>
+                <svg class="thumb-svg" viewBox="0 0 24 24">
+                    <path d="${z.svg}" stroke="white" stroke-width="1.5" fill="none"></path>
+                </svg>
+                <div class="thumb-info">
+                    <div class="thumb-name">${z.name}</div>
+                    <div class="thumb-desc">${z.desc}</div>
                 </div>
             `;
-            div.onclick = () => openViewer(z);
+            
+            // 點擊依然可以放大查看（加強效果）
+            div.onclick = () => {
+                alert(`查看：${z.name}\n${z.desc}`);
+            };
+            
             gallery.appendChild(div);
         });
 
-        // 開啟全螢幕檢視
-        function openViewer(data) {
-            // 設定背景與大圖示
-            const bgContainer = document.getElementById('v-pattern-bg');
-            bgContainer.style.background = data.bg;
-            bgContainer.innerHTML = `<svg class="zodiac-svg-large" viewBox="0 0 24 24"><path d="${data.svg}"></path></svg>`;
-            
-            // 設定文字內容
-            document.getElementById('v-title').innerText = data.name;
-            document.getElementById('v-date').innerText = data.date;
-            document.getElementById('v-desc').innerText = data.desc;
-            
-            document.getElementById('viewer').style.display = 'flex';
-        }
-
-        function closeViewer() {
-            document.getElementById('viewer').style.display = 'none';
-        }
-
-        // 禁止原生行為
+        // 禁止原生長按與縮放
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
     </script>
