@@ -6,13 +6,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="照片">
+    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/4/4e/Photos_logo_iOS_18.png/600px-Photos_logo_iOS_18.png">
     <title>照片</title>
     <style>
         :root {
-            --ios-gray: #1c1c1e;
             --ios-blue: #0a84ff;
-            --text-main: #ffffff;
-            --text-sec: #8e8e93;
+            --ios-gray-text: #8e8e93;
+            --dock-bg: rgba(40, 40, 40, 0.75);
+            --font-main: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Icons", "PingFang TC", sans-serif;
         }
 
         * {
@@ -23,72 +24,71 @@
         body {
             margin: 0;
             background-color: #000;
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang TC", sans-serif;
-            padding-top: env(safe-area-inset-top);
-            padding-bottom: 150px;
+            color: #fff;
+            font-family: var(--font-main);
+            overflow-x: hidden;
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* 頂部導覽列 */
+        /* 頂部狀態列與標題 */
         header {
-            padding: 20px 16px 10px;
+            padding: calc(env(safe-area-inset-top) + 20px) 16px 12px;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
+            background: black;
         }
 
         .header-left h1 {
             font-size: 34px;
             margin: 0;
             font-weight: 700;
+            letter-spacing: -0.5px;
         }
 
-        .header-left span {
+        .header-left .count {
             font-size: 15px;
-            color: var(--text-sec);
-            font-weight: 600;
-            display: block;
+            color: var(--ios-gray-text);
+            font-weight: 500;
             margin-top: -2px;
         }
 
         .header-right {
             display: flex;
             gap: 10px;
-            margin-top: 5px;
+            padding-top: 6px;
         }
 
-        .circle-btn {
-            background: #2c2c2e;
-            width: 36px;
-            height: 36px;
+        .btn-circle {
+            width: 32px;
+            height: 32px;
+            background: #1c1c1e;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
         }
 
-        .select-btn {
-            background: #2c2c2e;
-            padding: 6px 16px;
-            border-radius: 20px;
+        .btn-select {
+            background: #1c1c1e;
+            color: #fff;
             font-size: 15px;
             font-weight: 600;
-            color: #fff;
+            padding: 6px 14px;
+            border-radius: 18px;
         }
 
-        /* 相簿網格 */
+        /* 照片網格 */
         .photo-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 2px;
-            margin-top: 10px;
+            padding-bottom: 160px;
         }
 
         .photo-item {
-            aspect-ratio: 1 / 1;
-            background-color: #1c1c1e;
-            overflow: hidden;
+            aspect-ratio: 1/1;
+            background: #111;
         }
 
         .photo-item img {
@@ -97,67 +97,77 @@
             object-fit: cover;
         }
 
-        /* iOS 18 懸浮膠囊控制列 */
-        .floating-dock-container {
+        /* 底部 iOS 18 懸浮控制列 */
+        .dock-wrapper {
             position: fixed;
-            bottom: 40px;
+            bottom: calc(env(safe-area-inset-bottom) + 20px);
             left: 0;
             width: 100%;
             display: flex;
             justify-content: center;
-            z-index: 100;
+            align-items: center;
+            z-index: 1000;
+            pointer-events: none;
         }
 
         .dock-capsule {
-            background: rgba(30, 30, 30, 0.85);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 40px;
-            height: 60px;
+            pointer-events: auto;
+            background: var(--dock-bg);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
+            height: 52px;
+            border-radius: 26px;
             display: flex;
             align-items: center;
-            padding: 0 8px;
-            border: 0.5px solid rgba(255,255,255,0.1);
-            width: 85%;
-            max-width: 350px;
+            padding: 0 4px;
+            border: 0.5px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
         }
 
         .dock-item {
-            flex: 1;
             display: flex;
             align-items: center;
-            justify-content: center;
-            gap: 6px;
-            height: 48px;
-            border-radius: 30px;
-            color: var(--text-sec);
+            padding: 0 16px;
+            height: 44px;
+            border-radius: 22px;
+            color: #fff;
             text-decoration: none;
-            font-size: 14px;
-            font-weight: 600;
+            transition: background 0.2s;
         }
 
         .dock-item.active {
-            background: #3a3a3c;
-            color: #6fb6ff; /* iOS 18 亮藍色 */
+            background: rgba(255, 255, 255, 0.15);
+            color: var(--ios-blue);
         }
 
-        .dock-icon {
-            font-size: 20px;
+        .dock-item span {
+            font-size: 13px;
+            font-weight: 600;
+            margin-left: 8px;
         }
 
-        .search-circle {
-            width: 44px;
-            height: 44px;
-            background: rgba(30, 30, 30, 0.85);
-            backdrop-filter: blur(20px);
+        .search-trigger {
+            pointer-events: auto;
+            width: 52px;
+            height: 52px;
+            background: var(--dock-bg);
+            backdrop-filter: blur(25px) saturate(180%);
+            -webkit-backdrop-filter: blur(25px) saturate(180%);
             border-radius: 50%;
+            margin-left: 12px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-left: 10px;
-            border: 0.5px solid rgba(255,255,255,0.1);
+            border: 0.5px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.3);
         }
 
+        /* SVG 圖示顏色控制 */
+        .icon-svg {
+            width: 20px;
+            height: 20px;
+            fill: currentColor;
+        }
     </style>
 </head>
 <body>
@@ -165,50 +175,62 @@
     <header>
         <div class="header-left">
             <h1>圖庫</h1>
-            <span>150 個項目</span>
+            <div class="count">150 個項目</div>
         </div>
         <div class="header-right">
-            <div class="circle-btn">☰</div>
-            <div class="select-btn">選取</div>
+            <div class="btn-circle">
+                <svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg>
+            </div>
+            <div class="btn-select">選取</div>
         </div>
     </header>
 
-    <div class="photo-grid" id="gallery">
-        </div>
+    <main class="photo-grid" id="gallery">
+        </main>
 
-    <div class="floating-dock-container">
+    <div class="dock-wrapper">
         <div class="dock-capsule">
             <a href="#" class="dock-item active">
-                <span class="dock-icon">🖼️</span>
+                <svg class="icon-svg" viewBox="0 0 24 24">
+                    <rect x="3" y="7" width="14" height="14" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
+                    <path d="M7 3h14v14" stroke="currentColor" stroke-width="2" stroke-linecap="round" fill="none"/>
+                </svg>
                 <span>圖庫</span>
             </a>
             <a href="#" class="dock-item">
-                <span class="dock-icon">🗂️</span>
+                <svg class="icon-svg" viewBox="0 0 24 24">
+                    <path d="M4 8h16M4 12h16M4 16h16" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                    <rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="2" fill="none"/>
+                </svg>
                 <span>選集</span>
             </a>
         </div>
-        <div class="search-circle">🔍</div>
+        <div class="search-trigger">
+            <svg class="icon-svg" style="width:22px; height:22px;" viewBox="0 0 24 24">
+                <circle cx="11" cy="11" r="7" stroke="currentColor" stroke-width="2.5" fill="none"/>
+                <path d="M20 20l-3-3" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            </svg>
+        </div>
     </div>
 
     <script>
-        // 自動生成網格內容
+        // 為了極致模擬，我使用了與你截圖內容相似的占位圖
         const gallery = document.getElementById('gallery');
-        // 模擬你的截圖內容（筆記、計算機、螢幕截圖等）
-        // 建議你將自己的圖片命名為 1.jpg, 2.jpg... 放入同目錄
-        for (let i = 1; i <= 24; i++) {
-            const item = document.createElement('div');
-            item.className = 'photo-item';
-            // 這裡先用隨機圖，你可以改成 `src="img/${i}.jpg"`
-            item.innerHTML = `<img src="https://picsum.photos/400/400?random=${i+20}" alt="">`;
-            gallery.appendChild(item);
+        const totalItems = 30; // 顯示張數
+
+        for (let i = 0; i < totalItems; i++) {
+            const div = document.createElement('div');
+            div.className = 'photo-item';
+            // 使用不同的種子確保圖片不同
+            div.innerHTML = `<img src="https://picsum.photos/400/400?random=${i + 100}" loading="lazy">`;
+            gallery.appendChild(div);
         }
 
-        // 禁止長按彈出選單（更有 App 感）
-        window.oncontextmenu = function(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            return false;
-        };
+        // 禁止長按與縮放，確保更像原生 App
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) e.preventDefault();
+        }, { passive: false });
     </script>
 </body>
 </html>
