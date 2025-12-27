@@ -9,21 +9,35 @@
     <style>
         :root {
             --ios-blue: #0a84ff;
-            --dock-bg: rgba(28, 28, 30, 0.72);
+            --dock-bg: rgba(28, 28, 30, 0.75);
             --blur: blur(35px) saturate(210%);
+            /* iOS 原生彈性動畫曲線 */
+            --ios-ease: cubic-bezier(0.25, 1, 0.5, 1);
         }
 
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang TC", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
         }
 
         body {
             margin: 0;
             background-color: #000;
             color: #fff;
-            overflow: hidden; /* 防止橡皮筋效果 */
+            /* 防止 iOS 橡皮筋滾動效果，增加 App 感 */
+            overflow: hidden; 
+            position: fixed;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* 可滾動區域 */
+        #scroll-container {
+            height: 100%;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding-bottom: 250px; /* 底部留白 */
         }
 
         /* 頂部導覽列 */
@@ -32,153 +46,153 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
-            background: #000;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(20px);
             position: sticky;
             top: 0;
             z-index: 100;
         }
 
-        header h1 { font-size: 34px; margin: 0; font-weight: 700; letter-spacing: -1.2px; }
-        .header-sub { font-size: 15px; color: #8e8e93; font-weight: 600; margin-top: 2px; }
+        header h1 { font-size: 34px; margin: 0; font-weight: 700; letter-spacing: -1px; }
+        .header-sub { font-size: 15px; color: #98989d; font-weight: 600; margin-top: 2px; }
 
         /* 相簿網格 */
-        #gallery-scroll {
-            height: 100vh;
-            overflow-y: scroll;
-            padding-bottom: 250px;
-        }
-
         .photo-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 2px;
+            margin-top: 2px;
         }
 
-        /* 純文字照片圖卡 */
-        .photo-card {
+        /* 通用縮圖容器 */
+        .grid-item {
             aspect-ratio: 1/1;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 10px;
-            text-align: center;
-            cursor: pointer;
-            transition: opacity 0.1s;
+            position: relative;
+            overflow: hidden;
+            background: #1c1c1e;
         }
+        .grid-item:active { filter: brightness(0.8); transition: 0.2s; }
 
-        .photo-card:active { opacity: 0.7; }
-        .card-name { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
-        .card-desc { font-size: 9px; line-height: 1.2; opacity: 0.9; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+        /* 類型 A: 真實照片縮圖 */
+        .thumb-img { width: 100%; height: 100%; object-fit: cover; }
 
-        /* 全螢幕檢視器 (Viewer) */
+        /* 類型 B: 純文字圖卡縮圖 */
+        .thumb-card {
+            width: 100%; height: 100%; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; padding: 8px; text-align: center;
+        }
+        .c-name { font-size: 15px; font-weight: 800; margin-bottom: 4px; }
+        .c-desc { font-size: 9px; line-height: 1.2; opacity: 0.9; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+
+        /* --- iOS 原生感全螢幕檢視器 --- */
         #viewer {
             position: fixed;
-            inset: 0;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: #000;
             z-index: 2000;
-            display: none; /* 預設隱藏 */
+            display: none; /* 初始隱藏 */
             flex-direction: column;
-            opacity: 0;
-            transition: opacity 0.3s ease;
         }
 
-        #viewer.show { display: flex; opacity: 1; }
+        /* 動畫控制 Class */
+        #viewer.animating-in {
+            display: flex;
+            animation: openViewer 0.4s var(--ios-ease) forwards;
+        }
+        #viewer.animating-out {
+            display: flex;
+            animation: closeViewer 0.3s var(--ios-ease) forwards;
+        }
 
+        @keyframes openViewer {
+            from { opacity: 0; transform: scale(0.85); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes closeViewer {
+            from { opacity: 1; transform: scale(1); }
+            to { opacity: 0; transform: scale(0.85); }
+        }
+
+        /* 檢視器導覽列 (淡入淡出) */
         .viewer-nav {
+            position: absolute; top: 0; width: 100%;
             padding: calc(env(safe-area-inset-top) + 15px) 16px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            display: flex; justify-content: space-between; align-items: center;
             z-index: 2001;
+            opacity: 0; transition: opacity 0.3s 0.1s;
         }
-
+        #viewer.animating-in .viewer-nav { opacity: 1; }
         .back-btn { color: var(--ios-blue); font-size: 18px; font-weight: 500; display: flex; align-items: center; }
-        .back-btn::before { content: "〈 "; font-weight: 700; }
+        .back-btn::before { content: "〈 "; font-weight: 700; font-size: 20px; margin-top: -2px; }
 
-        .viewer-main {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
+        /* 檢視器內容區 */
+        .viewer-body {
+            flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
         }
 
-        /* 放大後的純文字照片 */
-        .expanded-photo {
-            width: 100%;
-            aspect-ratio: 3/4;
-            border-radius: 20px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 40px 30px;
-            text-align: center;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
-            animation: ios-pop 0.4s cubic-bezier(0.15, 1, 0.3, 1);
+        /* 內容類型 A: 全螢幕照片 */
+        #v-img-full { max-width: 100%; max-height: 100%; object-fit: contain; }
+
+        /* 內容類型 B: 全螢幕文字卡片 */
+        #v-card-full {
+            width: 90%; aspect-ratio: 3/4; border-radius: 24px;
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            padding: 40px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
         }
+        .vc-name { font-size: 42px; font-weight: 800; margin-bottom: 10px; }
+        .vc-date { font-size: 16px; font-weight: 600; opacity: 0.7; margin-bottom: 25px; letter-spacing: 1px;}
+        .vc-desc { font-size: 20px; line-height: 1.5; font-weight: 400; }
 
-        @keyframes ios-pop {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
-        }
-
-        .expanded-name { font-size: 42px; font-weight: 800; margin-bottom: 15px; letter-spacing: -1px; }
-        .expanded-date { font-size: 16px; font-weight: 600; opacity: 0.8; margin-bottom: 30px; letter-spacing: 2px; }
-        .expanded-desc { font-size: 20px; line-height: 1.6; font-weight: 400; color: rgba(255,255,255,0.95); }
-
-        /* 底部 iOS 26 控制列 */
+        /* 底部 iOS 26 Dock */
         .dock-container {
-            position: fixed;
-            bottom: calc(env(safe-area-inset-bottom) + 15px);
+            position: fixed; bottom: calc(env(safe-area-inset-bottom) + 20px);
             left: 0; width: 100%; display: flex; justify-content: center; z-index: 1000; pointer-events: none;
         }
-
         .dock-capsule {
             pointer-events: auto; background: var(--dock-bg); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur);
             height: 62px; border-radius: 31px; display: flex; align-items: center; padding: 0 6px;
-            border: 0.5px solid rgba(255,255,255,0.1); box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+            border: 0.5px solid rgba(255,255,255,0.12); box-shadow: 0 15px 40px rgba(0,0,0,0.6);
         }
-
-        .dock-btn {
-            display: flex; align-items: center; padding: 0 20px; height: 50px;
-            border-radius: 25px; color: #fff; text-decoration: none;
-        }
-
+        .dock-btn { display: flex; align-items: center; padding: 0 20px; height: 50px; border-radius: 25px; color: #fff; text-decoration: none; }
         .dock-btn.active { background: rgba(255, 255, 255, 0.15); color: var(--ios-blue); }
         .dock-btn span { font-size: 14px; font-weight: 600; margin-left: 10px; }
-
         .search-circle {
             pointer-events: auto; width: 62px; height: 62px; background: var(--dock-bg);
-            backdrop-filter: var(--blur); border-radius: 50%; margin-left: 12px;
-            display: flex; align-items: center; justify-content: center; border: 0.5px solid rgba(255,255,255,0.1);
+            backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border-radius: 50%; margin-left: 12px;
+            display: flex; align-items: center; justify-content: center; border: 0.5px solid rgba(255,255,255,0.12);
         }
+        .svg-icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.2; }
     </style>
 </head>
 <body>
 
-    <div id="gallery-scroll">
+    <div id="scroll-container">
         <header>
             <div>
                 <h1>圖庫</h1>
-                <div class="header-sub">12 個星座卡片</div>
+                <div class="header-sub">32 個項目</div>
             </div>
-            <div style="background:#1c1c1e; padding:6px 14px; border-radius:20px; font-size:15px; font-weight:600;">選取</div>
+            <div style="background:#2c2c2e; padding:7px 16px; border-radius:20px; font-size:15px; font-weight:600;">選取</div>
         </header>
 
-        <main class="photo-grid" id="grid"></main>
+        <main class="photo-grid" id="gallery"></main>
     </div>
 
     <div id="viewer">
         <div class="viewer-nav">
             <div class="back-btn" onclick="closeViewer()">圖庫</div>
-            <div style="font-weight:600">編輯</div>
-            <div style="color:var(--ios-blue); font-size:22px">⋯</div>
         </div>
-        <div class="viewer-main" id="viewer-target" onclick="closeViewer()">
+        
+        <div class="viewer-body" onclick="closeViewer()">
+            <img id="v-img-full" src="" style="display:none;">
+            <div id="v-card-full">
+                <div class="vc-name" id="vc-name"></div>
+                <div class="vc-date" id="vc-date"></div>
+                <div class="vc-desc" id="vc-desc"></div>
             </div>
-        <div style="padding: 20px 40px env(safe-area-inset-bottom); display:flex; justify-content:space-between; color:var(--ios-blue); font-size:24px;">
+        </div>
+
+        <div style="position:absolute; bottom:0; width:100%; padding: 20px 40px calc(env(safe-area-inset-bottom) + 20px); display:flex; justify-content:space-between; color:var(--ios-blue); font-size:24px; opacity:0.8;">
             <span>📤</span><span>❤️</span><span>ℹ️</span><span>🗑️</span>
         </div>
     </div>
@@ -186,18 +200,11 @@
     <div class="dock-container">
         <div class="dock-capsule">
             <a href="#" class="dock-btn active">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                    <rect x="3" y="8" width="12" height="12" rx="3"/>
-                    <rect x="6" y="5" width="12" height="12" rx="3" opacity="0.6"/>
-                    <rect x="9" y="2" width="12" height="12" rx="3" opacity="0.3"/>
-                </svg>
+                <svg class="svg-icon" viewBox="0 0 24 24"><rect x="3" y="8" width="12" height="12" rx="3"/><rect x="6" y="5" width="12" height="12" rx="3" opacity="0.6"/><rect x="9" y="2" width="12" height="12" rx="3" opacity="0.3"/></svg>
                 <span>圖庫</span>
             </a>
             <a href="#" class="dock-btn">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
-                    <rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/>
-                    <rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>
-                </svg>
+                <svg class="svg-icon" viewBox="0 0 24 24"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg>
                 <span>選集</span>
             </a>
         </div>
@@ -205,55 +212,99 @@
     </div>
 
     <script>
-        const data = [
-            { name: "白羊座", date: "3/21 - 4/19", bg: "linear-gradient(135deg, #ff416c, #ff4b2b)", desc: "充滿自信與勇氣，行動力極強，永遠衝在最前方的開創者。" },
-            { name: "金牛座", date: "4/20 - 5/20", bg: "linear-gradient(135deg, #11998e, #38ef7d)", desc: "穩重踏實，追求安定與享受，有著堅定的意志與無比耐心。" },
-            { name: "雙子座", date: "5/21 - 6/21", bg: "linear-gradient(135deg, #ffe259, #ffa751)", desc: "機智靈敏，好奇心旺盛。擅長社交，思維跳躍並尋求新鮮感。" },
-            { name: "巨蟹座", date: "6/22 - 7/22", bg: "linear-gradient(135deg, #2193b0, #6dd5ed)", desc: "溫柔體貼，重視家庭。內心細膩敏感，具有強烈的守護欲。" },
-            { name: "獅子座", date: "7/23 - 8/22", bg: "linear-gradient(135deg, #f2994a, #f2c94c)", desc: "領袖氣質，自信慷慨。喜歡成為焦點，展現王者的熱情風範。" },
-            { name: "處女座", date: "8/23 - 9/22", bg: "linear-gradient(135deg, #7F7FD5, #91EAE4)", desc: "追求完美，做事細緻謹慎。具備強大的分析力與條理思維。" },
-            { name: "天秤座", date: "9/23 - 10/23", bg: "linear-gradient(135deg, #834d9b, #d04ed6)", desc: "優雅和諧，追求公平。擅長社交平衡，擁有極佳的審美觀。" },
-            { name: "天蠍座", date: "10/24 - 11/22", bg: "linear-gradient(135deg, #232526, #414345)", desc: "神秘深沈，意志強大。對認定的人事物有著絕對執著與忠誠。" },
-            { name: "射手座", date: "11/23 - 12/21", bg: "linear-gradient(135deg, #5614b0, #dbd65c)", desc: "愛好自由，樂觀冒險。追求真理與智慧，嚮往不受拘束的生活。" },
-            { name: "摩羯座", date: "12/22 - 1/19", bg: "linear-gradient(135deg, #2C3E50, #4CA1AF)", desc: "堅忍不拔，責任感強。具有遠大企圖心，為目標默默耕耘。" },
-            { name: "水瓶座", date: "1/20 - 2/18", bg: "linear-gradient(135deg, #00c6ff, #0072ff)", desc: "獨特前衛，革新精神。重視友誼與理想，思維往往異於常人。" },
-            { name: "雙魚座", date: "2/19 - 3/20", bg: "linear-gradient(135deg, #a8c0ff, #3f2b96)", desc: "浪漫夢幻，想像力豐。富有同情心且直覺敏銳的情感專家。" }
+        // 1. 準備數據：20張照片 + 12個星座卡片
+        const randomPhotos = Array.from({ length: 20 }, (_, i) => ({
+            type: 'image',
+            src: `https://picsum.photos/800/1000?random=${i + 500}` // 使用高品質直向照片
+        }));
+
+        const zodiacs = [
+            { type: 'card', name: "白羊座", date: "3/21-4/19", bg: "linear-gradient(135deg, #ff416c, #ff4b2b)", desc: "自信勇敢熱情果斷，充滿冒險精神與強大行動力。" },
+            { type: 'card', name: "金牛座", date: "4/20-5/20", bg: "linear-gradient(135deg, #11998e, #38ef7d)", desc: "穩重踏實追求安定，具有極佳的審美與理財耐心。" },
+            { type: 'card', name: "雙子座", date: "5/21-6/21", bg: "linear-gradient(135deg, #ffe259, #ffa751)", desc: "機智靈敏好奇心強，擅長溝通並追求多元的新鮮資訊。" },
+            { type: 'card', name: "巨蟹座", date: "6/22-7/22", bg: "linear-gradient(135deg, #2193b0, #6dd5ed)", desc: "溫柔體貼極具感性，重視家庭連結與強大情感保護欲。" },
+            { type: 'card', name: "獅子座", date: "7/23-8/22", bg: "linear-gradient(135deg, #f2994a, #f2c94c)", desc: "自信慷慨具備領袖氣質，渴望舞台並展現出王者的熱情。" },
+            { type: 'card', name: "處女座", date: "8/23-9/22", bg: "linear-gradient(135deg, #7F7FD5, #91EAE4)", desc: "追求完美做事謹慎，具備強大分析力與條理分明的思維。" },
+            { type: 'card', name: "天秤座", date: "9/23-10/23", bg: "linear-gradient(135deg, #834D9B", desc: "優雅和諧追求平衡，在人際社交中尋找最完美的公平感。" },
+            { type: 'card', name: "天蠍座", date: "10/24-11/22", bg: "linear-gradient(135deg, #232526, #434343)", desc: "神秘深沉意志強大，對認定的人事物有絕對的執著與忠誠。" },
+            { type: 'card', name: "射手座", date: "11/23-12/21", bg: "linear-gradient(135deg, #5614b0, #dbd65c)", desc: "愛好自由樂觀冒險，追求真理與智慧，嚮往不受拘束的生活。" },
+            { type: 'card', name: "摩羯座", date: "12/22-1/19", bg: "linear-gradient(135deg, #2C3E50, #4CA1AF)", desc: "堅忍不拔責任感強，具有遠大企圖心並默默為目標努力。" },
+            { type: 'card', name: "水瓶座", date: "1/20-2/18", bg: "linear-gradient(135deg, #00c6ff, #0072ff)", desc: "獨特前衛革新精神，重視友誼與人道精神，思維異於常人。" },
+            { type: 'card', name: "雙魚座", date: "2/19-3/20", bg: "linear-gradient(135deg, #a8c0ff, #3f2b96)", desc: "浪漫夢幻充滿想像，富有同情心且直覺敏銳的情感專家。" }
         ];
 
-        const grid = document.getElementById('grid');
-        const viewer = document.getElementById('viewer');
-        const viewerTarget = document.getElementById('viewer-target');
+        // 合併數據：照片在前，星座在後
+        const fullData = [...randomPhotos, ...zodiacs];
+        const gallery = document.getElementById('gallery');
 
-        // 初始化網格
-        data.forEach(z => {
-            const card = document.createElement('div');
-            card.className = 'photo-card';
-            card.style.background = z.bg;
-            card.innerHTML = `<div class="card-name">${z.name}</div><div class="card-desc">${z.desc}</div>`;
-            card.onclick = () => openViewer(z);
-            grid.appendChild(card);
+        // 2. 渲染網格
+        fullData.forEach(item => {
+            const div = document.createElement('div');
+            div.className = 'grid-item';
+
+            if (item.type === 'image') {
+                // 渲染照片縮圖
+                div.innerHTML = `<img class="thumb-img" src="${item.src}" loading="lazy">`;
+            } else {
+                // 渲染文字卡片縮圖
+                div.style.background = item.bg;
+                div.innerHTML = `
+                    <div class="thumb-card">
+                        <div class="c-name">${item.name}</div>
+                        <div class="c-desc">${item.desc}</div>
+                    </div>
+                `;
+            }
+            div.onclick = () => openViewer(item);
+            gallery.appendChild(div);
         });
 
-        function openViewer(z) {
-            viewerTarget.innerHTML = `
-                <div class="expanded-photo" style="background:${z.bg}">
-                    <div class="expanded-name">${z.name}</div>
-                    <div class="expanded-date">${z.date}</div>
-                    <div class="expanded-desc">${z.desc}</div>
-                </div>
-            `;
-            viewer.style.display = 'flex';
-            setTimeout(() => viewer.classList.add('show'), 10);
+        // 3. 檢視器控制邏輯 (核心動畫部分)
+        const viewer = document.getElementById('viewer');
+        const vImg = document.getElementById('v-img-full');
+        const vCard = document.getElementById('v-card-full');
+
+        function openViewer(item) {
+            // 根據類型準備內容
+            if (item.type === 'image') {
+                vImg.src = item.src;
+                vImg.style.display = 'block';
+                vCard.style.display = 'none';
+            } else {
+                vCard.style.background = item.bg;
+                document.getElementById('vc-name').innerText = item.name;
+                document.getElementById('vc-date').innerText = item.date;
+                document.getElementById('vc-desc').innerText = item.desc;
+                vCard.style.display = 'flex';
+                vImg.style.display = 'none';
+            }
+
+            // 觸發 iOS 原生感開啟動畫
+            viewer.classList.remove('animating-out');
+            viewer.classList.add('animating-in');
         }
 
         function closeViewer() {
-            viewer.classList.remove('show');
-            setTimeout(() => viewer.style.display = 'none', 300);
+            // 觸發 iOS 原生感關閉動畫
+            viewer.classList.remove('animating-in');
+            viewer.classList.add('animating-out');
+            
+            // 動畫結束後隱藏元素
+            setTimeout(() => {
+                if (viewer.classList.contains('animating-out')) {
+                    viewer.classList.remove('animating-out');
+                    viewer.style.display = 'none';
+                }
+            }, 300); // 這裡的時間要配合 CSS animation duration
         }
 
-        // 禁止原生長按與縮放，確保更像原生 App
+        // 禁止原生行為，提升仿真度
         document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+        document.addEventListener('touchmove', e => {
+            if (viewer.style.display === 'flex') {
+                e.preventDefault(); // 防止在 viewer 開啟時滾動背景
+            }
+        }, { passive: false });
     </script>
 </body>
 </html>
