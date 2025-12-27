@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="照片">
+    <title>照片</title>
+    <style>
+        :root {
+            --ios-blue: #007aff;
+            --bg-color: #ffffff;
+            --tab-bg: rgba(248, 248, 248, 0.8);
+            --border-color: #d1d1d6;
+        }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            padding-bottom: 100px; /* 為底部欄留空間 */
+            padding-top: env(safe-area-inset-top);
+        }
+
+        /* 頂部導覽列 */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            padding: 10px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .back-btn {
+            color: var(--ios-blue);
+            font-size: 17px;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .back-btn::before {
+            content: "〈";
+            font-weight: bold;
+            margin-right: 5px;
+        }
+
+        header h1 {
+            font-size: 34px;
+            margin: 10px 0;
+            width: 100%;
+        }
+
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+        }
+
+        .action-btn {
+            color: var(--ios-blue);
+            font-size: 17px;
+            font-weight: 400;
+        }
+
+        /* 相簿網格 */
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 2px;
+            padding: 2px;
+        }
+
+        .photo-item {
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            background-color: #f2f2f7;
+            position: relative;
+        }
+
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 底部標籤欄 */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            width: 100%;
+            height: 83px;
+            background: var(--tab-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-top: 0.5px solid var(--border-color);
+            display: flex;
+            justify-content: space-around;
+            padding-top: 8px;
+            padding-bottom: env(safe-area-inset-bottom);
+            z-index: 100;
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #8e8e93;
+            font-size: 10px;
+            text-decoration: none;
+        }
+
+        .tab-item.active {
+            color: var(--ios-blue);
+        }
+
+        .tab-icon {
+            font-size: 24px;
+            margin-bottom: 2px;
+        }
+
+        /* 模擬全螢幕預覽 */
+        #viewer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: black;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        #viewer img {
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        #viewer .close-btn {
+            position: absolute;
+            top: 50px;
+            left: 20px;
+            color: white;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-content">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <a href="#" class="back-btn">相簿</a>
+                <span class="action-btn">選擇</span>
+            </div>
+            <h1>最近項目</h1>
+        </div>
+    </header>
+
+    <div class="photo-grid" id="gallery">
+        <div class="photo-item"><img src="https://picsum.photos/400/400?random=1" onclick="openViewer(this.src)"></div>
+        <div class="photo-item"><img src="https://picsum.photos/400/400?random=2" onclick="openViewer(this.src)"></div>
+        <div class="photo-item"><img src="https://picsum.photos/400/400?random=3" onclick="openViewer(this.src)"></div>
+        <div class="photo-item"><img src="https://picsum.photos/400/400?random=4" onclick="openViewer(this.src)"></div>
+        <div class="photo-item"><img src="https://picsum.photos/400/400?random=5" onclick="openViewer(this.src)"></div>
+        <div class="photo-item"><img src="https://picsum.photos/400/400?random=6" onclick="openViewer(this.src)"></div>
+        <div class="photo-item"><img src="https://picsum.photos/400/400?random=7" onclick="openViewer(this.src)"></div>
+        <div class="photo-item"><img src="https://picsum.photos/400/400?random=8" onclick="openViewer(this.src)"></div>
+        <div class="photo-item"><img src="https://picsum.photos/400/400?random=9" onclick="openViewer(this.src)"></div>
+        <div class="photo-item"><img src="https://picsum.photos/400/400?random=10" onclick="openViewer(this.src)"></div>
+        <div class="photo-item"><img src="https://picsum.photos/400/400?random=11" onclick="openViewer(this.src)"></div>
+        <div class="photo-item"><img src="https://picsum.photos/400/400?random=12" onclick="openViewer(this.src)"></div>
+        <div class="photo-item"><img src="https://picsum.photos/400/400?random=13" onclick="openViewer(this.src)"></div>
+        <div class="photo-item"><img src="https://picsum.photos/400/400?random=14" onclick="openViewer(this.src)"></div>
+        <div class="photo-item"><img src="https://picsum.photos/400/400?random=15" onclick="openViewer(this.src)"></div>
+    </div>
+
+    <div class="tab-bar">
+        <a href="#" class="tab-item">
+            <span class="tab-icon">🖼️</span>
+            <span>圖庫</span>
+        </a>
+        <a href="#" class="tab-item">
+            <span class="tab-icon">✨</span>
+            <span>為您推薦</span>
+        </a>
+        <a href="#" class="tab-item active">
+            <span class="tab-icon">📁</span>
+            <span>相簿</span>
+        </a>
+        <a href="#" class="tab-item">
+            <span class="tab-icon">🔍</span>
+            <span>搜尋</span>
+        </a>
+    </div>
+
+    <div id="viewer" onclick="closeViewer()">
+        <span class="close-btn">〈 返回</span>
+        <img id="viewer-img" src="">
+    </div>
+
+    <script>
+        function openViewer(src) {
+            document.getElementById('viewer-img').src = src;
+            document.getElementById('viewer').style.display = 'flex';
+        }
+
+        function closeViewer() {
+            document.getElementById('viewer').style.display = 'none';
+        }
+
+        // 禁止縮放，增加 App 感
+        document.addEventListener('gesturestart', function(e) {
+            e.preventDefault();
+        });
+    </script>
+</body>
+</html>
