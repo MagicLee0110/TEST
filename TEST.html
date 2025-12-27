@@ -9,7 +9,7 @@
     <style>
         :root {
             --ios-blue: #0a84ff;
-            --dock-bg: rgba(28, 28, 30, 0.8);
+            --dock-bg: rgba(28, 28, 30, 0.75);
             --blur: blur(40px) saturate(210%);
             --ios-ease: cubic-bezier(0.3, 1, 0.3, 1);
         }
@@ -18,8 +18,9 @@
 
         body { margin: 0; background-color: #000; color: #fff; overflow: hidden; position: fixed; width: 100%; height: 100%; }
 
-        #scroll-container { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 200px; }
+        #scroll-container { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 220px; }
 
+        /* 頂部導覽 */
         header {
             padding: calc(env(safe-area-inset-top) + 20px) 16px 12px;
             display: flex; justify-content: space-between; align-items: flex-end;
@@ -29,27 +30,50 @@
         header h1 { font-size: 34px; margin: 0; font-weight: 700; letter-spacing: -1.2px; }
         .header-sub { font-size: 15px; color: #98989d; font-weight: 600; margin-top: 2px; }
 
-        /* 相簿網格 */
+        /* 相簿網格：1:1 裁切 */
         .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 2px; }
 
-        .grid-item { aspect-ratio: 1/1; position: relative; overflow: hidden; background: #1c1c1e; cursor: pointer; }
-        .grid-item:active { filter: brightness(0.7); }
-        .thumb-img { width: 100%; height: 100%; object-fit: cover; }
-
-        /* 關鍵：星座照片元件 (縮圖與點開共用) */
-        .zodiac-photo {
-            width: 100%; height: 100%; display: flex; flex-direction: column;
-            padding: 10%; justify-content: space-between; text-align: left;
+        .grid-item { 
+            aspect-ratio: 1/1; 
+            position: relative; 
+            overflow: hidden; 
+            background: #1c1c1e; 
+            cursor: pointer; 
         }
-        .zp-header { font-size: 100%; font-weight: 800; }
-        .zp-date { font-size: 40%; opacity: 0.7; margin-bottom: 5%; display: block; }
-        .zp-body { font-size: 55%; line-height: 1.4; opacity: 0.9; font-weight: 400; }
-        .zp-footer { border-top: 0.5px solid rgba(255,255,255,0.3); padding-top: 5%; margin-top: 5%; }
-        .zp-lucky-label { font-size: 35%; opacity: 0.6; display: block; margin-bottom: 2%; }
+
+        /* 內容容器：這張「照片」本身是長形的 */
+        .zodiac-canvas {
+            width: 100%;
+            height: 140%; /* 讓內容比格子長，造成裁切感 */
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            padding: 12% 10%;
+            text-align: left;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .zp-header { font-size: 100%; font-weight: 800; margin-bottom: 5%; }
+        .zp-date { font-size: 40%; opacity: 0.7; display: block; margin-bottom: 8%; }
+        .zp-body { font-size: 50%; line-height: 1.4; opacity: 0.9; font-weight: 400; }
+        
+        /* 被卡掉的部分：幸運數字 */
+        .zp-footer { 
+            margin-top: auto; 
+            padding-bottom: 15%;
+            border-top: 0.5px solid rgba(255,255,255,0.2);
+            padding-top: 8%;
+        }
+        .zp-lucky-label { font-size: 35%; opacity: 0.6; display: block; margin-bottom: 4%; letter-spacing: 1px;}
         .zp-nums { display: flex; justify-content: space-between; font-size: 65%; font-weight: 700; }
 
         /* 全螢幕檢視器 */
-        #viewer { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; flex-direction: column; }
+        #viewer { 
+            position: fixed; inset: 0; background: #000; z-index: 2000; 
+            display: none; flex-direction: column; 
+        }
         #viewer.active { display: flex; animation: iosPop 0.4s var(--ios-ease) forwards; }
 
         @keyframes iosPop {
@@ -62,10 +86,9 @@
         .back-btn::before { content: "〈 "; font-weight: 700; }
 
         .v-body { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        #v-content { width: 100%; max-height: 80vh; aspect-ratio: 1/1; display: flex; justify-content: center; align-items: center; }
-        .v-image-full { max-width: 100%; max-height: 100%; object-fit: contain; }
-        .v-card-full { width: 100%; height: 100%; border-radius: 0; /* 在檢視器中像一張照片 */ }
+        #v-content { width: 100%; height: auto; aspect-ratio: 3/4; display: flex; justify-content: center; align-items: center; overflow: hidden; border-radius: 12px;}
 
+        /* 底部 Dock */
         .dock-container { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 20px); left: 0; width: 100%; display: flex; justify-content: center; z-index: 1000; pointer-events: none; }
         .dock-capsule { pointer-events: auto; background: var(--dock-bg); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); height: 64px; border-radius: 32px; display: flex; align-items: center; padding: 0 10px; border: 0.5px solid rgba(255,255,255,0.1); box-shadow: 0 15px 40px rgba(0,0,0,0.5); }
         .dock-btn { display: flex; align-items: center; padding: 0 20px; height: 50px; border-radius: 25px; color: #fff; text-decoration: none; font-size: 14px; font-weight: 600; }
@@ -94,31 +117,33 @@
 
     <script>
         // 1. 24張基礎照片
-        const basePhotos = Array.from({ length: 24 }, (_, i) => ({ type: 'img', src: `https://picsum.photos/800/800?random=${i + 1}` }));
+        const basePhotos = Array.from({ length: 24 }, (_, i) => ({ type: 'img', src: `https://picsum.photos/800/800?random=${i + 50}` }));
 
         // 2. 12星座數據 (精確加總邏輯)
         const zodiacs = [
-            { name: "摩羯座", date: "12/22-1/19", bg: "#243B55", nums: [12, 45, 38, 76, 30], desc: "您擁有無與倫比的耐力，是天生的長跑選手。在事業上總能默默耕耘並在最後達成成就。今日星象顯示，您的穩重將帶來意外契機。" },
-            { name: "水瓶座", date: "1/20-2/18", bg: "#141E30", nums: [24, 51, 63, 19, 45], desc: "獨特且充滿智慧的靈魂。創新是您的代名詞，這讓您在群體中總是閃耀異於常人的光芒。今日適合捕捉腦海中一閃而逝的靈感。" },
-            { name: "雙魚座", date: "2/19-3/20", bg: "#2C3E50", nums: [33, 42, 57, 28, 43], desc: "情感豐富且具備強大直覺。您是藝術與浪漫的化身，能感知微細變化。今日的宇宙能量將強化您的心靈感應，貼近內心想法。" },
-            { name: "牡羊座", date: "3/21-4/19", bg: "#4B1248", nums: [15, 66, 31, 48, 44], desc: "熱情勇敢且充滿行動力。您不畏懼未知挑戰，開創精神讓您領先群倫。今日星象激發您的領導潛能，勇敢說出您的計畫。" },
-            { name: "金牛座", date: "4/20-5/20", bg: "#0F2027", nums: [28, 39, 55, 17, 66], desc: "對美與物質有極高敏銳度，追求質感與安定。您的固執往往是成功的關鍵，代表對目標忠誠。今日適合品嚐美食犒賞自己。" },
-            { name: "雙子座", date: "5/21-6/21", bg: "#373B44", nums: [41, 22, 68, 35, 40], desc: "機智善變且充滿好奇心。您擁有雙倍活力與溝通技巧。今日會有意想不到的訊息傳來，這將開啟您下一階段的精彩冒險。" },
-            { name: "巨蟹座", date: "6/22-7/22", bg: "#16222A", nums: [19, 73, 24, 56, 35], desc: "溫柔體貼且重視家庭歸屬。您的防備心源於愛，一旦認定對方，將展現守護力量。今日建議待在熟悉環境，享受寧靜。" },
-            { name: "獅子座", date: "7/23-8/22", bg: "#42275A", nums: [52, 31, 44, 18, 63], desc: "天生王者，充滿自信且具魅力。您喜歡成為焦點，並樂於帶領他人走向光明。今日您的創造力爆發，任何困難都無法阻擋。" },
-            { name: "處女座", date: "8/23-9/22", bg: "#1D2671", nums: [37, 49, 25, 62, 36], desc: "追求完美注重細節，是最高效率執行者。清醒邏輯讓您無可替代。今日適合整理環境，微小改變將帶來巨大的幸運效應。" },
-            { name: "天蠍座", date: "10/24-11/22", bg: "#000000", nums: [44, 28, 71, 15, 52], desc: "神秘深沈且擁有洞察力。您從不妥協，對於熱愛事物有著靈魂執著。今日能量將引導您發掘真相，對您的決策至關重要。" },
-            { name: "天瓶座", date: "9/23-10/23", bg: "#200122", nums: [65, 22, 39, 47, 38], desc: "優雅公正且追求和諧。您擅長平衡衝突，在社交場合是不可或缺的潤滑劑。今日適合協商，您的美感將協助您做出決定。" },
-            { name: "射手座", date: "11/23-12/21", bg: "#0F0C29", nums: [21, 55, 68, 34, 34], desc: "愛好自由樂觀冒險。您的心中裝著星辰大海，追求維度智慧與真理。今日適合規劃一場旅行，或深入研讀感興趣的知識。" }
+            { name: "摩羯座", date: "12/22-1/19", bg: "#243B55", nums: [12, 45, 38, 76, 30], desc: "您擁有無與倫比的耐力，是天生的長跑選手。在事業上總能默默耕耘並在最後達成成就。" },
+            { name: "水瓶座", date: "1/20-2/18", bg: "#141E30", nums: [24, 51, 63, 19, 45], desc: "獨特且充滿智慧的靈魂。創新是您的代名詞，這讓您在群體中總是閃耀異於常人的光芒。" },
+            { name: "雙魚座", date: "2/19-3/20", bg: "#2C3E50", nums: [33, 42, 57, 28, 43], desc: "情感豐富且具備強大直覺。您是藝術與浪漫的化身，能感知微細變化。今日能量將強化感應。" },
+            { name: "牡羊座", date: "3/21-4/19", bg: "#4B1248", nums: [15, 66, 31, 48, 44], desc: "熱情勇敢且充滿行動力。您不畏懼未知挑戰，開創精神讓您領先群倫。今日勇敢說出您的計畫。" },
+            { name: "金牛座", date: "4/20-5/20", bg: "#0F2027", nums: [28, 39, 55, 17, 66], desc: "對美與物質有極高敏銳度，追求質感與安定。您的固執往往是成功的關鍵，代表對目標忠誠。" },
+            { name: "雙子座", date: "5/21-6/21", bg: "#373B44", nums: [41, 22, 68, 35, 40], desc: "機智善變且充滿好奇心。您擁有雙倍活力與溝通技巧。今日會有意想不到的訊息傳來開啟冒險。" },
+            { name: "巨蟹座", date: "6/22-7/22", bg: "#16222A", nums: [19, 73, 24, 56, 35], desc: "溫柔體貼且重視家庭歸屬。您的防備心源於愛，一旦認定對方，將展現守護力量。享受寧靜。" },
+            { name: "獅子座", date: "7/23-8/22", bg: "#42275A", nums: [52, 31, 44, 18, 63], desc: "天生王者，充滿自信且具魅力。您喜歡成為焦點，並引領他人。今日您的創造力爆發擋不住。" },
+            { name: "處女座", date: "8/23-9/22", bg: "#1D2671", nums: [37, 49, 25, 62, 36], desc: "追求完美注重細節，是最高效率執行者。清醒邏輯讓您無可替代。微小改變將帶來幸運效應。" },
+            { name: "天蠍座", date: "10/24-11/22", bg: "#000000", nums: [44, 28, 71, 15, 52], desc: "神秘深沈且擁有洞察力。您從不妥協，對於熱愛事物有著靈魂執著。今日能量將引導您發掘真相。" },
+            { name: "天瓶座", date: "9/23-10/23", bg: "#200122", nums: [65, 22, 39, 47, 38], desc: "優雅公正且追求和諧。您擅長平衡衝突，社交不可或缺。今日美感將協助您做出最完美的決定。" },
+            { name: "射手座", date: "11/23-12/21", bg: "#0F0C29", nums: [21, 55, 68, 34, 34], desc: "愛好自由樂觀冒險。心中裝著星辰大海，追求智慧與真理。適合規劃一場說走就走的旅行。" }
         ].map(z => ({ ...z, type: 'card' }));
 
         const fullData = [...basePhotos, ...zodiacs];
         const gallery = document.getElementById('gallery');
 
-        // 生成星座卡片 HTML (共用模板)
-        function createZodiacHTML(item, isFull = false) {
+        // 生成星座卡片 HTML (網格與點開共用)
+        function createZodiacCanvas(item, isFull = false) {
+            // isFull 模式下調整高度比例以顯示全貌
+            const heightStyle = isFull ? 'height: 100%;' : 'height: 140%;';
             return `
-                <div class="zodiac-photo" style="background:${item.bg};">
+                <div class="zodiac-canvas" style="background:${item.bg}; ${heightStyle}">
                     <div>
                         <div class="zp-header">${item.name}</div>
                         <span class="zp-date">${item.date}</span>
@@ -140,7 +165,7 @@
             if (item.type === 'img') {
                 div.innerHTML = `<img class="thumb-img" src="${item.src}" loading="lazy">`;
             } else {
-                div.innerHTML = createZodiacHTML(item);
+                div.innerHTML = createZodiacCanvas(item, false);
             }
             div.onclick = () => openViewer(item);
             gallery.appendChild(div);
@@ -151,9 +176,12 @@
 
         function openViewer(item) {
             if (item.type === 'img') {
-                vContent.innerHTML = `<img class="v-image-full" src="${item.src}">`;
+                vContent.style.aspectRatio = '1/1';
+                vContent.innerHTML = `<img style="max-width:100%; max-height:100%;" src="${item.src}">`;
             } else {
-                vContent.innerHTML = `<div class="v-card-full">${createZodiacHTML(item, true)}</div>`;
+                // 星座卡片展開為 3:4 比例以顯示下方幸運數字
+                vContent.style.aspectRatio = '3/4';
+                vContent.innerHTML = createZodiacCanvas(item, true);
             }
             viewer.classList.add('active');
         }
