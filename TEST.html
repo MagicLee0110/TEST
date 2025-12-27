@@ -5,55 +5,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#000000">
+    <meta name="theme-color" content="#050505">
     <title>iOS 26 Unlock</title>
     <style>
-        /* 全域變數：調整這裡可以改變整體風格 */
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.12); /* 按鍵背景透明度 */
-            --glass-border: rgba(255, 255, 255, 0.15); /* 邊框 */
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.2);
             --text-color: #ffffff;
-            --press-color: rgba(255, 255, 255, 0.35); /* 按下時的顏色 */
+            --press-color: rgba(255, 255, 255, 0.4);
+        }
+
+        /* 修正1：將背景設定在 html 層級，確保覆蓋瀏海/動態島區域 */
+        html {
+            height: 100%;
+            background-color: #000;
+            background-image: 
+                radial-gradient(circle at 50% 10%, rgba(60, 20, 110, 0.4) 0%, transparent 50%),
+                radial-gradient(circle at 90% 60%, rgba(20, 100, 120, 0.3) 0%, transparent 40%),
+                linear-gradient(180deg, #0f0c15 0%, #151525 100%);
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-attachment: fixed; /* 防止背景滑動 */
         }
 
         body {
             margin: 0;
             padding: 0;
-            background: #000;
             font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
-            height: 100vh;
+            height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: flex-end; /* 讓內容靠下排列 */
             align-items: center;
+            /* 修正2：使用 space-between 讓元素分散，而不是全部擠在下面 */
+            justify-content: space-between; 
             overflow: hidden;
-            /* 背景：深邃宇宙流體感 */
-            background-image: 
-                radial-gradient(circle at 50% 0%, rgba(50, 20, 90, 0.5) 0%, transparent 60%),
-                radial-gradient(circle at 10% 80%, rgba(20, 80, 100, 0.4) 0%, transparent 50%),
-                linear-gradient(180deg, #050505 0%, #1a1a2e 100%);
-            background-size: cover;
             user-select: none;
-            -webkit-user-select: none; /* 禁止選取文字 */
-            -webkit-tap-highlight-color: transparent; /* 移除點擊藍框 */
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
             color: var(--text-color);
         }
 
-        /* 上半部提示區 */
+        /* 上方提示區：往下推一點，視覺更平衡 */
         .header-section {
-            flex: 1; /* 佔據上半部剩餘空間 */
             display: flex;
             flex-direction: column;
-            justify-content: center; /* 垂直置中 */
+            justify-content: flex-end; /* 靠下對齊 */
             align-items: center;
+            flex-grow: 1; /* 佔據上半部空間 */
+            padding-bottom: 40px; /* 與鍵盤的距離 */
             width: 100%;
-            padding-top: 60px; /* 避開頂部真實狀態列 */
         }
 
         .instruction {
-            font-size: 20px;
+            font-size: 22px;
             font-weight: 500;
-            margin-bottom: 30px;
+            margin-bottom: 25px;
             letter-spacing: 0.5px;
             text-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
@@ -61,47 +67,45 @@
         /* 密碼圓點 */
         .dots-container {
             display: flex;
-            gap: 22px;
-            margin-bottom: 20px;
+            gap: 24px;
+            height: 20px; /* 固定高度防止跳動 */
         }
 
         .dot {
-            width: 11px;
-            height: 11px;
+            width: 12px;
+            height: 12px;
             border-radius: 50%;
             border: 1.5px solid #fff;
             background: transparent;
             transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            box-shadow: 0 0 8px rgba(255,255,255,0.05);
+            box-shadow: 0 0 8px rgba(255,255,255,0.1);
         }
 
         .dot.active {
             background: #fff;
             box-shadow: 0 0 15px rgba(255,255,255,0.9);
-            transform: scale(1.1);
+            transform: scale(1.15);
         }
 
-        /* 錯誤搖晃動畫 */
         @keyframes shake {
             0%, 100% { transform: translateX(0); }
             20%, 60% { transform: translateX(-8px); }
             40%, 80% { transform: translateX(8px); }
         }
-
-        .shake {
-            animation: shake 0.35s cubic-bezier(.36,.07,.19,.97) both;
-        }
+        .shake { animation: shake 0.35s cubic-bezier(.36,.07,.19,.97) both; }
 
         /* 數字鍵盤區 */
         .keypad {
             width: 100%;
-            max-width: 340px; /* 稍微加寬適配現代大螢幕 */
+            max-width: 350px;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             row-gap: 22px;
-            column-gap: 25px;
-            margin-bottom: 50px;
-            padding-bottom: env(safe-area-inset-bottom); /* 避開底部 Home Bar */
+            column-gap: 28px;
+            
+            /* 修正重點：這裡控制鍵盤離底部的距離 */
+            margin-bottom: 12vh; /* 距離底部 12% 的高度，確保位置適中 */
+            padding-bottom: env(safe-area-inset-bottom);
         }
 
         .key-wrapper {
@@ -115,23 +119,24 @@
             height: 78px;
             border-radius: 50%;
             background: var(--glass-bg);
-            backdrop-filter: blur(25px); /* 毛玻璃模糊度 */
-            -webkit-backdrop-filter: blur(25px);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
             border: 1px solid var(--glass-border);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             cursor: pointer;
-            transition: background 0.1s;
+            transition: background 0.1s, transform 0.1s;
         }
 
         .key:active {
             background: var(--press-color);
+            transform: scale(0.95); /* 按下微微縮小 */
         }
 
         .key-num {
-            font-size: 34px;
+            font-size: 36px;
             font-weight: 300;
             line-height: 1;
             margin-bottom: 2px;
@@ -144,47 +149,38 @@
             opacity: 0.6;
         }
 
-        /* 底部功能鍵 (緊急 / 取消) */
+        /* 底部按鈕 */
         .bottom-action {
             font-size: 16px;
             font-weight: 600;
             color: #fff;
             background: transparent;
             border: none;
-            padding: 30px;
+            padding: 20px;
             opacity: 0.9;
         }
-        
-        .bottom-action:active {
-            opacity: 0.5;
-        }
+        .bottom-action:active { opacity: 0.5; }
 
-        /* --- 相簿區域 (隱藏狀態) --- */
-        /* 下一步我們可以把這區域換成真正的相簿程式碼 */
+        /* 相簿容器 (預留) */
         #album-container {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            top: 0; left: 0; width: 100%; height: 100%;
             background: #000;
             z-index: 200;
             display: none;
             opacity: 0;
             transition: opacity 0.6s ease;
             color: white;
-            align-items: center;
             justify-content: center;
+            align-items: center;
             font-size: 24px;
         }
-
     </style>
 </head>
 <body>
 
     <div id="lock-interface" class="header-section">
         <div class="instruction">輸入密碼</div>
-        
         <div class="dots-container" id="dots">
             <div class="dot"></div>
             <div class="dot"></div>
@@ -212,33 +208,25 @@
     </div>
 
     <div id="album-container">
-        歡迎進入 12 星座相簿
+        相簿載入中...
     </div>
 
     <script>
-        // 設定正確密碼 (可自行修改)
         const CORRECT_PASS = '123456'; 
-        
         let currentInput = '';
         const dots = document.querySelectorAll('.dot');
         const lockInterface = document.getElementById('lock-interface');
         const keypad = document.getElementById('keypad');
         const albumContainer = document.getElementById('album-container');
 
-        // 按鍵輸入
         function pressKey(num) {
             if (currentInput.length < 6) {
                 currentInput += num;
                 updateDots();
-                
-                // 檢查密碼
-                if (currentInput.length === 6) {
-                    setTimeout(checkPassword, 150);
-                }
+                if (currentInput.length === 6) setTimeout(checkPassword, 150);
             }
         }
 
-        // 刪除鍵 (綁定在取消按鈕上)
         function deleteKey() {
             if (currentInput.length > 0) {
                 currentInput = currentInput.slice(0, -1);
@@ -246,7 +234,6 @@
             }
         }
 
-        // 更新圓點
         function updateDots() {
             dots.forEach((dot, index) => {
                 if (index < currentInput.length) {
@@ -257,7 +244,6 @@
             });
         }
 
-        // 檢查密碼邏輯
         function checkPassword() {
             if (currentInput === CORRECT_PASS) {
                 unlockSuccess();
@@ -268,36 +254,29 @@
             }
         }
 
-        // 錯誤時的震動與動畫
         function shakeAnimation() {
             const container = document.querySelector('.dots-container');
             container.classList.add('shake');
-            if (navigator.vibrate) navigator.vibrate(200); // 手機震動
-            
-            setTimeout(() => {
-                container.classList.remove('shake');
-            }, 350);
+            if (navigator.vibrate) navigator.vibrate(200);
+            setTimeout(() => { container.classList.remove('shake'); }, 350);
         }
 
-        // 解鎖成功
         function unlockSuccess() {
-            // 介面向上滑出消失
             document.body.style.transition = "all 0.6s ease";
             keypad.style.opacity = '0';
-            keypad.style.transform = 'translateY(20px)';
+            keypad.style.transform = 'translateY(30px)';
             lockInterface.style.opacity = '0';
-            lockInterface.style.transform = 'translateY(-20px)';
+            lockInterface.style.transform = 'translateY(-30px)';
             
             setTimeout(() => {
                 keypad.style.display = 'none';
                 lockInterface.style.display = 'none';
                 
-                // 顯示相簿區域 (下一步我們把這裡換成真正的相簿)
+                // 這裡將會切換到相簿
                 albumContainer.style.display = 'flex';
-                // 觸發重繪以執行過場動畫
                 albumContainer.offsetHeight; 
                 albumContainer.style.opacity = '1';
-                
+                // window.location.href = 'album.html'; // 如果相簿是另一個檔案
             }, 400);
         }
     </script>
