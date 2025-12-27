@@ -2,34 +2,36 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Photos 26">
+    <link rel="apple-touch-icon" href="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Photos_iOS_13_App_Icon.png/240px-Photos_iOS_13_App_Icon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
     <title>iOS 26 Photos</title>
     <style>
         :root {
             --ios-bg: #ffffff;
             --ios-text: #000000;
             --ios-blue: #007AFF;
-            --ios-bar-bg: rgba(255, 255, 255, 0.85);
-            --ios-grid-gap: 2px;
+            --ios-bar-bg: rgba(255, 255, 255, 0.92);
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
                 --ios-bg: #000000;
                 --ios-text: #ffffff;
-                --ios-bar-bg: rgba(30, 30, 30, 0.85);
+                --ios-bar-bg: rgba(28, 28, 30, 0.92);
             }
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
 
         body {
-            margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+            margin: 0; padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
             background-color: var(--ios-bg);
             color: var(--ios-text);
             height: 100vh;
@@ -38,31 +40,37 @@
             overflow: hidden;
         }
 
+        /* 提示加入主畫面 */
+        #install-prompt {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 9999;
+            display: none; /* JS will toggle this */
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            padding: 20px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+        .install-icon { width: 60px; height: 60px; border-radius: 14px; margin-bottom: 20px; }
+        .install-arrow { font-size: 30px; animation: bounce 2s infinite; margin-top: 20px; }
+
+        @keyframes bounce { 0%, 20%, 50%, 80%, 100% {transform: translateY(0);} 40% {transform: translateY(-10px);} 60% {transform: translateY(-5px);} }
+
         /* Top Bar */
         .top-bar {
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 88px; /* Includes notch area simulation */
+            top: 0; left: 0; right: 0;
+            padding-top: max(10px, var(--safe-top));
+            padding-bottom: 10px;
             background: var(--ios-bar-bg);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             z-index: 100;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-            padding-bottom: 10px;
             border-bottom: 0.5px solid rgba(128,128,128,0.2);
-        }
-
-        .status-bar {
-            display: flex;
-            justify-content: space-between;
-            padding: 0 20px;
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 10px;
         }
 
         .nav-controls {
@@ -70,357 +78,172 @@
             justify-content: space-between;
             align-items: center;
             padding: 0 16px;
+            height: 44px;
         }
 
-        .back-btn {
-            font-size: 17px;
-            color: var(--ios-blue);
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-        }
-        
         .segment-control {
             background: rgba(118, 118, 128, 0.12);
-            border-radius: 8px;
+            border-radius: 100px;
             padding: 2px;
             display: flex;
-            gap: 2px;
         }
 
         .segment-btn {
             padding: 4px 12px;
             font-size: 13px;
-            border-radius: 6px;
+            border-radius: 100px;
             border: none;
             background: transparent;
             color: var(--ios-text);
-            font-weight: 500;
-            cursor: pointer;
-        }
-
-        .segment-btn.active {
-            background: var(--ios-bg);
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .action-btn {
-            color: var(--ios-blue);
-            font-size: 17px;
             font-weight: 600;
-            cursor: pointer;
         }
+        .segment-btn.active { background: var(--ios-bg); box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .action-btn { width: 30px; height: 30px; border-radius: 50%; background: #eee; display: flex; align-items: center; justify-content: center; font-size: 14px; }
 
-        /* Photo Grid */
+        /* Scroll Area */
         .scroll-container {
             flex: 1;
             overflow-y: auto;
-            padding-top: 88px; /* Space for top bar */
-            padding-bottom: 83px; /* Space for bottom bar */
-        }
-
-        .grid-info {
-            padding: 10px 16px;
-            font-size: 20px;
-            font-weight: 700;
+            padding-top: calc(54px + max(10px, var(--safe-top)));
+            padding-bottom: calc(83px + var(--safe-bottom));
         }
 
         .photo-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: var(--ios-grid-gap);
-            padding-bottom: 20px;
+            gap: 2px;
         }
 
         .photo-item {
             position: relative;
             aspect-ratio: 1 / 1;
             overflow: hidden;
-            background: #eee;
-            cursor: pointer;
+            background: #ccc;
         }
+        .photo-item img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s; }
+        .photo-item:active img { transform: scale(0.95); opacity: 0.8; }
 
-        .photo-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.2s;
-        }
-
-        .photo-item:active img {
-            opacity: 0.8;
-            transform: scale(0.98);
-        }
-
-        /* Bottom Tab Bar */
+        /* Bottom Bar */
         .tab-bar {
             position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 83px;
+            bottom: 0; left: 0; right: 0;
+            padding-bottom: max(20px, var(--safe-bottom));
+            padding-top: 10px;
             background: var(--ios-bar-bg);
             backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
             display: flex;
             justify-content: space-around;
-            padding-top: 10px;
             border-top: 0.5px solid rgba(128,128,128,0.2);
             z-index: 100;
         }
+        .tab-item { display: flex; flex-direction: column; align-items: center; font-size: 10px; color: #999; gap: 4px; }
+        .tab-item.active { color: var(--ios-blue); }
+        .tab-icon { font-size: 22px; }
 
-        .tab-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            color: #999;
-            font-size: 10px;
-            font-weight: 500;
-            gap: 4px;
-            cursor: pointer;
+        /* Viewer Overlay */
+        .viewer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: black; z-index: 200;
+            display: none; flex-direction: column;
+            opacity: 0; transition: opacity 0.3s;
         }
-
-        .tab-item.active {
-            color: var(--ios-blue);
-        }
-
-        .tab-icon {
-            font-size: 24px;
-        }
-
-        /* Full Screen Viewer (Overlay) */
-        .viewer-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            z-index: 2000;
-            display: none; /* Hidden by default */
-            flex-direction: column;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .viewer-overlay.active {
-            display: flex;
-            opacity: 1;
-        }
-
-        .viewer-header {
-            height: 90px;
-            padding-top: 40px;
-            padding-left: 20px;
-            display: flex;
-            align-items: center;
-            color: white;
-            z-index: 2002;
-        }
-
-        .viewer-back {
-            font-size: 24px;
-            cursor: pointer;
-            color: #007AFF;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            font-size: 17px;
-        }
-        
-        .viewer-date-time {
-            flex: 1;
-            text-align: center;
-            font-size: 14px;
-            font-weight: 600;
-            color: #fff;
-            margin-right: 40px; /* Balance the back button */
-        }
-
-        .viewer-content {
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        .viewer-content img {
-            max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
-            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-        }
-
-        .viewer-footer {
-            height: 80px;
-            display: flex;
-            justify-content: space-between;
-            padding: 0 30px;
-            align-items: center;
-            color: #007AFF;
-            font-size: 24px;
-            background: rgba(20, 20, 20, 0.8);
-            backdrop-filter: blur(10px);
-        }
-
-        /* Loading Skeleton */
-        .loading {
-            animation: pulse 1.5s infinite;
-            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
-            background-size: 200% 100%;
-        }
-
-        @keyframes pulse {
-            0% { background-position: 200% 0; }
-            100% { background-position: -200% 0; }
+        .viewer.active { opacity: 1; }
+        .viewer-img-container { flex: 1; display: flex; align-items: center; justify-content: center; }
+        .viewer img { max-width: 100%; max-height: 100%; }
+        .viewer-close {
+            position: absolute; top: max(20px, var(--safe-top)); left: 20px;
+            color: white; font-size: 18px; z-index: 201; display: flex; align-items: center; gap: 5px;
         }
 
     </style>
 </head>
 <body>
 
+    <div id="install-prompt">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/9d/Photos_iOS_13_App_Icon.png/240px-Photos_iOS_13_App_Icon.png" class="install-icon">
+        <h3>安裝 Photos 26</h3>
+        <p style="margin-top:10px; font-size: 14px; opacity: 0.8; line-height: 1.5;">
+            為了體驗全螢幕 App 模式：<br>
+            1. 點擊下方 <strong>分享</strong> 按鈕 <span style="font-size:18px">⎋</span><br>
+            2. 選擇 <strong>加入主畫面</strong> 
+        </p>
+        <div class="install-arrow">⬇</div>
+        <button onclick="document.getElementById('install-prompt').style.display='none'" style="margin-top:20px; padding: 8px 20px; border-radius: 20px; border:none; background: #333; color: white;">我已在 App 中</button>
+    </div>
+
     <div class="top-bar">
-        <div class="status-bar">
-            <span>9:41</span>
-            <span>5G <span style="font-size:12px">📶</span> 100%</span>
-        </div>
         <div class="nav-controls">
-            <div class="back-btn">‹ 相簿</div>
+            <span style="font-weight:700; font-size: 24px;">圖庫</span>
             <div class="segment-control">
                 <button class="segment-btn">年</button>
                 <button class="segment-btn">月</button>
-                <button class="segment-btn">日</button>
                 <button class="segment-btn active">所有照片</button>
             </div>
-            <div class="action-btn">選取</div>
+            <div class="action-btn">•••</div>
         </div>
     </div>
 
     <div class="scroll-container">
-        <div class="grid-info" id="photo-count">載入中...</div>
-        <div class="photo-grid" id="grid">
-            </div>
-        
-        <div style="text-align: center; padding: 20px; color: #888; font-size: 13px;">
-            <p>已同步 iCloud</p>
-            <p>30 張照片，0 部影片</p>
+        <div style="padding: 0 16px 10px; font-size: 12px; color: #888; font-weight: 600;">2026年 12月 — 2025年 1月</div>
+        <div class="photo-grid" id="grid"></div>
+        <div style="text-align: center; padding: 40px; color: #888; font-size: 13px;">
+            <p>30 張照片 • 已同步 iCloud</p>
         </div>
     </div>
 
     <div class="tab-bar">
-        <div class="tab-item active">
-            <div class="tab-icon">🖼️</div>
-            <span>圖庫</span>
-        </div>
-        <div class="tab-item">
-            <div class="tab-icon">💖</div>
-            <span>為您推薦</span>
-        </div>
-        <div class="tab-item">
-            <div class="tab-icon">📁</div>
-            <span>相簿</span>
-        </div>
-        <div class="tab-item">
-            <div class="tab-icon">🔍</div>
-            <span>搜尋</span>
-        </div>
+        <div class="tab-item active"><span class="tab-icon">🖼️</span>圖庫</div>
+        <div class="tab-item"><span class="tab-icon">✨</span>回憶</div>
+        <div class="tab-item"><span class="tab-icon">📂</span>相簿</div>
+        <div class="tab-item"><span class="tab-icon">🔎</span>搜尋</div>
     </div>
 
-    <div class="viewer-overlay" id="viewer">
-        <div class="viewer-header">
-            <div class="viewer-back" onclick="closeViewer()">‹ 圖庫</div>
-            <div class="viewer-date-time" id="viewer-date">2026年1月1日 12:00</div>
+    <div class="viewer" id="viewer" onclick="closeViewer()">
+        <div class="viewer-close">‹ 圖庫</div>
+        <div class="viewer-img-container">
+            <img id="viewer-img" src="">
         </div>
-        <div class="viewer-content">
-            <img src="" alt="Full View" id="viewer-img">
-        </div>
-        <div class="viewer-footer">
-            <span style="cursor:pointer">📤</span> <span style="cursor:pointer">🤍</span> <span style="cursor:pointer">ℹ️</span> <span style="cursor:pointer; color: #ff3b30;">🗑️</span> </div>
     </div>
 
     <script>
-        // 30 Common Album Photo Scenarios
-        const photoTopics = [
-            "cat", "dog", "coffee", "sunset", "food", 
-            "beach", "mountain", "selfie", "friends", "party",
-            "car", "city", "book", "laptop", "gym",
-            "flower", "baby", "wedding", "concert", "art",
-            "shoes", "watch", "sky", "rain", "snow",
-            "bicycle", "bedroom", "park", "road", "smile"
-        ];
+        // 1. Detect if running as Standalone App (PWA)
+        const isStandalone = window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches;
+        
+        // 如果不是在「主畫面 App 模式」開啟，而且是在 iOS 上，顯示教學提示
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        if (isIOS && !isStandalone) {
+            document.getElementById('install-prompt').style.display = 'flex';
+        }
 
+        // 2. Generate 30 Photos
+        const topics = ["cat", "dog", "sea", "mountain", "coffee", "car", "city", "flower", "food", "sky", "book", "forest", "room", "tech", "party", "friend", "girl", "boy", "road", "rain", "snow", "night", "sun", "art", "shoes", "watch", "gym", "baby", "smile", "love"];
+        
         const grid = document.getElementById('grid');
+        let html = '';
+        topics.forEach((t, i) => {
+            // High quality random images
+            const src = `https://picsum.photos/seed/${t}${i}/600/600`;
+            html += `<div class="photo-item" onclick="openViewer('${src}')"><img src="${src}" loading="lazy"></div>`;
+        });
+        grid.innerHTML = html;
+
+        // 3. Viewer Logic
         const viewer = document.getElementById('viewer');
-        const viewerImg = document.getElementById('viewer-img');
-        const viewerDate = document.getElementById('viewer-date');
-        const photoCount = document.getElementById('photo-count');
+        const vImg = document.getElementById('viewer-img');
 
-        // Generate Dates for metadata
-        function getRandomDate() {
-            const start = new Date(2025, 0, 1);
-            const end = new Date();
-            const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
-            return date.toLocaleString('zh-TW', { 
-                year: 'numeric', month: 'long', day: 'numeric', 
-                hour: '2-digit', minute: '2-digit' 
-            });
-        }
-
-        // Render Photos
-        function renderPhotos() {
-            let html = '';
-            photoTopics.forEach((topic, index) => {
-                // Using picsum with seed to get consistent "random" images
-                // Adding 'random' param to prevent caching issues sometimes
-                const imgUrl = `https://picsum.photos/seed/${topic}${index}/800/800`;
-                const dateStr = getRandomDate();
-                
-                html += `
-                    <div class="photo-item loading" onclick="openViewer('${imgUrl}', '${dateStr}')">
-                        <img src="${imgUrl}" 
-                             onload="this.parentElement.classList.remove('loading')" 
-                             alt="${topic}">
-                    </div>
-                `;
-            });
-            
-            grid.innerHTML = html;
-            photoCount.textContent = `12月`; // Simulation of header
-        }
-
-        // Viewer Logic
-        function openViewer(src, date) {
-            viewerImg.src = src;
-            viewerDate.innerText = date;
-            
-            // Animation handling
+        function openViewer(src) {
             viewer.style.display = 'flex';
-            // Slight delay to allow display:flex to apply before changing opacity
-            requestAnimationFrame(() => {
-                viewer.classList.add('active');
-                viewerImg.style.transform = "scale(1)";
-            });
+            vImg.src = src;
+            setTimeout(() => viewer.classList.add('active'), 10);
         }
 
         function closeViewer() {
             viewer.classList.remove('active');
             setTimeout(() => {
                 viewer.style.display = 'none';
-                viewerImg.src = ""; // Clear to save memory
-            }, 300); // Match transition duration
+                vImg.src = '';
+            }, 300);
         }
-
-        // Initialize
-        renderPhotos();
-
-        // Optional: Close on swiping down logic (Simulated with simple click on black area)
-        viewer.addEventListener('click', (e) => {
-            if(e.target === viewer || e.target.classList.contains('viewer-content')) {
-                closeViewer();
-            }
-        });
-
     </script>
 </body>
 </html>
