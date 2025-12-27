@@ -1,284 +1,429 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>iOS 26 Gallery Pro</title>
-    <style>
-        :root {
-            --bg-color: #000000;
-            --text-main: #FFFFFF;
-            --text-sub: #8E8E93;
-            --accent: #0A84FF;
-            --safe-top: env(safe-area-inset-top);
-            --safe-bottom: env(safe-area-inset-bottom);
-        }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>iOS Alarm Clone</title>
+<style>
+    /* --- iOS 基礎設定 --- */
+    :root {
+        --bg-color: #000000;
+        --card-bg: #1C1C1E;
+        --text-color: #FFFFFF;
+        --sub-text: #8E8E93;
+        --orange: #FF9F0A;
+        --green: #30D158;
+        --divider: #2C2C2E;
+        --danger: #FF453A;
+    }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+    body {
+        background-color: #111;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+        margin: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        color: var(--text-color);
+        overflow: hidden;
+    }
 
-        body {
-            margin: 0; padding: 0;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
-            height: 100vh;
-            display: flex; flex-direction: column; overflow: hidden;
-        }
+    /* 手機外框模擬 */
+    .iphone-frame {
+        width: 375px;
+        height: 812px;
+        background-color: var(--bg-color);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        border-radius: 40px;
+        box-shadow: 0 0 50px rgba(0,0,0,0.5);
+        border: 8px solid #333;
+    }
 
-        /* --- Header --- */
-        .header {
-            padding-top: max(20px, var(--safe-top));
-            padding-bottom: 10px; padding-left: 20px; padding-right: 20px;
-            display: flex; justify-content: space-between; align-items: flex-end;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(20px);
-            z-index: 100; position: fixed; top: 0; left: 0; right: 0;
-        }
-        .header-left { display: flex; flex-direction: column; gap: 2px; }
-        .title { font-size: 34px; font-weight: 800; letter-spacing: 0.5px; }
-        .subtitle { font-size: 14px; font-weight: 600; color: var(--text-sub); }
-        .header-right { display: flex; gap: 12px; margin-bottom: 5px; }
-        .icon-btn { width: 36px; height: 36px; background: #2C2C2E; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .select-btn { background: #2C2C2E; border-radius: 20px; padding: 8px 16px; font-size: 14px; font-weight: 600; display: flex; align-items: center; }
+    /* --- 頂部狀態列 (模擬) --- */
+    .status-bar {
+        height: 44px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        padding: 0 20px 10px;
+        font-size: 14px;
+        font-weight: 600;
+        z-index: 10;
+    }
 
-        /* --- Grid --- */
-        .scroll-area { flex: 1; overflow-y: auto; padding-top: calc(80px + var(--safe-top)); padding-bottom: 120px; }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
-        
-        .photo { 
-            aspect-ratio: 1/1; 
-            background: #1c1c1e; /* 預設深灰背景 (給還沒載入的圖片用) */
-            overflow: hidden; 
-            position: relative; 
-            cursor: pointer;
-        }
+    /* --- App Header --- */
+    .app-header {
+        padding: 10px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-        /* 一般照片 (非文字) */
-        .photo img { 
-            width: 100%; 
-            height: 100%; 
-            object-fit: cover; 
-            display: block;
-        }
+    .edit-btn {
+        color: var(--orange);
+        font-size: 17px;
+        cursor: pointer;
+    }
 
-        /* --- 核心修改：純文字照片樣式 (Text Photo) --- */
-        /* 這裡改成了白底黑字 */
-        .photo.text-photo {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background-color: #FFFFFF; /* 【修改】背景改為白色 */
-            color: #000000;            /* 【修改】主要文字改為黑色 */
-            text-align: center;
-            /* 為了讓白色的方塊在黑色的背景上看起來更像一張獨立的照片/卡片，加一點極細的邊框 */
-            box-shadow: inset 0 0 0 1px rgba(0,0,0,0.1);
-        }
-        
-        .tp-symbol {
-            font-size: 48px;
-            margin-bottom: 4px;
-            line-height: 1;
-            color: #000000; /* 確保符號是黑色 */
-        }
-        
-        .tp-name {
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: #333333; /* 【修改】次要文字改為深灰色，在白底上對比才夠 */
-        }
+    .header-title {
+        font-size: 30px;
+        font-weight: bold;
+    }
 
-        /* 點擊效果 */
-        .photo:active { opacity: 0.8; transition: 0.2s; }
+    .add-btn {
+        color: var(--orange);
+        font-size: 30px;
+        font-weight: 300;
+        cursor: pointer;
+        line-height: 1;
+    }
 
+    /* --- 鬧鐘列表 --- */
+    .alarm-list {
+        flex: 1;
+        overflow-y: auto;
+        padding-top: 10px;
+    }
 
-        /* --- Floating Nav --- */
-        .floating-dock { position: fixed; bottom: max(20px, var(--safe-bottom)); left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; pointer-events: none; z-index: 200; }
-        .nav-capsule { pointer-events: auto; background: rgba(30, 30, 30, 0.85); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-radius: 35px; height: 65px; display: flex; align-items: center; padding: 0 5px; border: 1px solid rgba(255,255,255,0.1); }
-        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 70px; height: 100%; color: #888; gap: 4px; }
-        .nav-item.active { color: var(--accent); }
-        .nav-label { font-size: 10px; font-weight: 600; }
-        .search-circle { pointer-events: auto; width: 65px; height: 65px; background: rgba(30, 30, 30, 0.85); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); color: #fff; }
+    .alarm-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--divider);
+        transition: background 0.2s;
+    }
 
-        /* --- Viewer (大圖模式) --- */
-        /* 注意：這裡我維持了大圖模式的深色背景。
-           因為在 iOS 相簿中，即使照片是白底的，點開大圖後背景依然是黑色的。
-           如果您希望點開大圖也是白底，請告訴我。
-        */
-        .viewer {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 300; display: none; flex-direction: column;
-            opacity: 0; transition: opacity 0.2s;
-        }
-        .viewer.show { opacity: 1; }
-        
-        .viewer-content {
-            flex: 1; display: flex; align-items: center; justify-content: center;
-            width: 100%;
-        }
+    .alarm-item:active {
+        background-color: var(--card-bg);
+    }
 
-        /* 這是給一般照片用的 */
-        #viewer-img {
-            max-width: 100%; max-height: 100%; object-fit: contain;
-            display: none; 
-        }
+    .time-info {
+        display: flex;
+        flex-direction: column;
+    }
 
-        /* 這是給星座用的「純文字大圖」海報 */
-        #viewer-text-card {
-            display: none; 
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            width: 100%;
-            color: white; /* 大圖模式維持白字，背景黑 */
-            padding: 40px;
-        }
-        
-        /* 大圖模式下的文字排版 */
-        .vt-symbol { font-size: 100px; margin-bottom: 20px; font-weight: 300; }
-        .vt-title { font-size: 40px; font-weight: 800; margin-bottom: 10px; letter-spacing: 2px; }
-        .vt-date { font-size: 18px; color: var(--accent); margin-bottom: 30px; font-weight: 600; letter-spacing: 2px; }
-        .vt-desc { font-size: 18px; line-height: 1.6; max-width: 80%; color: #ccc; }
+    .time-display {
+        font-size: 50px;
+        font-weight: 300;
+        line-height: 1;
+        letter-spacing: -1px;
+    }
+    
+    .time-display span {
+        font-size: 30px; /* AM/PM */
+        margin-left: 5px;
+    }
 
-        .viewer-close {
-            position: absolute; top: max(20px, var(--safe-top)); left: 20px;
-            padding: 10px; color: var(--accent); font-size: 18px; font-weight: 600; z-index: 301;
-            cursor: pointer;
-        }
-    </style>
+    .alarm-label {
+        font-size: 14px;
+        color: var(--sub-text);
+        margin-top: 5px;
+    }
+
+    /* 當鬧鐘關閉時，顏色變暗 */
+    .alarm-item.inactive .time-display,
+    .alarm-item.inactive .alarm-label {
+        color: var(--sub-text);
+    }
+
+    /* --- iOS Toggle Switch --- */
+    .switch {
+        position: relative;
+        display: inline-block;
+        width: 51px;
+        height: 31px;
+    }
+
+    .switch input { 
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+
+    .slider {
+        position: absolute;
+        cursor: pointer;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-color: #39393D;
+        transition: .4s;
+        border-radius: 34px;
+    }
+
+    .slider:before {
+        position: absolute;
+        content: "";
+        height: 27px;
+        width: 27px;
+        left: 2px;
+        bottom: 2px;
+        background-color: white;
+        transition: .4s;
+        border-radius: 50%;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+    }
+
+    input:checked + .slider {
+        background-color: var(--green);
+    }
+
+    input:checked + .slider:before {
+        transform: translateX(20px);
+    }
+
+    /* --- 底部導航列 --- */
+    .tab-bar {
+        height: 83px;
+        background-color: rgba(28, 28, 30, 0.95);
+        border-top: 0.5px solid #38383A;
+        display: flex;
+        justify-content: space-around;
+        align-items: flex-start;
+        padding-top: 10px;
+        backdrop-filter: blur(20px);
+    }
+
+    .tab-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        color: var(--sub-text);
+        font-size: 10px;
+        gap: 5px;
+        cursor: pointer;
+        width: 60px;
+    }
+
+    .tab-item.active {
+        color: var(--orange);
+    }
+
+    .tab-icon {
+        font-size: 24px;
+    }
+
+    /* --- 新增鬧鐘 Modal --- */
+    .modal {
+        position: absolute;
+        top: 100%; /* 初始在下方 */
+        left: 0;
+        width: 100%;
+        height: 92%; /* 留一點頭部 */
+        background-color: #1C1C1E;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+        transition: top 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .modal.open {
+        top: 8%;
+    }
+
+    .modal-header {
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        background-color: #2C2C2E;
+        border-top-left-radius: 15px;
+        border-top-right-radius: 15px;
+    }
+
+    .modal-btn {
+        color: var(--orange);
+        font-size: 16px;
+        cursor: pointer;
+    }
+
+    .modal-title {
+        font-weight: 600;
+        font-size: 16px;
+    }
+
+    .modal-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding-top: 50px;
+    }
+
+    .time-picker {
+        background: transparent;
+        color: white;
+        border: none;
+        font-size: 50px;
+        font-family: inherit;
+        text-align: center;
+        outline: none;
+        background-color: #333;
+        border-radius: 10px;
+        padding: 10px;
+    }
+    
+    /* 隱藏原生時間選擇器圖示 */
+    input[type="time"]::-webkit-calendar-picker-indicator {
+        filter: invert(1);
+        cursor: pointer;
+    }
+
+</style>
 </head>
 <body>
 
-    <div class="header">
-        <div class="header-left">
-            <div class="title">圖庫</div>
-            <div class="subtitle">文字圖庫 & 照片</div>
-        </div>
-        <div class="header-right">
-            <div class="icon-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></div>
-            <div class="select-btn">選取</div>
+<div class="iphone-frame">
+    <div class="status-bar">
+        <span id="clock-time">09:41</span>
+        <div style="display:flex; gap:5px;">
+            <span>📶</span>
+            <span>🔋</span>
         </div>
     </div>
 
-    <div class="scroll-area">
-        <div class="grid" id="grid"></div>
+    <div class="app-header">
+        <div class="edit-btn">編輯</div>
+        <div class="header-title">鬧鐘</div>
+        <div class="add-btn" onclick="openModal()">+</div>
     </div>
 
-    <div class="floating-dock">
-        <div class="nav-capsule">
-            <div class="nav-item active">
-                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12z"/><path d="M8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
-                <span class="nav-label">圖庫</span>
-            </div>
-            <div class="nav-item">
-                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h16v2H4zm2 4h12v2H6zm-2 4h16v2H4z"/></svg>
-                <span class="nav-label">選集</span>
-            </div>
+    <div class="alarm-list" id="alarmList">
         </div>
-        <div class="search-circle">
-            <svg width="24" height="24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-        </div>
-    </div>
 
-    <div class="viewer" id="viewer" onclick="closeViewer()">
-        <div class="viewer-close">完成</div>
-        <div class="viewer-content">
-            <img id="viewer-img" src="">
-            
-            <div id="viewer-text-card">
-                <div class="vt-symbol" id="vt-symbol"></div>
-                <div class="vt-title" id="vt-title"></div>
-                <div class="vt-date" id="vt-date"></div>
-                <div class="vt-desc" id="vt-desc"></div>
-            </div>
+    <div class="tab-bar">
+        <div class="tab-item">
+            <span class="tab-icon">🌐</span>
+            <span>世界時鐘</span>
+        </div>
+        <div class="tab-item active">
+            <span class="tab-icon">⏰</span>
+            <span>鬧鐘</span>
+        </div>
+        <div class="tab-item">
+            <span class="tab-icon">⏱️</span>
+            <span>碼表</span>
+        </div>
+        <div class="tab-item">
+            <span class="tab-icon">⏲️</span>
+            <span>計時器</span>
         </div>
     </div>
 
-    <script>
-        // Data
-        const zodiacSigns = [
-            { symbol: "♈", name: "牡羊座", date: "3.21 - 4.19", desc: "充滿活力的開創者。\n行動力強，直覺敏銳。" },
-            { symbol: "♉", name: "金牛座", date: "4.20 - 5.20", desc: "穩重感性的鑑賞家。\n重視安全感與質感。" },
-            { symbol: "♊", name: "雙子座", date: "5.21 - 6.20", desc: "機智多變的溝通者。\n思維敏捷，好奇心旺盛。" },
-            { symbol: "♋", name: "巨蟹座", date: "6.21 - 7.22", desc: "溫柔細膩的守護者。\n外剛內柔，極具同理心。" },
-            { symbol: "♌", name: "獅子座", date: "7.23 - 8.22", desc: "光芒四射的領導者。\n自信大方，具有王者風範。" },
-            { symbol: "♍", name: "處女座", date: "8.23 - 9.22", desc: "追求完美的分析師。\n心思縝密，注重細節。" },
-            { symbol: "♎", name: "天秤座", date: "9.23 - 10.22", desc: "優雅和諧的協調者。\n追求公平，擅長平衡。" },
-            { symbol: "♏", name: "天蠍座", date: "10.23 - 11.21", desc: "深沈神秘的洞察者。\n愛恨分明，意志力堅強。" },
-            { symbol: "♐", name: "射手座", date: "11.22 - 12.21", desc: "自由奔放的哲學家。\n樂觀開朗，嚮往遠方。" },
-            { symbol: "♑", name: "摩羯座", date: "12.22 - 1.19", desc: "沈穩堅毅的實踐者。\n務實負責，一步一腳印。" },
-            { symbol: "♒", name: "水瓶座", date: "1.20 - 2.18", desc: "獨樹一格的革新者。\n思維跳躍，走在時代尖端。" },
-            { symbol: "♓", name: "雙魚座", date: "2.19 - 3.20", desc: "浪漫夢幻的藝術家。\n富有同情心，想像力豐富。" }
-        ];
+    <div class="modal" id="addModal">
+        <div class="modal-header">
+            <div class="modal-btn" onclick="closeModal()">取消</div>
+            <div class="modal-title">加入鬧鐘</div>
+            <div class="modal-btn" style="font-weight:bold;" onclick="saveAlarm()">儲存</div>
+        </div>
+        <div class="modal-body">
+            <input type="time" id="newAlarmTime" class="time-picker" value="08:00">
+            <p style="color:#666; margin-top:20px;">選擇時間後點擊儲存</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // 預設資料
+    let alarms = [
+        { id: 1, time: "06:30", note: "起床", active: true },
+        { id: 2, time: "07:00", note: "鬧鐘", active: false },
+        { id: 3, time: "08:15", note: "會議", active: true }
+    ];
+
+    const listContainer = document.getElementById('alarmList');
+    const modal = document.getElementById('addModal');
+    const clockElement = document.getElementById('clock-time');
+
+    // 1. 渲染鬧鐘列表
+    function renderAlarms() {
+        listContainer.innerHTML = ''; // 清空
         
-        const randomTopics = ["tech", "city", "road", "forest", "dark", "neon"];
-        
-        const grid = document.getElementById('grid');
-        const viewer = document.getElementById('viewer');
-        const viewerImg = document.getElementById('viewer-img');
-        const viewerText = document.getElementById('viewer-text-card');
-
-        // Render
-        let html = '';
-        
-        // 1. Render Zodiacs as "Text Photos" (純文字照片)
-        zodiacSigns.forEach((z, i) => {
-            html += `
-                <div class="photo text-photo" onclick="openZodiacViewer(${i})">
-                    <div class="tp-symbol">${z.symbol}</div>
-                    <div class="tp-name">${z.name}</div>
-                </div>
-            `;
+        // 排序：將時間轉為分鐘數進行比較
+        alarms.sort((a, b) => {
+            return parseInt(a.time.replace(':', '')) - parseInt(b.time.replace(':', ''));
         });
 
-        // 2. Render Random Real Photos
-        for(let i=0; i<21; i++) {
-            const topic = randomTopics[i % randomTopics.length];
-            const src = `https://picsum.photos/seed/${topic}${i}More/800/800`;
-            html += `<div class="photo" onclick="openPhotoViewer('${src}')"><img src="${src}" loading="lazy"></div>`;
-        }
-        grid.innerHTML = html;
-
-        // Viewer Logic
-
-        // 打開星座 (顯示純文字海報)
-        function openZodiacViewer(index) {
-            const data = zodiacSigns[index];
+        alarms.forEach(alarm => {
+            const item = document.createElement('div');
+            item.className = `alarm-item ${alarm.active ? '' : 'inactive'}`;
             
-            viewerImg.style.display = 'none';
-            viewerText.style.display = 'flex';
-
-            document.getElementById('vt-symbol').innerText = data.symbol;
-            document.getElementById('vt-title').innerText = data.name;
-            document.getElementById('vt-date').innerText = data.date;
-            document.getElementById('vt-desc').innerText = data.desc;
+            // 拆解時間算 AM/PM (簡單模擬)
+            let [hour, min] = alarm.time.split(':');
+            let displayHour = parseInt(hour);
+            let period = ""; // 24小時制通常不顯示，但為了像iOS，這裡維持簡潔數字或可自行加入邏輯
             
-            viewer.style.display = 'flex';
-            setTimeout(() => viewer.classList.add('show'), 10);
-        }
+            // 構建 HTML
+            item.innerHTML = `
+                <div class="time-info">
+                    <div class="time-display">${hour}:${min}</div>
+                    <div class="alarm-label">${alarm.note}</div>
+                </div>
+                <label class="switch">
+                    <input type="checkbox" ${alarm.active ? 'checked' : ''} onchange="toggleAlarm(${alarm.id})">
+                    <span class="slider"></span>
+                </label>
+            `;
+            listContainer.appendChild(item);
+        });
+    }
 
-        // 打開普通照片
-        function openPhotoViewer(src) {
-            viewerText.style.display = 'none';
-            viewerImg.style.display = 'block';
-            
-            viewerImg.src = src;
-            
-            viewer.style.display = 'flex';
-            setTimeout(() => viewer.classList.add('show'), 10);
+    // 2. 切換開關邏輯
+    window.toggleAlarm = function(id) {
+        const alarm = alarms.find(a => a.id === id);
+        if (alarm) {
+            alarm.active = !alarm.active;
+            renderAlarms(); // 重新渲染以更新文字顏色
         }
+    }
 
-        function closeViewer() {
-            viewer.classList.remove('show');
-            setTimeout(() => {
-                viewer.style.display = 'none';
-                viewerImg.src = '';
-            }, 200);
-        }
-    </script>
+    // 3. Modal 控制
+    window.openModal = function() {
+        modal.classList.add('open');
+    }
+
+    window.closeModal = function() {
+        modal.classList.remove('open');
+    }
+
+    // 4. 儲存新鬧鐘
+    window.saveAlarm = function() {
+        const timeInput = document.getElementById('newAlarmTime').value;
+        if (!timeInput) return;
+
+        const newAlarm = {
+            id: Date.now(), // 用時間戳當ID
+            time: timeInput,
+            note: "鬧鐘",
+            active: true
+        };
+
+        alarms.push(newAlarm);
+        renderAlarms();
+        closeModal();
+    }
+
+    // 5. 更新狀態列時間
+    function updateClock() {
+        const now = new Date();
+        const h = String(now.getHours()).padStart(2, '0');
+        const m = String(now.getMinutes()).padStart(2, '0');
+        clockElement.textContent = `${h}:${m}`;
+    }
+
+    // 初始化
+    renderAlarms();
+    setInterval(updateClock, 1000);
+    updateClock();
+
+</script>
+
 </body>
 </html>
