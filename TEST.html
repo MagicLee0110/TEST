@@ -2,428 +2,602 @@
 <html lang="zh-TW">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>iOS Alarm Clone</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Clock</title>
 <style>
-    /* --- iOS 基礎設定 --- */
     :root {
         --bg-color: #000000;
         --card-bg: #1C1C1E;
-        --text-color: #FFFFFF;
-        --sub-text: #8E8E93;
+        --text-primary: #FFFFFF;
+        --text-secondary: #8E8E93;
         --orange: #FF9F0A;
         --green: #30D158;
+        --red: #FF453A;
+        --dark-grey-btn: #333333;
         --divider: #2C2C2E;
-        --danger: #FF453A;
+        --tab-bar-bg: rgba(30, 30, 30, 0.85);
     }
+
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
     body {
-        background-color: #111;
-        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
-        margin: 0;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        color: var(--text-color);
-        overflow: hidden;
-    }
-
-    /* 手機外框模擬 */
-    .iphone-frame {
-        width: 375px;
-        height: 812px;
         background-color: var(--bg-color);
-        position: relative;
-        overflow: hidden;
+        font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+        margin: 0;
+        height: 100vh;
+        color: var(--text-primary);
         display: flex;
         flex-direction: column;
-        border-radius: 40px;
-        box-shadow: 0 0 50px rgba(0,0,0,0.5);
-        border: 8px solid #333;
+        overflow: hidden;
+        padding-bottom: env(safe-area-inset-bottom);
     }
 
-    /* --- 頂部狀態列 (模擬) --- */
-    .status-bar {
-        height: 44px;
+    /* --- 通用佈局 --- */
+    .view-container {
+        flex: 1;
+        display: none; /* 預設隱藏，透過 JS 切換 */
+        flex-direction: column;
+        overflow-y: auto;
+        padding-top: 44px; /* Status bar space */
+    }
+
+    .view-container.active {
         display: flex;
-        justify-content: space-between;
-        align-items: flex-end;
-        padding: 0 20px 10px;
-        font-size: 14px;
-        font-weight: 600;
-        z-index: 10;
     }
 
-    /* --- App Header --- */
-    .app-header {
+    .header {
         padding: 10px 20px;
         display: flex;
         justify-content: space-between;
-        align-items: center;
-    }
-
-    .edit-btn {
-        color: var(--orange);
-        font-size: 17px;
-        cursor: pointer;
+        align-items: flex-end;
+        min-height: 50px;
     }
 
     .header-title {
-        font-size: 30px;
+        font-size: 34px;
         font-weight: bold;
     }
 
-    .add-btn {
+    .header-btn {
         color: var(--orange);
-        font-size: 30px;
-        font-weight: 300;
+        font-size: 17px;
+        background: none;
+        border: none;
         cursor: pointer;
-        line-height: 1;
     }
 
-    /* --- 鬧鐘列表 --- */
-    .alarm-list {
-        flex: 1;
-        overflow-y: auto;
-        padding-top: 10px;
-    }
-
-    .alarm-item {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 15px 20px;
-        border-bottom: 1px solid var(--divider);
-        transition: background 0.2s;
-    }
-
-    .alarm-item:active {
-        background-color: var(--card-bg);
-    }
-
-    .time-info {
-        display: flex;
-        flex-direction: column;
-    }
-
-    .time-display {
-        font-size: 50px;
-        font-weight: 300;
-        line-height: 1;
-        letter-spacing: -1px;
-    }
-    
-    .time-display span {
-        font-size: 30px; /* AM/PM */
-        margin-left: 5px;
-    }
-
-    .alarm-label {
-        font-size: 14px;
-        color: var(--sub-text);
-        margin-top: 5px;
-    }
-
-    /* 當鬧鐘關閉時，顏色變暗 */
-    .alarm-item.inactive .time-display,
-    .alarm-item.inactive .alarm-label {
-        color: var(--sub-text);
-    }
-
-    /* --- iOS Toggle Switch --- */
-    .switch {
-        position: relative;
-        display: inline-block;
-        width: 51px;
-        height: 31px;
-    }
-
-    .switch input { 
-        opacity: 0;
-        width: 0;
-        height: 0;
-    }
-
-    .slider {
-        position: absolute;
-        cursor: pointer;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background-color: #39393D;
-        transition: .4s;
-        border-radius: 34px;
-    }
-
-    .slider:before {
-        position: absolute;
-        content: "";
-        height: 27px;
-        width: 27px;
-        left: 2px;
-        bottom: 2px;
-        background-color: white;
-        transition: .4s;
-        border-radius: 50%;
-        box-shadow: 0 3px 8px rgba(0,0,0,0.15);
-    }
-
-    input:checked + .slider {
-        background-color: var(--green);
-    }
-
-    input:checked + .slider:before {
-        transform: translateX(20px);
-    }
-
-    /* --- 底部導航列 --- */
+    /* --- Tab Bar (底部導航) --- */
     .tab-bar {
-        height: 83px;
-        background-color: rgba(28, 28, 30, 0.95);
+        height: 83px; /* 標準 iOS Tab Bar 高度 */
+        background-color: var(--tab-bar-bg);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
         border-top: 0.5px solid #38383A;
         display: flex;
         justify-content: space-around;
-        align-items: flex-start;
-        padding-top: 10px;
-        backdrop-filter: blur(20px);
+        padding-top: 8px;
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        z-index: 50;
+        padding-bottom: env(safe-area-inset-bottom);
     }
 
     .tab-item {
         display: flex;
         flex-direction: column;
         align-items: center;
-        color: var(--sub-text);
-        font-size: 10px;
-        gap: 5px;
-        cursor: pointer;
         width: 60px;
+        cursor: pointer;
+        color: var(--text-secondary);
     }
 
     .tab-item.active {
         color: var(--orange);
     }
 
-    .tab-icon {
-        font-size: 24px;
+    .tab-icon svg {
+        width: 26px;
+        height: 26px;
+        fill: currentColor;
     }
 
-    /* --- 新增鬧鐘 Modal --- */
-    .modal {
-        position: absolute;
-        top: 100%; /* 初始在下方 */
-        left: 0;
-        width: 100%;
-        height: 92%; /* 留一點頭部 */
-        background-color: #1C1C1E;
-        border-top-left-radius: 15px;
-        border-top-right-radius: 15px;
-        transition: top 0.3s cubic-bezier(0.32, 0.72, 0, 1);
-        z-index: 100;
-        display: flex;
-        flex-direction: column;
+    .tab-label {
+        font-size: 10px;
+        margin-top: 4px;
+        font-weight: 500;
     }
 
-    .modal.open {
-        top: 8%;
-    }
-
-    .modal-header {
-        padding: 15px 20px;
+    /* --- 1. 世界時鐘樣式 --- */
+    .city-item {
         display: flex;
         justify-content: space-between;
-        background-color: #2C2C2E;
-        border-top-left-radius: 15px;
-        border-top-right-radius: 15px;
-    }
-
-    .modal-btn {
-        color: var(--orange);
-        font-size: 16px;
-        cursor: pointer;
-    }
-
-    .modal-title {
-        font-weight: 600;
-        font-size: 16px;
-    }
-
-    .modal-body {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
         align-items: center;
-        padding-top: 50px;
+        padding: 15px 20px;
+        border-bottom: 1px solid var(--divider);
     }
+    .city-info h2 { font-size: 20px; margin: 0; font-weight: 400; }
+    .city-info p { margin: 2px 0 0; color: var(--text-secondary); font-size: 13px; }
+    .city-time { font-size: 30px; font-weight: 300; }
 
-    .time-picker {
-        background: transparent;
-        color: white;
+    /* --- 2. 鬧鐘樣式 --- */
+    .alarm-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 20px;
+        border-bottom: 1px solid var(--divider);
+    }
+    .alarm-time { font-size: 56px; font-weight: 200; line-height: 1; }
+    .alarm-time span { font-size: 30px; margin-left: 2px; }
+    .alarm-note { color: var(--text-secondary); font-size: 14px; margin-top: 4px;}
+    
+    /* Toggle Switch */
+    .switch {
+        position: relative; width: 51px; height: 31px;
+    }
+    .switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+        position: absolute; cursor: pointer;
+        top: 0; left: 0; right: 0; bottom: 0;
+        background-color: #39393D; transition: .4s; border-radius: 34px;
+    }
+    .slider:before {
+        position: absolute; content: "";
+        height: 27px; width: 27px; left: 2px; bottom: 2px;
+        background-color: white; transition: .4s; border-radius: 50%;
+        box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+    }
+    input:checked + .slider { background-color: var(--green); }
+    input:checked + .slider:before { transform: translateX(20px); }
+
+    /* --- 3. 碼表樣式 --- */
+    .stopwatch-display {
+        height: 35vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-size: 86px;
+        font-weight: 200;
+        font-variant-numeric: tabular-nums; /* 等寬數字，避免跳動 */
+    }
+    .controls {
+        display: flex;
+        justify-content: space-between;
+        padding: 0 20px;
+        margin-bottom: 20px;
+    }
+    .circle-btn {
+        width: 80px; height: 80px;
+        border-radius: 50%;
         border: none;
-        font-size: 50px;
-        font-family: inherit;
+        font-size: 18px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        position: relative;
+    }
+    /* 雙層圓圈效果 */
+    .circle-btn::after {
+        content: ''; position: absolute;
+        top: -3px; left: -3px; right: -3px; bottom: -3px;
+        border-radius: 50%; border: 2px solid currentColor;
+        opacity: 0.5;
+    }
+    .btn-reset { background-color: #333; color: white; }
+    .btn-start { background-color: rgba(48, 209, 88, 0.2); color: var(--green); }
+    .btn-stop { background-color: rgba(255, 69, 58, 0.2); color: var(--red); }
+    
+    .lap-list {
+        flex: 1;
+        overflow-y: auto;
+        padding: 0 20px;
+    }
+    .lap-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-top: 1px solid var(--divider);
+        font-size: 17px;
+    }
+    .lap-fastest { color: var(--green); }
+    .lap-slowest { color: var(--red); }
+
+    /* --- 4. 計時器樣式 --- */
+    .timer-setup {
+        height: 40vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+    }
+    .timer-input {
+        background: #222;
+        border: none;
+        color: white;
+        font-size: 40px;
+        width: 80px;
         text-align: center;
-        outline: none;
-        background-color: #333;
         border-radius: 10px;
         padding: 10px;
     }
+    .timer-label { font-size: 18px; font-weight: 600; }
     
-    /* 隱藏原生時間選擇器圖示 */
-    input[type="time"]::-webkit-calendar-picker-indicator {
-        filter: invert(1);
-        cursor: pointer;
+    .timer-running {
+        display: none;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        height: 40vh;
     }
+    
+    /* 圓形進度條 SVG */
+    .progress-ring { transform: rotate(-90deg); }
+    .progress-ring__circle {
+        stroke-dasharray: 880; /* 2 * PI * r */
+        stroke-dashoffset: 0;
+        transition: stroke-dashoffset 0.1s linear;
+        transform-origin: 50% 50%;
+    }
+    .timer-display-text {
+        position: absolute;
+        font-size: 60px;
+        font-weight: 200;
+        font-variant-numeric: tabular-nums;
+    }
+
+    /* Modal (新增鬧鐘用) */
+    .modal {
+        position: fixed; top: 100%; left: 0; right: 0; bottom: 0;
+        background: #1C1C1E; z-index: 100;
+        transition: top 0.3s ease;
+        border-radius: 15px 15px 0 0;
+        display: flex; flex-direction: column;
+    }
+    .modal.open { top: 50px; }
+    .modal-header {
+        padding: 15px; display: flex; justify-content: space-between;
+        background: #2C2C2E; border-radius: 15px 15px 0 0;
+    }
+    .modal-body { flex: 1; display: flex; justify-content: center; align-items: center; }
 
 </style>
 </head>
 <body>
 
-<div class="iphone-frame">
-    <div class="status-bar">
-        <span id="clock-time">09:41</span>
-        <div style="display:flex; gap:5px;">
-            <span>📶</span>
-            <span>🔋</span>
+    <div id="view-worldclock" class="view-container">
+        <div class="header">
+            <button class="header-btn">編輯</button>
+            <div class="header-title">世界時鐘</div>
+            <button class="header-btn">+</button>
         </div>
+        <div id="world-list">
+            </div>
     </div>
 
-    <div class="app-header">
-        <div class="edit-btn">編輯</div>
-        <div class="header-title">鬧鐘</div>
-        <div class="add-btn" onclick="openModal()">+</div>
+    <div id="view-alarm" class="view-container active">
+        <div class="header">
+            <button class="header-btn">編輯</button>
+            <div class="header-title">鬧鐘</div>
+            <button class="header-btn" onclick="openAddAlarm()">+</button>
+        </div>
+        <div id="alarm-list">
+            </div>
     </div>
 
-    <div class="alarm-list" id="alarmList">
+    <div id="view-stopwatch" class="view-container">
+        <div class="stopwatch-display" id="sw-display">00:00.00</div>
+        <div class="controls">
+            <button class="circle-btn btn-reset" id="sw-lap-btn" onclick="handleLapReset()">計次</button>
+            <div style="display:flex; gap:8px; align-items:center; opacity:0.3;">
+                <div style="width:6px; height:6px; background:#fff; border-radius:50%;"></div>
+                <div style="width:6px; height:6px; background:#fff; border-radius:50%;"></div>
+            </div>
+            <button class="circle-btn btn-start" id="sw-start-btn" onclick="toggleStopwatch()">啟動</button>
         </div>
+        <div class="lap-list" id="sw-laps">
+            </div>
+    </div>
+
+    <div id="view-timer" class="view-container">
+        <div id="timer-setup" class="timer-setup">
+            <div>
+                <input type="number" id="timer-h" class="timer-input" placeholder="0" max="23">
+                <div class="timer-label">小時</div>
+            </div>
+            <div>
+                <input type="number" id="timer-m" class="timer-input" placeholder="5" max="59" value="5">
+                <div class="timer-label">分鐘</div>
+            </div>
+            <div>
+                <input type="number" id="timer-s" class="timer-input" placeholder="0" max="59">
+                <div class="timer-label">秒</div>
+            </div>
+        </div>
+        
+        <div id="timer-running" class="timer-running">
+            <div style="position: relative; width: 300px; height: 300px; display:flex; justify-content:center; align-items:center;">
+                <svg class="progress-ring" width="300" height="300">
+                    <circle class="progress-ring__circle" stroke="#FF9F0A" stroke-width="8" fill="transparent" r="140" cx="150" cy="150"/>
+                </svg>
+                <div class="timer-display-text" id="timer-display">05:00</div>
+            </div>
+            <div style="margin-top: 20px; color: #8E8E93;">🔔 鈴聲: 雷達</div>
+        </div>
+
+        <div class="controls">
+            <button class="circle-btn btn-reset" onclick="resetTimer()">取消</button>
+            <button class="circle-btn btn-start" id="timer-action-btn" onclick="toggleTimer()">開始</button>
+        </div>
+    </div>
 
     <div class="tab-bar">
-        <div class="tab-item">
-            <span class="tab-icon">🌐</span>
-            <span>世界時鐘</span>
+        <div class="tab-item" onclick="switchTab('worldclock', this)">
+            <div class="tab-icon">
+                <svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"/></svg>
+            </div>
+            <span class="tab-label">世界時鐘</span>
         </div>
-        <div class="tab-item active">
-            <span class="tab-icon">⏰</span>
-            <span>鬧鐘</span>
+        <div class="tab-item active" onclick="switchTab('alarm', this)">
+            <div class="tab-icon">
+                <svg viewBox="0 0 24 24"><path d="M22 5.72l-4.6-3.86-1.29 1.53 4.6 3.86L22 5.72zM7.88 3.39L6.6 1.86 2 5.71l1.29 1.53 4.59-3.85zM12.5 8H11v6l4.75 2.85.75-1.23-4-2.37V8zM12 4c-4.97 0-9 4.03-9 9s4.03 9 9 9 9-4.03 9-9-4.03-9-9-9zm0 16c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+            </div>
+            <span class="tab-label">鬧鐘</span>
         </div>
-        <div class="tab-item">
-            <span class="tab-icon">⏱️</span>
-            <span>碼表</span>
+        <div class="tab-item" onclick="switchTab('stopwatch', this)">
+            <div class="tab-icon">
+                <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/></svg>
+            </div>
+            <span class="tab-label">碼表</span>
         </div>
-        <div class="tab-item">
-            <span class="tab-icon">⏲️</span>
-            <span>計時器</span>
+        <div class="tab-item" onclick="switchTab('timer', this)">
+            <div class="tab-icon">
+                <svg viewBox="0 0 24 24"><path d="M15 1H9v2h6V1zm-4 13h2V8h-2v6zm8.03-6.61l1.42-1.42c-.43-.51-.9-.99-1.41-1.41l-1.42 1.42C16.07 4.74 14.12 4 12 4c-4.97 0-9 4.03-9 9s4.02 9 9 9 9-4.03 9-9c0-2.12-.74-4.07-1.97-5.61zM12 20c-3.87 0-7-3.13-7-7s3.13-7 7-7 7 3.13 7 7-3.13 7-7 7z"/><circle cx="12" cy="12" r="6" fill="currentColor" opacity="0.3"/></svg>
+            </div>
+            <span class="tab-label">計時器</span>
         </div>
     </div>
 
     <div class="modal" id="addModal">
         <div class="modal-header">
-            <div class="modal-btn" onclick="closeModal()">取消</div>
-            <div class="modal-title">加入鬧鐘</div>
-            <div class="modal-btn" style="font-weight:bold;" onclick="saveAlarm()">儲存</div>
+            <div class="header-btn" onclick="closeAddAlarm()">取消</div>
+            <div style="font-weight:600">加入鬧鐘</div>
+            <div class="header-btn" style="font-weight:600" onclick="saveAlarm()">儲存</div>
         </div>
         <div class="modal-body">
-            <input type="time" id="newAlarmTime" class="time-picker" value="08:00">
-            <p style="color:#666; margin-top:20px;">選擇時間後點擊儲存</p>
+            <input type="time" id="newAlarmTime" style="font-size:50px; background:#333; color:#fff; border:none; padding:10px; border-radius:10px;" value="08:00">
         </div>
     </div>
-</div>
 
 <script>
-    // 預設資料
-    let alarms = [
-        { id: 1, time: "06:30", note: "起床", active: true },
-        { id: 2, time: "07:00", note: "鬧鐘", active: false },
-        { id: 3, time: "08:15", note: "會議", active: true }
+    // --- Tab 切換 ---
+    function switchTab(viewId, tabElement) {
+        document.querySelectorAll('.view-container').forEach(el => el.classList.remove('active'));
+        document.getElementById('view-' + viewId).classList.add('active');
+        
+        document.querySelectorAll('.tab-item').forEach(el => el.classList.remove('active'));
+        tabElement.classList.add('active');
+    }
+
+    // --- 1. 世界時鐘邏輯 ---
+    const cities = [
+        { city: "台北", offset: 8, sub: "今天" },
+        { city: "紐約", offset: -5, sub: "昨天" },
+        { city: "倫敦", offset: 0, sub: "今天" },
+        { city: "東京", offset: 9, sub: "今天" }
     ];
 
-    const listContainer = document.getElementById('alarmList');
-    const modal = document.getElementById('addModal');
-    const clockElement = document.getElementById('clock-time');
-
-    // 1. 渲染鬧鐘列表
-    function renderAlarms() {
-        listContainer.innerHTML = ''; // 清空
-        
-        // 排序：將時間轉為分鐘數進行比較
-        alarms.sort((a, b) => {
-            return parseInt(a.time.replace(':', '')) - parseInt(b.time.replace(':', ''));
-        });
-
-        alarms.forEach(alarm => {
-            const item = document.createElement('div');
-            item.className = `alarm-item ${alarm.active ? '' : 'inactive'}`;
-            
-            // 拆解時間算 AM/PM (簡單模擬)
-            let [hour, min] = alarm.time.split(':');
-            let displayHour = parseInt(hour);
-            let period = ""; // 24小時制通常不顯示，但為了像iOS，這裡維持簡潔數字或可自行加入邏輯
-            
-            // 構建 HTML
-            item.innerHTML = `
-                <div class="time-info">
-                    <div class="time-display">${hour}:${min}</div>
-                    <div class="alarm-label">${alarm.note}</div>
-                </div>
-                <label class="switch">
-                    <input type="checkbox" ${alarm.active ? 'checked' : ''} onchange="toggleAlarm(${alarm.id})">
-                    <span class="slider"></span>
-                </label>
-            `;
-            listContainer.appendChild(item);
-        });
-    }
-
-    // 2. 切換開關邏輯
-    window.toggleAlarm = function(id) {
-        const alarm = alarms.find(a => a.id === id);
-        if (alarm) {
-            alarm.active = !alarm.active;
-            renderAlarms(); // 重新渲染以更新文字顏色
-        }
-    }
-
-    // 3. Modal 控制
-    window.openModal = function() {
-        modal.classList.add('open');
-    }
-
-    window.closeModal = function() {
-        modal.classList.remove('open');
-    }
-
-    // 4. 儲存新鬧鐘
-    window.saveAlarm = function() {
-        const timeInput = document.getElementById('newAlarmTime').value;
-        if (!timeInput) return;
-
-        const newAlarm = {
-            id: Date.now(), // 用時間戳當ID
-            time: timeInput,
-            note: "鬧鐘",
-            active: true
-        };
-
-        alarms.push(newAlarm);
-        renderAlarms();
-        closeModal();
-    }
-
-    // 5. 更新狀態列時間
-    function updateClock() {
+    function updateWorldClock() {
+        const container = document.getElementById('world-list');
+        container.innerHTML = '';
         const now = new Date();
-        const h = String(now.getHours()).padStart(2, '0');
-        const m = String(now.getMinutes()).padStart(2, '0');
-        clockElement.textContent = `${h}:${m}`;
+        const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+
+        cities.forEach(c => {
+            const cityTime = new Date(utc + (3600000 * c.offset));
+            const h = String(cityTime.getHours()).padStart(2, '0');
+            const m = String(cityTime.getMinutes()).padStart(2, '0');
+            
+            container.innerHTML += `
+                <div class="city-item">
+                    <div class="city-info">
+                        <p>${c.sub}, ${c.offset >= 0 ? '+' : ''}${c.offset}HR</p>
+                        <h2>${c.city}</h2>
+                    </div>
+                    <div class="city-time">${h}:${m}</div>
+                </div>
+            `;
+        });
+    }
+    setInterval(updateWorldClock, 1000);
+    updateWorldClock();
+
+    // --- 2. 鬧鐘邏輯 ---
+    let alarms = [
+        { id: 1, time: "06:30", note: "起床", active: true },
+        { id: 2, time: "07:30", note: "健身", active: false }
+    ];
+
+    function renderAlarms() {
+        const list = document.getElementById('alarm-list');
+        list.innerHTML = '';
+        alarms.sort((a,b) => a.time.localeCompare(b.time));
+
+        alarms.forEach(a => {
+            list.innerHTML += `
+                <div class="alarm-item" style="opacity: ${a.active ? 1 : 0.5}">
+                    <div>
+                        <div class="alarm-time">${a.time}</div>
+                        <div class="alarm-note">${a.note}</div>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" ${a.active ? 'checked' : ''} onchange="toggleAlarm(${a.id})">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+            `;
+        });
+    }
+    window.toggleAlarm = (id) => {
+        const a = alarms.find(x => x.id === id);
+        if(a) { a.active = !a.active; renderAlarms(); }
+    };
+    const addModal = document.getElementById('addModal');
+    window.openAddAlarm = () => addModal.classList.add('open');
+    window.closeAddAlarm = () => addModal.classList.remove('open');
+    window.saveAlarm = () => {
+        const val = document.getElementById('newAlarmTime').value;
+        if(val) {
+            alarms.push({ id: Date.now(), time: val, note: "鬧鐘", active: true });
+            renderAlarms();
+            closeAddAlarm();
+        }
+    };
+    renderAlarms();
+
+    // --- 3. 碼表邏輯 ---
+    let swTime = 0;
+    let swInterval;
+    let swRunning = false;
+    let laps = [];
+
+    function formatTime(ms) {
+        const m = Math.floor(ms / 60000).toString().padStart(2,'0');
+        const s = Math.floor((ms % 60000) / 1000).toString().padStart(2,'0');
+        const cs = Math.floor((ms % 1000) / 10).toString().padStart(2,'0');
+        return `${m}:${s}.${cs}`;
     }
 
-    // 初始化
-    renderAlarms();
-    setInterval(updateClock, 1000);
-    updateClock();
+    window.toggleStopwatch = () => {
+        const startBtn = document.getElementById('sw-start-btn');
+        const lapBtn = document.getElementById('sw-lap-btn');
+        
+        if(!swRunning) {
+            // Start
+            swRunning = true;
+            const startTime = Date.now() - swTime;
+            swInterval = setInterval(() => {
+                swTime = Date.now() - startTime;
+                document.getElementById('sw-display').innerText = formatTime(swTime);
+            }, 10);
+            startBtn.innerText = "停止";
+            startBtn.className = "circle-btn btn-stop";
+            lapBtn.innerText = "計次";
+        } else {
+            // Stop
+            swRunning = false;
+            clearInterval(swInterval);
+            startBtn.innerText = "啟動";
+            startBtn.className = "circle-btn btn-start";
+            lapBtn.innerText = "重置";
+        }
+    };
+
+    window.handleLapReset = () => {
+        if(swRunning) {
+            // Lap
+            laps.unshift(swTime); // Add to front
+            renderLaps();
+        } else {
+            // Reset
+            swTime = 0;
+            laps = [];
+            document.getElementById('sw-display').innerText = "00:00.00";
+            document.getElementById('sw-laps').innerHTML = "";
+            document.getElementById('sw-lap-btn').innerText = "計次";
+        }
+    };
+
+    function renderLaps() {
+        const list = document.getElementById('sw-laps');
+        list.innerHTML = '';
+        laps.forEach((lap, index) => {
+            list.innerHTML += `
+                <div class="lap-item">
+                    <span>計次 ${laps.length - index}</span>
+                    <span>${formatTime(lap)}</span>
+                </div>
+            `;
+        });
+    }
+
+    // --- 4. 計時器邏輯 ---
+    let timerInterval;
+    let timerTotalSeconds = 0;
+    let timerRemaining = 0;
+
+    window.toggleTimer = () => {
+        const setup = document.getElementById('timer-setup');
+        const running = document.getElementById('timer-running');
+        const btn = document.getElementById('timer-action-btn');
+        const circle = document.querySelector('.progress-ring__circle');
+        const radius = circle.r.baseVal.value;
+        const circumference = radius * 2 * Math.PI;
+
+        circle.style.strokeDasharray = `${circumference} ${circumference}`;
+
+        if(setup.style.display !== 'none') {
+            // Start Timer
+            const h = parseInt(document.getElementById('timer-h').value) || 0;
+            const m = parseInt(document.getElementById('timer-m').value) || 0;
+            const s = parseInt(document.getElementById('timer-s').value) || 0;
+            timerTotalSeconds = h*3600 + m*60 + s;
+            if(timerTotalSeconds <= 0) return;
+
+            timerRemaining = timerTotalSeconds;
+            setup.style.display = 'none';
+            running.style.display = 'flex';
+            btn.innerText = "暫停";
+            btn.className = "circle-btn btn-stop"; // 變紅
+
+            timerInterval = setInterval(() => {
+                timerRemaining--;
+                updateTimerDisplay(circumference);
+                if(timerRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    btn.innerText = "開始";
+                }
+            }, 1000);
+            updateTimerDisplay(circumference);
+        } else {
+            // Pause/Resume logic simplified to Reset for demo
+            if(btn.innerText === "暫停") {
+                clearInterval(timerInterval);
+                btn.innerText = "繼續";
+                btn.className = "circle-btn btn-start";
+            } else {
+                btn.innerText = "暫停";
+                btn.className = "circle-btn btn-stop";
+                timerInterval = setInterval(() => {
+                    timerRemaining--;
+                    updateTimerDisplay(circumference);
+                    if(timerRemaining <= 0) clearInterval(timerInterval);
+                }, 1000);
+            }
+        }
+    };
+
+    function updateTimerDisplay(circumference) {
+        const h = Math.floor(timerRemaining / 3600);
+        const m = Math.floor((timerRemaining % 3600) / 60);
+        const s = timerRemaining % 60;
+        document.getElementById('timer-display').innerText = 
+            `${h>0?h+':':''}${m.toString().padStart(2,'0')}:${s.toString().padStart(2,'0')}`;
+        
+        const offset = circumference - (timerRemaining / timerTotalSeconds) * circumference;
+        document.querySelector('.progress-ring__circle').style.strokeDashoffset = offset;
+    }
+
+    window.resetTimer = () => {
+        clearInterval(timerInterval);
+        document.getElementById('timer-setup').style.display = 'flex';
+        document.getElementById('timer-running').style.display = 'none';
+        document.getElementById('timer-action-btn').innerText = "開始";
+        document.getElementById('timer-action-btn').className = "circle-btn btn-start";
+    };
 
 </script>
-
 </body>
 </html>
