@@ -48,56 +48,55 @@
         
         .photo { 
             aspect-ratio: 1/1; 
-            background: #1c1c1e; /* 預設深灰背景 */
+            background: #111; 
             overflow: hidden; 
             position: relative; 
             cursor: pointer;
         }
 
-        /* 一般照片 (非文字) */
+        /* === 關鍵修改：純文字照片卡 === */
+        /* 這讓 div 看起來像是一張有質感的圖片 */
+        .photo.text-card {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            /* 模擬相片背景：使用放射狀漸層模擬打光效果 */
+            background: radial-gradient(circle at center, #3a3a3c 0%, #1c1c1e 100%);
+            /* 讓文字有些微陰影，增加立體感 */
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+            transition: filter 0.2s;
+        }
+        
+        /* 點擊時模擬按壓圖片變暗 */
+        .photo.text-card:active {
+            filter: brightness(0.8);
+        }
+
+        .card-symbol {
+            font-size: 48px;
+            margin-bottom: 4px;
+            /* 讓符號有點金屬光澤 */
+            background: linear-gradient(to bottom, #fff, #999);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .card-name {
+            font-size: 15px;
+            font-weight: 700;
+            color: #fff;
+            letter-spacing: 0.5px;
+        }
+
+        /* === 一般照片的樣式 === */
         .photo img { 
             width: 100%; 
             height: 100%; 
             object-fit: cover; 
             display: block;
         }
-
-        /* --- 核心修改：純文字照片樣式 (Text Photo) --- */
-        /* 這讓 div 看起來像是一張「黑底白字的 JPG」 */
-        .photo.text-photo {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            background-color: #000000; /* 純黑底，像照片 */
-            color: #ffffff;
-            text-align: center;
-        }
-        
-        /* 模擬照片質感：給一點點非常細微的邊框或陰影，讓它不至於跟背景融為一體 */
-        .photo.text-photo-inner {
-            width: 100%; height: 100%;
-            display: flex; flex-direction: column; 
-            justify-content: center; align-items: center;
-        }
-
-        .tp-symbol {
-            font-size: 48px;
-            margin-bottom: 4px;
-            line-height: 1;
-            /* 讓符號看起來銳利，像印刷品 */
-        }
-        
-        .tp-name {
-            font-size: 14px;
-            font-weight: 700;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            color: #ccc;
-        }
-
-        /* 點擊效果 */
-        .photo:active { opacity: 0.8; transition: 0.2s; }
+        .photo:not(.text-card):active img { transform: scale(0.95); transition: 0.2s; }
 
 
         /* --- Floating Nav --- */
@@ -116,38 +115,49 @@
         }
         .viewer.show { opacity: 1; }
         
-        .viewer-content {
+        .viewer-img-wrap {
             flex: 1; display: flex; align-items: center; justify-content: center;
-            width: 100%;
+            position: relative;
+            overflow: hidden;
         }
 
-        /* 這是給一般照片用的 */
-        #viewer-img {
-            max-width: 100%; max-height: 100%; object-fit: contain;
-            display: none; /* 預設隱藏 */
-        }
-
-        /* 這是給星座用的「純文字大圖」 */
-        #viewer-text-card {
-            display: none; /* 預設隱藏 */
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            width: 100%;
-            color: white;
-            padding: 40px;
+        .photo-container {
+            position: relative;
+            max-width: 100%;
+            max-height: 100%;
         }
         
-        /* 大圖模式下的文字排版 (像海報) */
-        .vt-symbol { font-size: 100px; margin-bottom: 20px; font-weight: 300; }
-        .vt-title { font-size: 40px; font-weight: 800; margin-bottom: 10px; letter-spacing: 2px; }
-        .vt-date { font-size: 18px; color: var(--accent); margin-bottom: 30px; font-weight: 600; letter-spacing: 2px; }
-        .vt-desc { font-size: 18px; line-height: 1.6; max-width: 80%; color: #ccc; }
+        .photo-container img {
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            /* 點開後，背景圖稍微變暗，讓上面的文字更清楚 */
+            filter: brightness(0.6); 
+        }
 
+        /* Embedded Text Layer (大圖上的文字) */
+        .embedded-text-layer {
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100%;
+            text-align: center;
+            color: white;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.8);
+            pointer-events: none; 
+            display: none; 
+        }
+
+        .emb-symbol { font-size: 80px; margin-bottom: 10px; display: block; }
+        .emb-title { font-size: 36px; font-weight: 800; margin: 0 0 10px 0; letter-spacing: 1px; }
+        .emb-date { font-size: 16px; font-weight: 700; text-transform: uppercase; letter-spacing: 3px; margin-bottom: 20px; opacity: 0.9; color: var(--accent); }
+        .emb-desc { font-size: 18px; line-height: 1.6; font-weight: 500; margin: 0 auto; max-width: 80%; }
+        
         .viewer-close {
             position: absolute; top: max(20px, var(--safe-top)); left: 20px;
             padding: 10px; color: var(--accent); font-size: 18px; font-weight: 600; z-index: 301;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
             cursor: pointer;
         }
     </style>
@@ -157,7 +167,7 @@
     <div class="header">
         <div class="header-left">
             <div class="title">圖庫</div>
-            <div class="subtitle">文字圖庫 & 照片</div>
+            <div class="subtitle">所有照片</div>
         </div>
         <div class="header-right">
             <div class="icon-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></div>
@@ -187,14 +197,15 @@
 
     <div class="viewer" id="viewer" onclick="closeViewer()">
         <div class="viewer-close">完成</div>
-        <div class="viewer-content">
-            <img id="viewer-img" src="">
-            
-            <div id="viewer-text-card">
-                <div class="vt-symbol" id="vt-symbol"></div>
-                <div class="vt-title" id="vt-title"></div>
-                <div class="vt-date" id="vt-date"></div>
-                <div class="vt-desc" id="vt-desc"></div>
+        <div class="viewer-img-wrap">
+            <div class="photo-container">
+                <img id="viewer-img" src="">
+                <div class="embedded-text-layer" id="emb-layer">
+                    <span class="emb-symbol" id="emb-symbol"></span>
+                    <h1 class="emb-title" id="emb-title">TITLE</h1>
+                    <div class="emb-date" id="emb-date">DATE</div>
+                    <p class="emb-desc" id="emb-desc">Description goes here.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -202,77 +213,71 @@
     <script>
         // Data
         const zodiacSigns = [
-            { symbol: "♈", name: "牡羊座", date: "3.21 - 4.19", desc: "充滿活力的開創者。\n行動力強，直覺敏銳。" },
-            { symbol: "♉", name: "金牛座", date: "4.20 - 5.20", desc: "穩重感性的鑑賞家。\n重視安全感與質感。" },
-            { symbol: "♊", name: "雙子座", date: "5.21 - 6.20", desc: "機智多變的溝通者。\n思維敏捷，好奇心旺盛。" },
-            { symbol: "♋", name: "巨蟹座", date: "6.21 - 7.22", desc: "溫柔細膩的守護者。\n外剛內柔，極具同理心。" },
-            { symbol: "♌", name: "獅子座", date: "7.23 - 8.22", desc: "光芒四射的領導者。\n自信大方，具有王者風範。" },
-            { symbol: "♍", name: "處女座", date: "8.23 - 9.22", desc: "追求完美的分析師。\n心思縝密，注重細節。" },
-            { symbol: "♎", name: "天秤座", date: "9.23 - 10.22", desc: "優雅和諧的協調者。\n追求公平，擅長平衡。" },
-            { symbol: "♏", name: "天蠍座", date: "10.23 - 11.21", desc: "深沈神秘的洞察者。\n愛恨分明，意志力堅強。" },
-            { symbol: "♐", name: "射手座", date: "11.22 - 12.21", desc: "自由奔放的哲學家。\n樂觀開朗，嚮往遠方。" },
-            { symbol: "♑", name: "摩羯座", date: "12.22 - 1.19", desc: "沈穩堅毅的實踐者。\n務實負責，一步一腳印。" },
-            { symbol: "♒", name: "水瓶座", date: "1.20 - 2.18", desc: "獨樹一格的革新者。\n思維跳躍，走在時代尖端。" },
-            { symbol: "♓", name: "雙魚座", date: "2.19 - 3.20", desc: "浪漫夢幻的藝術家。\n富有同情心，想像力豐富。" }
+            { symbol: "♈", name: "牡羊座", en: "ARIES", date: "3.21 - 4.19", imgKey: "galaxy", desc: "充滿活力的開創者。行動力強，直覺敏銳。" },
+            { symbol: "♉", name: "金牛座", en: "TAURUS", date: "4.20 - 5.20", imgKey: "nebula", desc: "穩重感性的鑑賞家。重視安全感與質感。" },
+            { symbol: "♊", name: "雙子座", en: "GEMINI", date: "5.21 - 6.20", imgKey: "stars", desc: "機智多變的溝通者。思維敏捷，好奇心旺盛。" },
+            { symbol: "♋", name: "巨蟹座", en: "CANCER", date: "6.21 - 7.22", imgKey: "moon", desc: "溫柔細膩的守護者。外剛內柔，極具同理心。" },
+            { symbol: "♌", name: "獅子座", en: "LEO", date: "7.23 - 8.22", imgKey: "sun", desc: "光芒四射的領導者。自信大方，具有王者風範。" },
+            { symbol: "♍", name: "處女座", en: "VIRGO", date: "8.23 - 9.22", imgKey: "constellation", desc: "追求完美的分析師。心思縝密，注重細節。" },
+            { symbol: "♎", name: "天秤座", en: "LIBRA", date: "9.23 - 10.22", imgKey: "aurora", desc: "優雅和諧的協調者。追求公平，擅長平衡。" },
+            { symbol: "♏", name: "天蠍座", en: "SCORPIO", date: "10.23 - 11.21", imgKey: "night", desc: "深沈神秘的洞察者。愛恨分明，意志力堅強。" },
+            { symbol: "♐", name: "射手座", en: "SAGITTARIUS", date: "11.22 - 12.21", imgKey: "space", desc: "自由奔放的哲學家。樂觀開朗，嚮往遠方。" },
+            { symbol: "♑", name: "摩羯座", en: "CAPRICORN", date: "12.22 - 1.19", imgKey: "mountain", desc: "沈穩堅毅的實踐者。務實負責，一步一腳印。" },
+            { symbol: "♒", name: "水瓶座", en: "AQUARIUS", date: "1.20 - 2.18", imgKey: "universe", desc: "獨樹一格的革新者。思維跳躍，走在時代尖端。" },
+            { symbol: "♓", name: "雙魚座", en: "PISCES", date: "2.19 - 3.20", imgKey: "ocean", desc: "浪漫夢幻的藝術家。富有同情心，想像力豐富。" }
         ];
         
         const randomTopics = ["tech", "city", "road", "forest", "dark", "neon"];
         
         const grid = document.getElementById('grid');
         const viewer = document.getElementById('viewer');
-        const viewerImg = document.getElementById('viewer-img');
-        const viewerText = document.getElementById('viewer-text-card');
+        const embLayer = document.getElementById('emb-layer');
 
-        // Render
+        // Render Function
         let html = '';
         
-        // 1. Render Zodiacs as "Text Photos" (純文字照片)
+        // 1. 純文字照片卡 (Text-Based Photos)
+        // 這裡我們不放 <img> 標籤，而是用 div 畫出「文字照片」
         zodiacSigns.forEach((z, i) => {
-            // 這裡不放 img 標籤，而是用 div 做出海報效果
-            // 這些 div 就像是一張張已經寫好字的圖片
+            // 這個 src 是給點開後的大圖用的，列表裡看不到
+            const src = `https://picsum.photos/seed/${z.en}Star/800/800`; 
+            
             html += `
-                <div class="photo text-photo" onclick="openZodiacViewer(${i})">
-                    <div class="tp-symbol">${z.symbol}</div>
-                    <div class="tp-name">${z.name}</div>
+                <div class="photo text-card" onclick="openZodiacViewer('${src}', ${i})">
+                    <div class="card-symbol">${z.symbol}</div>
+                    <div class="card-name">${z.name}</div>
                 </div>
             `;
         });
 
-        // 2. Render Random Real Photos
+        // 2. 一般隨機照片 (Regular Photos)
         for(let i=0; i<21; i++) {
             const topic = randomTopics[i % randomTopics.length];
             const src = `https://picsum.photos/seed/${topic}${i}More/800/800`;
-            html += `<div class="photo" onclick="openPhotoViewer('${src}')"><img src="${src}" loading="lazy"></div>`;
+            html += `<div class="photo" onclick="openSimpleViewer('${src}')"><img src="${src}" loading="lazy"></div>`;
         }
         grid.innerHTML = html;
 
-        // Viewer Logic
-
-        // 打開星座 (顯示純文字海報)
-        function openZodiacViewer(index) {
+        // Viewer Logic (點擊後的行為)
+        function openZodiacViewer(src, index) {
             const data = zodiacSigns[index];
+            document.getElementById('viewer-img').src = src;
             
-            // 隱藏照片元素，顯示文字卡片元素
-            viewerImg.style.display = 'none';
-            viewerText.style.display = 'flex';
-
             // 填入資料
-            document.getElementById('vt-symbol').innerText = data.symbol;
-            document.getElementById('vt-title').innerText = data.name;
-            document.getElementById('vt-date').innerText = data.date;
-            document.getElementById('vt-desc').innerText = data.desc;
+            document.getElementById('emb-symbol').innerText = data.symbol;
+            document.getElementById('emb-title').innerText = data.name + " " + data.en;
+            document.getElementById('emb-date').innerText = data.date;
+            document.getElementById('emb-desc').innerText = data.desc;
+            embLayer.style.display = 'block';
             
             viewer.style.display = 'flex';
             setTimeout(() => viewer.classList.add('show'), 10);
         }
 
-        // 打開普通照片
-        function openPhotoViewer(src) {
-            // 隱藏文字卡片元素，顯示照片元素
-            viewerText.style.display = 'none';
-            viewerImg.style.display = 'block';
-            
-            viewerImg.src = src;
+        function openSimpleViewer(src) {
+            document.getElementById('viewer-img').src = src;
+            // 隱藏文字層
+            embLayer.style.display = 'none';
             
             viewer.style.display = 'flex';
             setTimeout(() => viewer.classList.add('show'), 10);
@@ -282,7 +287,7 @@
             viewer.classList.remove('show');
             setTimeout(() => {
                 viewer.style.display = 'none';
-                viewerImg.src = '';
+                document.getElementById('viewer-img').src = '';
             }, 200);
         }
     </script>
