@@ -2,99 +2,290 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>iOS Style Gallery</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <title>iOS 26 Gallery Pro</title>
     <style>
+        :root {
+            --bg-color: #000000;
+            --text-main: #FFFFFF;
+            --text-sub: #8E8E93;
+            --accent: #0A84FF;
+            --safe-top: env(safe-area-inset-top);
+            --safe-bottom: env(safe-area-inset-bottom);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; user-select: none; }
+
         body {
-            background-color: #000;
-            margin: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            color: white;
-            padding: 20px;
+            margin: 0; padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
+            height: 100vh;
+            display: flex; flex-direction: column; overflow: hidden;
         }
 
-        /* 相簿網格容器 */
-        .gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 一排三個，模擬 iOS 資料夾或相簿 */
-            gap: 10px; /* 照片之間的間距 */
-            max-width: 500px;
-            margin: 0 auto;
+        /* --- Header --- */
+        .header {
+            padding-top: max(20px, var(--safe-top));
+            padding-bottom: 10px; padding-left: 20px; padding-right: 20px;
+            display: flex; justify-content: space-between; align-items: flex-end;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(20px);
+            z-index: 100; position: fixed; top: 0; left: 0; right: 0;
         }
+        .header-left { display: flex; flex-direction: column; gap: 2px; }
+        .title { font-size: 34px; font-weight: 800; letter-spacing: 0.5px; }
+        .subtitle { font-size: 14px; font-weight: 600; color: var(--text-sub); }
+        .header-right { display: flex; gap: 12px; margin-bottom: 5px; }
+        .icon-btn { width: 36px; height: 36px; background: #2C2C2E; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+        .select-btn { background: #2C2C2E; border-radius: 20px; padding: 8px 16px; font-size: 14px; font-weight: 600; display: flex; align-items: center; }
 
-        /* 每一個照片/方塊的樣式 */
-        .photo-item {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 1 / 1; /* 保持正方形 */
-            background-color: #333; /* 預設背景色 */
-            border-radius: 12px; /* iOS 風格圓角 */
-            overflow: hidden;
+        /* --- Grid --- */
+        .scroll-area { flex: 1; overflow-y: auto; padding-top: calc(80px + var(--safe-top)); padding-bottom: 120px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+        
+        .photo { 
+            aspect-ratio: 1/1; 
+            background: #111; 
+            overflow: hidden; 
+            position: relative; 
             cursor: pointer;
-            transition: transform 0.2s ease;
-            
-            /* 讓文字置中的關鍵 CSS */
-            display: flex;
-            justify-content: center; /* 水平置中 */
-            align-items: center;     /* 垂直置中 */
-            text-align: center;
-            font-size: 18px;         /* 文字大小 */
-            font-weight: bold;       /* 粗體 */
-            color: #fff;             /* 文字顏色 */
-            text-shadow: 0 1px 3px rgba(0,0,0,0.5); /* 讓文字在淺色背景也能看清 */
         }
 
-        /* 點擊時的縮放效果 */
-        .photo-item:active {
+        /* 讓背景圖稍微暗一點，凸顯上面的文字 */
+        .photo img { 
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            transition: transform 0.3s; 
+            filter: brightness(0.6); /* 關鍵：降低亮度 */
+        }
+        
+        .photo:active img {
             transform: scale(0.95);
         }
 
-        /* 替 12 星座加上一點漸層背景，讓它看起來不像壞掉的圖片 */
-        .zodiac {
-            background: linear-gradient(135deg, #4c669f, #3b5998, #192f6a);
+        /* --- 新增：縮圖內的文字覆蓋層 --- */
+        .grid-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            pointer-events: none; /* 讓點擊穿透到 div */
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+        }
+
+        .grid-symbol {
+            font-size: 42px; /* 星座符號大小 */
+            margin-bottom: 5px;
+            font-weight: 400;
+            background: linear-gradient(to bottom, #fff, #aaa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .grid-name {
+            font-size: 16px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            color: #fff;
+        }
+
+        /* --- Floating Nav --- */
+        .floating-dock { position: fixed; bottom: max(20px, var(--safe-bottom)); left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; pointer-events: none; z-index: 200; }
+        .nav-capsule { pointer-events: auto; background: rgba(30, 30, 30, 0.85); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-radius: 35px; height: 65px; display: flex; align-items: center; padding: 0 5px; border: 1px solid rgba(255,255,255,0.1); }
+        .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 70px; height: 100%; color: #888; gap: 4px; }
+        .nav-item.active { color: var(--accent); }
+        .nav-label { font-size: 10px; font-weight: 600; }
+        .search-circle { pointer-events: auto; width: 65px; height: 65px; background: rgba(30, 30, 30, 0.85); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); color: #fff; }
+
+        /* --- Viewer & Embedded Text --- */
+        .viewer {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 300; display: none; flex-direction: column;
+            opacity: 0; transition: opacity 0.2s;
+        }
+        .viewer.show { opacity: 1; }
+        
+        .viewer-img-wrap {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .photo-container {
+            position: relative;
+            max-width: 100%;
+            max-height: 100%;
         }
         
-        /* 一般照片的樣式 (如果您前面的20張是照片，依然保留這個樣式) */
-        .photo-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .photo-container img {
             display: block;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
         }
 
-        /* 如果照片上也要壓文字，可以使用這個容器 (目前星座部分直接寫在 div 裡) */
-        .overlay-text {
-            pointer-events: none; /* 讓點擊穿透文字 */
+        /* The "Burnt-in" Text Layer */
+        .embedded-text-layer {
+            position: absolute;
+            bottom: 15%; 
+            left: 5%; right: 5%;
+            text-align: center;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 15px rgba(0,0,0,0.5);
+            pointer-events: none; 
+            display: none; 
         }
 
+        .emb-symbol { font-size: 60px; margin-bottom: 0px; display: block; }
+        .emb-title { font-size: 32px; font-weight: 800; margin: 0 0 10px 0; letter-spacing: 1px; }
+        .emb-date { font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; opacity: 0.9; }
+        .emb-desc { font-size: 16px; line-height: 1.5; font-weight: 500; margin: 0 auto; max-width: 80%; }
+        
+        .viewer-close {
+            position: absolute; top: max(20px, var(--safe-top)); left: 20px;
+            padding: 10px; color: var(--accent); font-size: 18px; font-weight: 600; z-index: 301;
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
 
-    <div class="gallery-grid">
-        
-        <div class="photo-item zodiac" onclick="openApp('牡羊座')">牡羊座</div>
-        <div class="photo-item zodiac" onclick="openApp('金牛座')">金牛座</div>
-        <div class="photo-item zodiac" onclick="openApp('雙子座')">雙子座</div>
-        <div class="photo-item zodiac" onclick="openApp('巨蟹座')">巨蟹座</div>
-        <div class="photo-item zodiac" onclick="openApp('獅子座')">獅子座</div>
-        <div class="photo-item zodiac" onclick="openApp('處女座')">處女座</div>
-        <div class="photo-item zodiac" onclick="openApp('天秤座')">天秤座</div>
-        <div class="photo-item zodiac" onclick="openApp('天蠍座')">天蠍座</div>
-        <div class="photo-item zodiac" onclick="openApp('射手座')">射手座</div>
-        <div class="photo-item zodiac" onclick="openApp('魔羯座')">魔羯座</div>
-        <div class="photo-item zodiac" onclick="openApp('水瓶座')">水瓶座</div>
-        <div class="photo-item zodiac" onclick="openApp('雙魚座')">雙魚座</div>
+    <div class="header">
+        <div class="header-left">
+            <div class="title">圖庫</div>
+            <div class="subtitle">12 星座 & 其他</div>
+        </div>
+        <div class="header-right">
+            <div class="icon-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></div>
+            <div class="select-btn">選取</div>
+        </div>
+    </div>
 
+    <div class="scroll-area">
+        <div class="grid" id="grid"></div>
+    </div>
+
+    <div class="floating-dock">
+        <div class="nav-capsule">
+            <div class="nav-item active">
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H4V6h16v12z"/><path d="M8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                <span class="nav-label">圖庫</span>
+            </div>
+            <div class="nav-item">
+                <svg width="24" height="24" fill="currentColor" viewBox="0 0 24 24"><path d="M4 6h16v2H4zm2 4h12v2H6zm-2 4h16v2H4z"/></svg>
+                <span class="nav-label">選集</span>
+            </div>
+        </div>
+        <div class="search-circle">
+            <svg width="24" height="24" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </div>
+    </div>
+
+    <div class="viewer" id="viewer" onclick="closeViewer()">
+        <div class="viewer-close">完成</div>
+        <div class="viewer-img-wrap">
+            <div class="photo-container">
+                <img id="viewer-img" src="">
+                <div class="embedded-text-layer" id="emb-layer">
+                    <span class="emb-symbol" id="emb-symbol"></span>
+                    <h1 class="emb-title" id="emb-title">TITLE</h1>
+                    <div class="emb-date" id="emb-date">DATE</div>
+                    <p class="emb-desc" id="emb-desc">Description goes here.</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script>
-        // 簡單的點擊測試，您之後可以換成展開動畫
-        function openApp(name) {
-            console.log("點擊了：" + name);
-            // 這裡之後可以串接您想要像 iOS 一樣展開的動畫邏輯
+        // Data with Unicode Symbols
+        const zodiacSigns = [
+            { symbol: "♈", name: "牡羊座", en: "ARIES", date: "3.21 - 4.19", imgKey: "galaxy", desc: "充滿活力的開創者。行動力強，直覺敏銳。" },
+            { symbol: "♉", name: "金牛座", en: "TAURUS", date: "4.20 - 5.20", imgKey: "nebula", desc: "穩重感性的鑑賞家。重視安全感與質感。" },
+            { symbol: "♊", name: "雙子座", en: "GEMINI", date: "5.21 - 6.20", imgKey: "stars", desc: "機智多變的溝通者。思維敏捷，好奇心旺盛。" },
+            { symbol: "♋", name: "巨蟹座", en: "CANCER", date: "6.21 - 7.22", imgKey: "moon", desc: "溫柔細膩的守護者。外剛內柔，極具同理心。" },
+            { symbol: "♌", name: "獅子座", en: "LEO", date: "7.23 - 8.22", imgKey: "sun", desc: "光芒四射的領導者。自信大方，具有王者風範。" },
+            { symbol: "♍", name: "處女座", en: "VIRGO", date: "8.23 - 9.22", imgKey: "constellation", desc: "追求完美的分析師。心思縝密，注重細節。" },
+            { symbol: "♎", name: "天秤座", en: "LIBRA", date: "9.23 - 10.22", imgKey: "aurora", desc: "優雅和諧的協調者。追求公平，擅長平衡。" },
+            { symbol: "♏", name: "天蠍座", en: "SCORPIO", date: "10.23 - 11.21", imgKey: "night", desc: "深沈神秘的洞察者。愛恨分明，意志力堅強。" },
+            { symbol: "♐", name: "射手座", en: "SAGITTARIUS", date: "11.22 - 12.21", imgKey: "space", desc: "自由奔放的哲學家。樂觀開朗，嚮往遠方。" },
+            { symbol: "♑", name: "摩羯座", en: "CAPRICORN", date: "12.22 - 1.19", imgKey: "mountain", desc: "沈穩堅毅的實踐者。務實負責，一步一腳印。" },
+            { symbol: "♒", name: "水瓶座", en: "AQUARIUS", date: "1.20 - 2.18", imgKey: "universe", desc: "獨樹一格的革新者。思維跳躍，走在時代尖端。" },
+            { symbol: "♓", name: "雙魚座", en: "PISCES", date: "2.19 - 3.20", imgKey: "ocean", desc: "浪漫夢幻的藝術家。富有同情心，想像力豐富。" }
+        ];
+        
+        const randomTopics = ["tech", "city", "road", "forest", "dark", "neon"];
+        
+        const grid = document.getElementById('grid');
+        const viewer = document.getElementById('viewer');
+        const embLayer = document.getElementById('emb-layer');
+
+        // Render
+        let html = '';
+        
+        // 1. Render Zodiacs (With Overlay Text inside Grid)
+        zodiacSigns.forEach((z, i) => {
+            // 使用星空類的主題作為背景，模擬星座圖案的氛圍
+            const src = `https://picsum.photos/seed/${z.en}Star/800/800`; 
+            
+            html += `
+                <div class="photo" onclick="openZodiacViewer('${src}', ${i})">
+                    <img src="${src}" loading="lazy">
+                    <div class="grid-overlay">
+                        <div class="grid-symbol">${z.symbol}</div>
+                        <div class="grid-name">${z.name}</div>
+                    </div>
+                </div>
+            `;
+        });
+
+        // 2. Render Random Photos (No Text Overlay)
+        for(let i=0; i<21; i++) {
+            const topic = randomTopics[i % randomTopics.length];
+            const src = `https://picsum.photos/seed/${topic}${i}More/800/800`;
+            html += `<div class="photo" onclick="openSimpleViewer('${src}')"><img src="${src}" loading="lazy"></div>`;
+        }
+        grid.innerHTML = html;
+
+        // Viewer Logic
+        function openZodiacViewer(src, index) {
+            const data = zodiacSigns[index];
+            document.getElementById('viewer-img').src = src;
+            
+            // Populate and show embedded text layer
+            document.getElementById('emb-symbol').innerText = data.symbol;
+            document.getElementById('emb-title').innerText = data.name + " " + data.en;
+            document.getElementById('emb-date').innerText = data.date;
+            document.getElementById('emb-desc').innerText = data.desc;
+            embLayer.style.display = 'block';
+            
+            viewer.style.display = 'flex';
+            setTimeout(() => viewer.classList.add('show'), 10);
+        }
+
+        function openSimpleViewer(src) {
+            document.getElementById('viewer-img').src = src;
+            // Hide embedded text layer
+            embLayer.style.display = 'none';
+            
+            viewer.style.display = 'flex';
+            setTimeout(() => viewer.classList.add('show'), 10);
+        }
+
+        function closeViewer() {
+            viewer.classList.remove('show');
+            setTimeout(() => {
+                viewer.style.display = 'none';
+                document.getElementById('viewer-img').src = '';
+            }, 200);
         }
     </script>
-
 </body>
 </html>
