@@ -5,20 +5,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="照片">
     <title>照片</title>
     <style>
         :root {
-            --ios-blue: #0a84ff;
-            --ios-gray-bg: #1c1c1e;
-            --ios-text-sec: #8e8e93;
-            --dock-glass: rgba(28, 28, 30, 0.72);
+            --ios-blue: #007aff;
+            --ios-gray: #1c1c1e;
+            --text-sec: #8e8e93;
+            --glass-bg: rgba(25, 25, 25, 0.75);
+            --glass-blur: blur(25px) saturate(200%) brightness(1.2);
         }
 
         * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang TC", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "PingFang TC", sans-serif;
         }
 
         body {
@@ -26,246 +26,198 @@
             background-color: #000;
             color: #fff;
             overflow-x: hidden;
-            /* 讓內容延伸到狀態欄下方 */
-            padding-top: 0; 
+            user-select: none;
             padding-bottom: env(safe-area-inset-bottom);
         }
 
-        /* 頂部導覽列：精確對齊截圖 */
+        /* 頂部導覽 */
         header {
-            padding: calc(env(safe-area-inset-top) + 12px) 16px 10px;
+            padding: calc(env(safe-area-inset-top) + 15px) 20px 10px;
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
-            background: rgba(0,0,0,0.8);
+            background: linear-gradient(to bottom, rgba(0,0,0,0.95), rgba(0,0,0,0));
             position: sticky;
             top: 0;
             z-index: 100;
+            transition: all 0.3s;
         }
 
-        .header-left h1 {
-            font-size: 34px;
-            margin: 0;
-            font-weight: 700;
-            letter-spacing: -1px;
-        }
+        .header-left h1 { font-size: 34px; margin: 0; font-weight: 700; letter-spacing: -1.2px; }
+        .header-left .sub { font-size: 15px; color: var(--text-sec); font-weight: 600; }
 
-        .header-left .item-count {
-            font-size: 15px;
-            color: var(--ios-text-sec);
-            font-weight: 600;
-            margin-top: -2px;
+        .header-right { display: flex; gap: 12px; align-items: center; margin-top: 8px; }
+        .btn-circle {
+            width: 34px; height: 34px; background: #2c2c2e; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
         }
-
-        .header-right {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-            padding-top: 6px;
-        }
-
-        /* 圓形選單按鈕 */
-        .btn-menu {
-            width: 34px;
-            height: 34px;
-            background: #2c2c2e;
-            border-radius: 50%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            gap: 3px;
-        }
-        .btn-menu span {
-            width: 14px;
-            height: 1.5px;
-            background: white;
-            border-radius: 1px;
-        }
-
-        /* 選取按鈕 */
         .btn-select {
-            background: #2c2c2e;
-            color: #fff;
-            font-size: 15px;
-            font-weight: 600;
-            padding: 6px 14px;
-            border-radius: 20px;
-            transition: opacity 0.2s;
+            background: #2c2c2e; color: #fff; font-size: 15px; font-weight: 600;
+            padding: 7px 16px; border-radius: 20px;
         }
 
-        /* 相簿網格 */
-        .photo-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2px;
-            padding-bottom: 200px; /* 為底部控制列留白 */
+        /* 內容區切換容器 */
+        .content-view {
+            display: none;
+            animation: fadeIn 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
         }
+        .content-view.active { display: block; }
 
-        .photo-item {
-            aspect-ratio: 1/1;
-            background: #111;
-            overflow: hidden;
-            transition: transform 0.1s;
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* 圖庫網格 (Library) */
+        .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5px; }
+        .photo-item { aspect-ratio: 1/1; background: #111; overflow: hidden; }
+        .photo-item img { width: 100%; height: 100%; object-fit: cover; }
+
+        /* 選集列表 (Collections) */
+        .collections-list { padding: 10px 20px; }
+        .album-row {
+            display: flex; align-items: center; gap: 15px; margin-bottom: 20px;
         }
+        .album-thumb { width: 80px; height: 80px; border-radius: 12px; background: #2c2c2e; overflow: hidden; }
+        .album-info div { font-weight: 600; font-size: 17px; }
+        .album-info span { color: var(--text-sec); font-size: 14px; }
 
-        .photo-item:active {
-            transform: scale(0.97);
-            filter: brightness(0.8);
-        }
-
-        .photo-item img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-        }
-
-        /* iOS 18 底部控制列組件 */
+        /* iOS 26 懸浮 Dock */
         .dock-container {
             position: fixed;
-            bottom: calc(env(safe-area-inset-bottom) + 20px);
-            left: 0;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            pointer-events: none;
+            bottom: calc(env(safe-area-inset-bottom) + 15px);
+            left: 0; width: 100%; display: flex; justify-content: center; align-items: center;
+            z-index: 1000; pointer-events: none;
         }
 
-        .main-dock {
-            pointer-events: auto;
-            background: var(--dock-glass);
-            backdrop-filter: blur(30px) saturate(210%) brightness(0.8);
-            -webkit-backdrop-filter: blur(30px) saturate(210%) brightness(0.8);
-            height: 54px;
-            border-radius: 27px;
-            display: flex;
-            align-items: center;
-            padding: 0 4px;
-            border: 0.5px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        .dock-glass {
+            pointer-events: auto; background: var(--glass-bg); backdrop-filter: var(--glass-blur);
+            -webkit-backdrop-filter: var(--glass-blur);
+            height: 62px; border-radius: 31px; display: flex; align-items: center; padding: 0 6px;
+            border: 0.5px solid rgba(255,255,255,0.12); box-shadow: 0 15px 40px rgba(0,0,0,0.5);
         }
 
         .dock-btn {
-            display: flex;
-            align-items: center;
-            padding: 0 16px;
-            height: 46px;
-            border-radius: 23px;
-            color: #fff;
-            text-decoration: none;
+            display: flex; align-items: center; padding: 0 20px; height: 50px;
+            border-radius: 25px; color: #fff; text-decoration: none; transition: 0.2s;
         }
 
-        .dock-btn.active {
-            background: rgba(255, 255, 255, 0.12);
-            color: var(--ios-blue);
+        .dock-btn.active { background: rgba(255, 255, 255, 0.15); color: var(--ios-blue); }
+        .dock-btn span { font-size: 14px; font-weight: 600; margin-left: 10px; }
+
+        .search-trigger {
+            pointer-events: auto; width: 62px; height: 62px; background: var(--glass-bg);
+            backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+            border-radius: 50%; margin-left: 12px; display: flex; align-items: center;
+            justify-content: center; border: 0.5px solid rgba(255,255,255,0.12);
         }
 
-        .dock-btn span {
-            font-size: 13px;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-
-        .search-btn {
-            pointer-events: auto;
-            width: 54px;
-            height: 54px;
-            background: var(--dock-glass);
-            backdrop-filter: blur(30px) saturate(210%) brightness(0.8);
-            -webkit-backdrop-filter: blur(30px) saturate(210%) brightness(0.8);
-            border-radius: 50%;
-            margin-left: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 0.5px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
-        }
-
-        /* 精確 SVG Icon */
-        .svg-icon {
-            width: 22px;
-            height: 22px;
-            fill: currentColor;
-        }
+        /* SVG 圖示細節 */
+        .svg-icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.2; }
     </style>
 </head>
 <body>
 
-    <header>
+    <header id="main-header">
         <div class="header-left">
-            <h1>圖庫</h1>
-            <div class="item-count">150 個項目</div>
+            <h1 id="title">圖庫</h1>
+            <div class="sub" id="subtitle">150 個項目</div>
         </div>
         <div class="header-right">
-            <div class="btn-menu">
-                <span></span>
-                <span></span>
-                <span></span>
+            <div class="btn-circle">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
+                    <circle cx="12" cy="12" r="2"/>
+                    <circle cx="12" cy="5" r="2"/>
+                    <circle cx="12" cy="19" r="2"/>
+                </svg>
             </div>
             <div class="btn-select">選取</div>
         </div>
     </header>
 
-    <main class="photo-grid" id="gallery">
-        </main>
+    <main id="library-view" class="content-view active">
+        <div class="photo-grid" id="photo-grid"></div>
+    </main>
+
+    <main id="collections-view" class="content-view">
+        <div class="collections-list">
+            <div class="album-row">
+                <div class="album-thumb"><img src="https://picsum.photos/100/100?1" width="100%"></div>
+                <div class="album-info"><div>最近項目</div><span>150</span></div>
+            </div>
+            <div class="album-row">
+                <div class="album-thumb"><img src="https://picsum.photos/100/100?2" width="100%"></div>
+                <div class="album-info"><div>收藏照片</div><span>42</span></div>
+            </div>
+            <div class="album-row">
+                <div class="album-thumb"><img src="https://picsum.photos/100/100?3" width="100%"></div>
+                <div class="album-info"><div>螢幕截圖</div><span>88</span></div>
+            </div>
+        </div>
+    </main>
 
     <div class="dock-container">
-        <div class="main-dock">
-            <a href="#" class="dock-btn active">
+        <div class="dock-glass">
+            <a href="javascript:void(0)" class="dock-btn active" onclick="switchTab('library', this)">
                 <svg class="svg-icon" viewBox="0 0 24 24">
-                    <rect x="3" y="7" width="13" height="13" rx="2.5" stroke="currentColor" stroke-width="2.2" fill="none"/>
-                    <path d="M8 3.5h11A2.5 2.5 0 0121.5 6v11" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" fill="none"/>
-                    <circle cx="7" cy="11" r="1" fill="currentColor"/>
+                    <rect x="3" y="8" width="12" height="12" rx="2.5"/>
+                    <path d="M7 4h12a2.5 2.5 0 0 1 2.5 2.5v12" opacity="0.5"/>
+                    <circle cx="9" cy="13" r="1.5" fill="currentColor" stroke="none"/>
                 </svg>
                 <span>圖庫</span>
             </a>
-            <a href="#" class="dock-btn">
+            <a href="javascript:void(0)" class="dock-btn" onclick="switchTab('collections', this)">
                 <svg class="svg-icon" viewBox="0 0 24 24">
-                    <rect x="3" y="5" width="18" height="14" rx="2.5" stroke="currentColor" stroke-width="2.2" fill="none"/>
-                    <line x1="7" y1="9" x2="17" y2="9" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <line x1="7" y1="12" x2="17" y2="12" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-                    <line x1="7" y1="15" x2="13" y2="15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    <rect x="4" y="4" width="16" height="16" rx="3"/>
+                    <path d="M4 10h16M4 15h16" stroke-width="1.8"/>
                 </svg>
                 <span>選集</span>
             </a>
         </div>
-        <div class="search-btn">
-            <svg class="svg-icon" style="width:24px; height:24px;" viewBox="0 0 24 24">
-                <circle cx="11" cy="11" r="6.5" stroke="currentColor" stroke-width="2.5" fill="none"/>
-                <line x1="16" y1="16" x2="20.5" y2="20.5" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+        <div class="search-trigger" onclick="alert('搜尋功能已開啟')">
+            <svg class="svg-icon" viewBox="0 0 24 24" style="width:26px;height:26px;">
+                <circle cx="11" cy="11" r="7"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65" stroke-linecap="round"/>
             </svg>
         </div>
     </div>
 
     <script>
-        const gallery = document.getElementById('gallery');
-        
-        // 生成模擬截圖內容（筆記、計算機、螢幕截圖感）
-        for (let i = 0; i < 24; i++) {
-            const div = document.createElement('div');
-            div.className = 'photo-item';
-            // 隨機從 picsum 抓取圖，並加上 gray 濾鏡模擬截圖感
-            div.innerHTML = `<img src="https://picsum.photos/500/500?random=${i+50}">`;
-            gallery.appendChild(div);
+        // 切換分頁邏輯
+        function switchTab(tab, element) {
+            // 觸覺震動模擬 (僅限支援的裝置)
+            if (window.navigator.vibrate) window.navigator.vibrate(10);
+
+            // 更新按鈕狀態
+            document.querySelectorAll('.dock-btn').forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+
+            // 更新標題與內容
+            const lib = document.getElementById('library-view');
+            const col = document.getElementById('collections-view');
+            const title = document.getElementById('title');
+            const sub = document.getElementById('subtitle');
+
+            if (tab === 'library') {
+                lib.classList.add('active'); col.classList.remove('active');
+                title.innerText = '圖庫'; sub.innerText = '150 個項目';
+            } else {
+                col.classList.add('active'); lib.classList.remove('active');
+                title.innerText = '選集'; sub.innerText = '相簿與更多';
+            }
         }
 
-        // 禁止 Safari 預設行為
+        // 初始化圖庫照片
+        const grid = document.getElementById('photo-grid');
+        for (let i = 0; i < 30; i++) {
+            const div = document.createElement('div');
+            div.className = 'photo-item';
+            div.innerHTML = `<img src="https://picsum.photos/400/400?sig=${i}" loading="lazy">`;
+            grid.appendChild(div);
+        }
+
+        // 禁止原生長按選單與縮放
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('touchstart', (e) => {
             if (e.touches.length > 1) e.preventDefault();
         }, { passive: false });
-
-        // 魔術師森森專用：點擊圖庫可以觸發特定動畫或邏輯（預留空間）
-        document.querySelectorAll('.dock-btn').forEach(btn => {
-            btn.onclick = (e) => {
-                e.preventDefault();
-                document.querySelectorAll('.dock-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-            };
-        });
     </script>
 </body>
 </html>
