@@ -5,11 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>iOS 26 Zodiac</title>
+    <title>iOS 26 Gallery Pro</title>
     <style>
         :root {
             --bg-color: #000000;
-            --card-bg: #1C1C1E;
             --text-main: #FFFFFF;
             --text-sub: #8E8E93;
             --accent: #0A84FF;
@@ -23,99 +22,42 @@
             margin: 0; padding: 0;
             background-color: var(--bg-color);
             color: var(--text-main);
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", sans-serif;
             height: 100vh;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
+            display: flex; flex-direction: column; overflow: hidden;
         }
 
         /* --- Header --- */
         .header {
             padding-top: max(20px, var(--safe-top));
-            padding-bottom: 10px;
-            padding-left: 20px;
-            padding-right: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(20px);
-            z-index: 100;
-            position: fixed;
-            top: 0; left: 0; right: 0;
+            padding-bottom: 10px; padding-left: 20px; padding-right: 20px;
+            display: flex; justify-content: space-between; align-items: flex-end;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(20px);
+            z-index: 100; position: fixed; top: 0; left: 0; right: 0;
         }
-
         .header-left { display: flex; flex-direction: column; gap: 2px; }
         .title { font-size: 34px; font-weight: 800; letter-spacing: 0.5px; }
         .subtitle { font-size: 14px; font-weight: 600; color: var(--text-sub); }
-
         .header-right { display: flex; gap: 12px; margin-bottom: 5px; }
         .icon-btn { width: 36px; height: 36px; background: #2C2C2E; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
         .select-btn { background: #2C2C2E; border-radius: 20px; padding: 8px 16px; font-size: 14px; font-weight: 600; display: flex; align-items: center; }
 
         /* --- Grid --- */
-        .scroll-area {
-            flex: 1;
-            overflow-y: auto;
-            padding-top: calc(80px + var(--safe-top));
-            padding-bottom: 120px;
-        }
-
-        .grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 2px;
-        }
-
-        .photo {
-            aspect-ratio: 1/1;
-            background: #333;
-            overflow: hidden;
-            position: relative;
-        }
-        
+        .scroll-area { flex: 1; overflow-y: auto; padding-top: calc(80px + var(--safe-top)); padding-bottom: 120px; }
+        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+        .photo { aspect-ratio: 1/1; background: #333; overflow: hidden; position: relative; }
         .photo img { width: 100%; height: 100%; object-fit: cover; transition: opacity 0.3s; }
-        
-        /* Zodiac Badge on Photo */
-        .zodiac-badge {
-            position: absolute;
-            bottom: 5px; right: 5px;
-            font-size: 12px;
-            background: rgba(0,0,0,0.6);
-            backdrop-filter: blur(4px);
-            padding: 2px 6px;
-            border-radius: 4px;
-            color: white;
-            font-weight: 600;
-        }
+        .zodiac-badge { position: absolute; bottom: 5px; right: 5px; font-size: 12px; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); padding: 2px 6px; border-radius: 4px; color: white; font-weight: 600; }
 
         /* --- Floating Nav --- */
-        .floating-dock {
-            position: fixed; bottom: max(20px, var(--safe-bottom)); left: 0; right: 0;
-            display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
-            pointer-events: none; z-index: 200;
-        }
-
-        .nav-capsule {
-            pointer-events: auto; background: rgba(30, 30, 30, 0.85);
-            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-            border-radius: 35px; height: 65px; display: flex; align-items: center; padding: 0 5px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
+        .floating-dock { position: fixed; bottom: max(20px, var(--safe-bottom)); left: 0; right: 0; display: flex; justify-content: space-between; align-items: center; padding: 0 20px; pointer-events: none; z-index: 200; }
+        .nav-capsule { pointer-events: auto; background: rgba(30, 30, 30, 0.85); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-radius: 35px; height: 65px; display: flex; align-items: center; padding: 0 5px; border: 1px solid rgba(255,255,255,0.1); }
         .nav-item { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 70px; height: 100%; color: #888; gap: 4px; }
         .nav-item.active { color: var(--accent); }
         .nav-label { font-size: 10px; font-weight: 600; }
+        .search-circle { pointer-events: auto; width: 65px; height: 65px; background: rgba(30, 30, 30, 0.85); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid rgba(255,255,255,0.1); color: #fff; }
 
-        .search-circle {
-            pointer-events: auto; width: 65px; height: 65px;
-            background: rgba(30, 30, 30, 0.85); backdrop-filter: blur(25px);
-            -webkit-backdrop-filter: blur(25px); border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            border: 1px solid rgba(255,255,255,0.1); color: #fff;
-        }
-
-        /* --- Viewer with Info Card --- */
+        /* --- Viewer & Embedded Text --- */
         .viewer {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: #000; z-index: 300; display: none; flex-direction: column;
@@ -123,38 +65,48 @@
         }
         .viewer.show { opacity: 1; }
         
-        .viewer-img-wrap { flex: 1; display: flex; align-items: center; justify-content: center; position: relative;}
-        .viewer img { max-width: 100%; max-height: 100%; }
+        .viewer-img-wrap {
+            flex: 1; display: flex; align-items: center; justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Container for Image + Text Layer */
+        .photo-container {
+            position: relative;
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        .photo-container img {
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        /* The "Burnt-in" Text Layer */
+        .embedded-text-layer {
+            position: absolute;
+            bottom: 8%; /* Positioned slightly up from bottom */
+            left: 8%; right: 8%;
+            text-align: center;
+            color: white;
+            /* Strong shadow to make it readable on any image, simulating burned text */
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8), 0 0 15px rgba(0,0,0,0.5);
+            pointer-events: none; /* Clicks pass through */
+            display: none; /* Hidden by default */
+        }
+
+        .emb-title { font-size: 32px; font-weight: 800; margin: 0 0 10px 0; letter-spacing: 1px; }
+        .emb-date { font-size: 15px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 15px; opacity: 0.9; }
+        .emb-desc { font-size: 18px; line-height: 1.4; font-weight: 600; margin: 0; }
         
         .viewer-close {
             position: absolute; top: max(20px, var(--safe-top)); left: 20px;
             padding: 10px; color: var(--accent); font-size: 18px; font-weight: 600; z-index: 301;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
+            text-shadow: 0 2px 5px rgba(0,0,0,0.5);
         }
-
-        /* Glass Info Card for Zodiac */
-        .info-card {
-            position: absolute;
-            bottom: 40px; left: 20px; right: 20px;
-            background: rgba(40, 40, 40, 0.6);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border-radius: 20px;
-            padding: 20px;
-            color: white;
-            border: 1px solid rgba(255,255,255,0.1);
-            transform: translateY(20px);
-            opacity: 0;
-            transition: all 0.4s ease 0.1s;
-        }
-        .viewer.show .info-card { transform: translateY(0); opacity: 1; }
-        
-        .info-title { font-size: 24px; font-weight: 800; margin-bottom: 5px; }
-        .info-date { font-size: 13px; color: #aaa; font-weight: 600; text-transform: uppercase; margin-bottom: 12px; }
-        .info-desc { font-size: 15px; line-height: 1.5; color: #ddd; }
-        .info-tags { margin-top: 15px; display: flex; gap: 8px; }
-        .tag { font-size: 12px; background: rgba(255,255,255,0.15); padding: 4px 10px; border-radius: 8px; font-weight: 600; }
-
     </style>
 </head>
 <body>
@@ -165,9 +117,7 @@
             <div class="subtitle">42 個項目</div>
         </div>
         <div class="header-right">
-            <div class="icon-btn">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg>
-            </div>
+            <div class="icon-btn"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line></svg></div>
             <div class="select-btn">選取</div>
         </div>
     </div>
@@ -195,66 +145,52 @@
     <div class="viewer" id="viewer" onclick="closeViewer()">
         <div class="viewer-close">完成</div>
         <div class="viewer-img-wrap">
-            <img id="viewer-img" src="">
-            <div class="info-card" id="info-card" onclick="event.stopPropagation()">
-                <div class="info-title" id="z-title"></div>
-                <div class="info-date" id="z-date"></div>
-                <div class="info-desc" id="z-desc"></div>
-                <div class="info-tags" id="z-tags"></div>
+            <div class="photo-container">
+                <img id="viewer-img" src="">
+                <div class="embedded-text-layer" id="emb-layer">
+                    <h1 class="emb-title" id="emb-title">TITLE</h1>
+                    <div class="emb-date" id="emb-date">DATE</div>
+                    <p class="emb-desc" id="emb-desc">Description goes here.</p>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
-        // 12 Zodiac Data (Mentalism / Cold Reading friendly)
+        // Data
         const zodiacSigns = [
-            { name: "牡羊座 Aries", date: "3/21 - 4/19", imgKey: "fire", desc: "充滿活力的開創者。你擁有強烈的直覺和行動力，雖然有時會比較急躁，但你的熱情能感染身邊所有人。", tags: ["熱情", "直率"] },
-            { name: "金牛座 Taurus", date: "4/20 - 5/20", imgKey: "nature", desc: "穩重而感性的鑑賞家。你重視質感與安全感，擁有極佳的耐心，對於認定的目標會展現出驚人的毅力。", tags: ["務實", "鑑賞"] },
-            { name: "雙子座 Gemini", date: "5/21 - 6/20", imgKey: "wind", desc: "機智多變的溝通者。你的思維敏捷，對世界充滿好奇。你善於適應環境，總能為周遭帶來新鮮的資訊。", tags: ["靈活", "好奇"] },
-            { name: "巨蟹座 Cancer", date: "6/21 - 7/22", imgKey: "moon", desc: "溫柔細膩的守護者。你有著堅硬的外殼和柔軟的內心，對情緒的感知力極強，是天生的療癒者。", tags: ["念舊", "敏感"] },
-            { name: "獅子座 Leo", date: "7/23 - 8/22", imgKey: "sun", desc: "光芒四射的領導者。你天生具有王者風範，慷慨大方。你渴望被看見，同時也樂於成為他人的依靠。", tags: ["自信", "大方"] },
-            { name: "處女座 Virgo", date: "8/23 - 9/22", imgKey: "leaf", desc: "追求完美的分析師。你心思縝密，邏輯清晰。你雖然對細節挑惕，但那是因為你希望事情能達到最完美的狀態。", tags: ["細心", "邏輯"] },
-            { name: "天秤座 Libra", date: "9/23 - 10/22", imgKey: "balance", desc: "優雅和諧的協調者。你天生具有外交手腕，追求公平與美感。你在團體中總是扮演著維持平衡的關鍵角色。", tags: ["優雅", "公正"] },
-            { name: "天蠍座 Scorpio", date: "10/23 - 11/21", imgKey: "mystery", desc: "深沈神秘的洞察者。你擁有極強的意志力和直覺，能看穿事物的本質。你對情感執著，愛恨分明。", tags: ["直覺", "神秘"] },
-            { name: "射手座 Sagittarius", date: "11/22 - 12/21", imgKey: "adventure", desc: "自由奔放的哲學家。你樂觀開朗，嚮往遠方。你討厭束縛，總是在追尋人生的真理和更大的視野。", tags: ["自由", "樂觀"] },
-            { name: "摩羯座 Capricorn", date: "12/22 - 1/19", imgKey: "mountain", desc: "沈穩堅毅的實踐者。你務實且負責，擁有強大的野心。你不怕困難，總是能一步一腳印地登上頂峰。", tags: ["自律", "野心"] },
-            { name: "水瓶座 Aquarius", date: "1/20 - 2/18", imgKey: "space", desc: "獨樹一格的革新者。你的思維跳躍，不受傳統束縛。你博愛且理智，總是走在時代的最前端。", tags: ["獨特", "創新"] },
-            { name: "雙魚座 Pisces", date: "2/19 - 3/20", imgKey: "sea", desc: "浪漫夢幻的藝術家。你富有同情心，想像力豐富。你常遊走於現實與夢境之間，擁有極強的包容力。", tags: ["浪漫", "直覺"] }
+            { name: "牡羊座 ARIES", date: "3.21 - 4.19", imgKey: "fire", desc: "充滿活力的開創者。行動力強，直覺敏銳。熱情奔放，但也容易衝動。" },
+            { name: "金牛座 TAURUS", date: "4.20 - 5.20", imgKey: "earth", desc: "穩重感性的鑑賞家。重視安全感與物質質感，擁有極佳的耐心與毅力。" },
+            { name: "雙子座 GEMINI", date: "5.21 - 6.20", imgKey: "air", desc: "機智多變的溝通者。思維敏捷，好奇心旺盛，善於適應新環境與資訊。" },
+            { name: "巨蟹座 CANCER", date: "6.21 - 7.22", imgKey: "water", desc: "溫柔細膩的守護者。外剛內柔，對情緒感知敏銳，極具同理心與保護慾。" },
+            { name: "獅子座 LEO", date: "7.23 - 8.22", imgKey: "sun", desc: "光芒四射的領導者。天生具有王者風範，自信大方，渴望成為眾人焦點。" },
+            { name: "處女座 VIRGO", date: "8.23 - 9.22", imgKey: "plant", desc: "追求完美的分析師。心思縝密，邏輯清晰，注重細節，致力於達到最佳狀態。" },
+            { name: "天秤座 LIBRA", date: "9.23 - 10.22", imgKey: "balance", desc: "優雅和諧的協調者。具有外交手腕，追求公平與美感，擅長維持團體平衡。" },
+            { name: "天蠍座 SCORPIO", date: "10.23 - 11.21", imgKey: "night", desc: "深沈神秘的洞察者。意志力堅強，直覺敏銳，愛恨分明，能看穿事物本質。" },
+            { name: "射手座 SAGITTARIUS", date: "11.22 - 12.21", imgKey: "travel", desc: "自由奔放的哲學家。樂觀開朗，嚮往遠方，討厭束縛，不斷追尋人生真理。" },
+            { name: "摩羯座 CAPRICORN", date: "12.22 - 1.19", imgKey: "peak", desc: "沈穩堅毅的實踐者。務實負責，野心強大，不怕困難，一步一腳印邁向目標。" },
+            { name: "水瓶座 AQUARIUS", date: "1.20 - 2.18", imgKey: "galaxy", desc: "獨樹一格的革新者。思維跳躍，不受傳統束縛，博愛理智，走在時代尖端。" },
+            { name: "雙魚座 PISCES", date: "2.19 - 3.20", imgKey: "ocean", desc: "浪漫夢幻的藝術家。富有同情心，想像力豐富，遊走於現實與夢境之間。" }
         ];
-
-        // 30 Random Photos Data
-        const randomTopics = ["coffee", "city", "gym", "cat", "road", "book", "tech", "party", "sky", "art"];
+        const randomTopics = ["coffee", "city", "gym", "cat", "road", "book", "tech", "party", "sky", "art", "dog", "sea"];
         
         const grid = document.getElementById('grid');
         const viewer = document.getElementById('viewer');
-        const infoCard = document.getElementById('info-card');
+        const embLayer = document.getElementById('emb-layer');
 
-        // Render Function
+        // Render
         let html = '';
-
-        // 1. Render 12 Zodiacs
+        // 12 Zodiacs
         zodiacSigns.forEach((z, i) => {
-            const src = `https://picsum.photos/seed/${z.imgKey}2026/600/600`;
-            // Store data in data-attributes for easy retrieval
-            html += `
-                <div class="photo" onclick="openZodiacViewer('${src}', ${i})">
-                    <img src="${src}" loading="lazy">
-                    <div class="zodiac-badge">${z.name.split(' ')[0]}</div>
-                </div>
-            `;
+            const src = `https://picsum.photos/seed/${z.imgKey}V2/800/800`;
+            html += `<div class="photo" onclick="openZodiacViewer('${src}', ${i})"><img src="${src}" loading="lazy"><div class="zodiac-badge">${z.name.split(' ')[0]}</div></div>`;
         });
-
-        // 2. Render 30 Random Photos
+        // 30 Randoms
         for(let i=0; i<30; i++) {
             const topic = randomTopics[i % randomTopics.length];
-            const src = `https://picsum.photos/seed/${topic}${i}Random/600/600`;
-            html += `
-                <div class="photo" onclick="openSimpleViewer('${src}')">
-                    <img src="${src}" loading="lazy">
-                </div>
-            `;
+            const src = `https://picsum.photos/seed/${topic}${i}Rnd/800/800`;
+            html += `<div class="photo" onclick="openSimpleViewer('${src}')"><img src="${src}" loading="lazy"></div>`;
         }
-
         grid.innerHTML = html;
 
         // Viewer Logic
@@ -262,23 +198,21 @@
             const data = zodiacSigns[index];
             document.getElementById('viewer-img').src = src;
             
-            // Populate Info Card
-            document.getElementById('z-title').innerText = data.name;
-            document.getElementById('z-date').innerText = data.date;
-            document.getElementById('z-desc').innerText = data.desc;
+            // Populate and show embedded text layer
+            document.getElementById('emb-title').innerText = data.name;
+            document.getElementById('emb-date').innerText = data.date;
+            document.getElementById('emb-desc').innerText = data.desc;
+            embLayer.style.display = 'block';
             
-            // Generate Tags
-            const tagsHtml = data.tags.map(t => `<span class="tag">#${t}</span>`).join('');
-            document.getElementById('z-tags').innerHTML = tagsHtml;
-            
-            infoCard.style.display = 'block'; // Show card
             viewer.style.display = 'flex';
             setTimeout(() => viewer.classList.add('show'), 10);
         }
 
         function openSimpleViewer(src) {
             document.getElementById('viewer-img').src = src;
-            infoCard.style.display = 'none'; // Hide card for normal photos
+            // Hide embedded text layer
+            embLayer.style.display = 'none';
+            
             viewer.style.display = 'flex';
             setTimeout(() => viewer.classList.add('show'), 10);
         }
