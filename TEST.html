@@ -9,8 +9,8 @@
     <style>
         :root {
             --ios-blue: #0a84ff;
-            --dock-bg: rgba(30, 30, 30, 0.7);
-            --blur: blur(30px) saturate(210%);
+            --dock-bg: rgba(28, 28, 30, 0.72);
+            --blur: blur(35px) saturate(210%);
         }
 
         * {
@@ -23,13 +23,12 @@
             margin: 0;
             background-color: #000;
             color: #fff;
-            overflow-x: hidden;
-            padding-bottom: env(safe-area-inset-bottom);
+            overflow: hidden; /* 防止橡皮筋效果 */
         }
 
-        /* 頂部標題列 */
+        /* 頂部導覽列 */
         header {
-            padding: calc(env(safe-area-inset-top) + 20px) 16px 12px;
+            padding: calc(env(safe-area-inset-top) + 20px) 16px 10px;
             display: flex;
             justify-content: space-between;
             align-items: flex-end;
@@ -39,50 +38,95 @@
             z-index: 100;
         }
 
-        .header-left h1 { font-size: 34px; margin: 0; font-weight: 700; letter-spacing: -1.2px; }
-        .header-left .count { font-size: 15px; color: #8e8e93; font-weight: 600; margin-top: 2px; }
+        header h1 { font-size: 34px; margin: 0; font-weight: 700; letter-spacing: -1.2px; }
+        .header-sub { font-size: 15px; color: #8e8e93; font-weight: 600; margin-top: 2px; }
 
-        .header-right { display: flex; gap: 12px; margin-bottom: 5px; }
-        .btn-circle { width: 34px; height: 34px; background: #1c1c1e; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
-        .btn-select { background: #1c1c1e; padding: 6px 16px; border-radius: 20px; font-size: 15px; font-weight: 600; }
+        /* 相簿網格 */
+        #gallery-scroll {
+            height: 100vh;
+            overflow-y: scroll;
+            padding-bottom: 250px;
+        }
 
-        /* 照片網格 */
         .photo-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 2px;
-            padding-bottom: 220px;
         }
 
-        /* 純文字照片圖卡樣式 */
+        /* 純文字照片圖卡 */
         .photo-card {
             aspect-ratio: 1/1;
-            position: relative;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            padding: 12px 8px;
+            padding: 10px;
             text-align: center;
-            overflow: hidden;
-            transition: transform 0.1s;
+            cursor: pointer;
+            transition: opacity 0.1s;
         }
 
-        .photo-card:active { transform: scale(0.96); filter: brightness(0.9); }
+        .photo-card:active { opacity: 0.7; }
+        .card-name { font-size: 16px; font-weight: 800; margin-bottom: 4px; }
+        .card-desc { font-size: 9px; line-height: 1.2; opacity: 0.9; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
 
-        /* 文字排版細節 */
-        .z-name { font-size: 16px; font-weight: 800; margin-bottom: 4px; letter-spacing: 1px; }
-        .z-date { font-size: 9px; opacity: 0.8; font-weight: 700; margin-bottom: 6px; }
-        .z-desc { 
-            font-size: 9.5px; 
-            line-height: 1.3; 
-            opacity: 0.9; 
-            font-weight: 500;
-            display: -webkit-box;
-            -webkit-line-clamp: 4; /* 縮圖模式下顯示 4 行介紹 */
-            -webkit-box-orient: vertical;
-            overflow: hidden;
+        /* 全螢幕檢視器 (Viewer) */
+        #viewer {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            z-index: 2000;
+            display: none; /* 預設隱藏 */
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
+
+        #viewer.show { display: flex; opacity: 1; }
+
+        .viewer-nav {
+            padding: calc(env(safe-area-inset-top) + 15px) 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 2001;
+        }
+
+        .back-btn { color: var(--ios-blue); font-size: 18px; font-weight: 500; display: flex; align-items: center; }
+        .back-btn::before { content: "〈 "; font-weight: 700; }
+
+        .viewer-main {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        /* 放大後的純文字照片 */
+        .expanded-photo {
+            width: 100%;
+            aspect-ratio: 3/4;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 40px 30px;
+            text-align: center;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+            animation: ios-pop 0.4s cubic-bezier(0.15, 1, 0.3, 1);
+        }
+
+        @keyframes ios-pop {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .expanded-name { font-size: 42px; font-weight: 800; margin-bottom: 15px; letter-spacing: -1px; }
+        .expanded-date { font-size: 16px; font-weight: 600; opacity: 0.8; margin-bottom: 30px; letter-spacing: 2px; }
+        .expanded-desc { font-size: 20px; line-height: 1.6; font-weight: 400; color: rgba(255,255,255,0.95); }
 
         /* 底部 iOS 26 控制列 */
         .dock-container {
@@ -107,33 +151,42 @@
 
         .search-circle {
             pointer-events: auto; width: 62px; height: 62px; background: var(--dock-bg);
-            backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); border-radius: 50%; margin-left: 10px;
+            backdrop-filter: var(--blur); border-radius: 50%; margin-left: 12px;
             display: flex; align-items: center; justify-content: center; border: 0.5px solid rgba(255,255,255,0.1);
         }
-
-        /* SVG 圖示：精確模擬 iOS 26 的多層次質感 */
-        .svg-icon { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.2; }
     </style>
 </head>
 <body>
 
-    <header>
-        <div class="header-left">
-            <h1>圖庫</h1>
-            <div class="count">12 個星座介紹</div>
-        </div>
-        <div class="header-right">
-            <div class="btn-circle">⋯</div>
-            <div class="btn-select">選取</div>
-        </div>
-    </header>
+    <div id="gallery-scroll">
+        <header>
+            <div>
+                <h1>圖庫</h1>
+                <div class="header-sub">12 個星座卡片</div>
+            </div>
+            <div style="background:#1c1c1e; padding:6px 14px; border-radius:20px; font-size:15px; font-weight:600;">選取</div>
+        </header>
 
-    <main class="photo-grid" id="gallery"></main>
+        <main class="photo-grid" id="grid"></main>
+    </div>
+
+    <div id="viewer">
+        <div class="viewer-nav">
+            <div class="back-btn" onclick="closeViewer()">圖庫</div>
+            <div style="font-weight:600">編輯</div>
+            <div style="color:var(--ios-blue); font-size:22px">⋯</div>
+        </div>
+        <div class="viewer-main" id="viewer-target" onclick="closeViewer()">
+            </div>
+        <div style="padding: 20px 40px env(safe-area-inset-bottom); display:flex; justify-content:space-between; color:var(--ios-blue); font-size:24px;">
+            <span>📤</span><span>❤️</span><span>ℹ️</span><span>🗑️</span>
+        </div>
+    </div>
 
     <div class="dock-container">
         <div class="dock-capsule">
             <a href="#" class="dock-btn active">
-                <svg class="svg-icon" viewBox="0 0 24 24">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
                     <rect x="3" y="8" width="12" height="12" rx="3"/>
                     <rect x="6" y="5" width="12" height="12" rx="3" opacity="0.6"/>
                     <rect x="9" y="2" width="12" height="12" rx="3" opacity="0.3"/>
@@ -141,61 +194,64 @@
                 <span>圖庫</span>
             </a>
             <a href="#" class="dock-btn">
-                <svg class="svg-icon" viewBox="0 0 24 24">
-                    <rect x="4" y="4" width="7" height="7" rx="1.5"/>
-                    <rect x="13" y="4" width="7" height="7" rx="1.5"/>
-                    <rect x="4" y="13" width="7" height="7" rx="1.5"/>
-                    <rect x="13" y="13" width="7" height="7" rx="1.5"/>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+                    <rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/>
+                    <rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>
                 </svg>
                 <span>選集</span>
             </a>
         </div>
-        <div class="search-circle">
-            <svg class="svg-icon" viewBox="0 0 24 24" style="width:26px; height:26px;">
-                <circle cx="11" cy="11" r="7"/>
-                <line x1="21" y1="21" x2="16.65" y2="16.65" stroke-linecap="round"/>
-            </svg>
-        </div>
+        <div class="search-circle">🔍</div>
     </div>
 
     <script>
-        const zodiacs = [
-            { name: "白羊座", date: "3/21-4/19", bg: "#FF416C", desc: "自信勇敢熱情果斷，充滿冒險精神與強大行動力。" },
-            { name: "金牛座", date: "4/20-5/20", bg: "#11998E", desc: "穩重踏實追求安定，具有極佳的審美與理財耐心。" },
-            { name: "雙子座", date: "5/21-6/21", bg: "#FFA751", desc: "機智靈敏好奇心強，擅長溝通並追求多元的新鮮資訊。" },
-            { name: "巨蟹座", date: "6/22-7/22", bg: "#2193B0", desc: "溫柔體貼極具感性，重視家庭連結與強大情感保護欲。" },
-            { name: "獅子座", date: "7/23-8/22", bg: "#F2994A", desc: "自信慷慨具備領袖氣質，渴望舞台並展現出王者的熱情。" },
-            { name: "處女座", date: "8/23-9/22", bg: "#7F7FD5", desc: "追求完美做事謹慎，具備強大分析力與條理分明的思維。" },
-            { name: "天秤座", date: "9/23-10/23", bg: "#834D9B", desc: "優雅和諧追求平衡，在人際社交中尋找最完美的公平感。" },
-            { name: "天蠍座", date: "10/24-11/22", bg: "#232526", desc: "神秘深沉意志強大，對認定的人事物有絕對的執著與忠誠。" },
-            { name: "射手座", date: "11/23-12/21", bg: "#5614B0", desc: "愛好自由樂觀冒險，追求智慧真理與不受拘束的生活模式。" },
-            { name: "摩羯座", date: "12/22-1/19", bg: "#2C3E50", desc: "堅忍不拔責任感強，具有遠大企圖心並默默為目標努力。" },
-            { name: "水瓶座", date: "1/20-2/18", bg: "#00C6FF", desc: "獨特前衛革新精神，重視友誼與人道精神，思維異於常人。" },
-            { name: "雙魚座", date: "2/19-3/20", bg: "#A8C0FF", desc: "浪漫夢幻充滿想像，富有同情心且直覺敏銳的情感專家。" }
+        const data = [
+            { name: "白羊座", date: "3/21 - 4/19", bg: "linear-gradient(135deg, #ff416c, #ff4b2b)", desc: "充滿自信與勇氣，行動力極強，永遠衝在最前方的開創者。" },
+            { name: "金牛座", date: "4/20 - 5/20", bg: "linear-gradient(135deg, #11998e, #38ef7d)", desc: "穩重踏實，追求安定與享受，有著堅定的意志與無比耐心。" },
+            { name: "雙子座", date: "5/21 - 6/21", bg: "linear-gradient(135deg, #ffe259, #ffa751)", desc: "機智靈敏，好奇心旺盛。擅長社交，思維跳躍並尋求新鮮感。" },
+            { name: "巨蟹座", date: "6/22 - 7/22", bg: "linear-gradient(135deg, #2193b0, #6dd5ed)", desc: "溫柔體貼，重視家庭。內心細膩敏感，具有強烈的守護欲。" },
+            { name: "獅子座", date: "7/23 - 8/22", bg: "linear-gradient(135deg, #f2994a, #f2c94c)", desc: "領袖氣質，自信慷慨。喜歡成為焦點，展現王者的熱情風範。" },
+            { name: "處女座", date: "8/23 - 9/22", bg: "linear-gradient(135deg, #7F7FD5, #91EAE4)", desc: "追求完美，做事細緻謹慎。具備強大的分析力與條理思維。" },
+            { name: "天秤座", date: "9/23 - 10/23", bg: "linear-gradient(135deg, #834d9b, #d04ed6)", desc: "優雅和諧，追求公平。擅長社交平衡，擁有極佳的審美觀。" },
+            { name: "天蠍座", date: "10/24 - 11/22", bg: "linear-gradient(135deg, #232526, #414345)", desc: "神秘深沈，意志強大。對認定的人事物有著絕對執著與忠誠。" },
+            { name: "射手座", date: "11/23 - 12/21", bg: "linear-gradient(135deg, #5614b0, #dbd65c)", desc: "愛好自由，樂觀冒險。追求真理與智慧，嚮往不受拘束的生活。" },
+            { name: "摩羯座", date: "12/22 - 1/19", bg: "linear-gradient(135deg, #2C3E50, #4CA1AF)", desc: "堅忍不拔，責任感強。具有遠大企圖心，為目標默默耕耘。" },
+            { name: "水瓶座", date: "1/20 - 2/18", bg: "linear-gradient(135deg, #00c6ff, #0072ff)", desc: "獨特前衛，革新精神。重視友誼與理想，思維往往異於常人。" },
+            { name: "雙魚座", date: "2/19 - 3/20", bg: "linear-gradient(135deg, #a8c0ff, #3f2b96)", desc: "浪漫夢幻，想像力豐。富有同情心且直覺敏銳的情感專家。" }
         ];
 
-        const gallery = document.getElementById('gallery');
+        const grid = document.getElementById('grid');
+        const viewer = document.getElementById('viewer');
+        const viewerTarget = document.getElementById('viewer-target');
 
-        zodiacs.forEach(z => {
+        // 初始化網格
+        data.forEach(z => {
             const card = document.createElement('div');
             card.className = 'photo-card';
             card.style.background = z.bg;
-            
-            card.innerHTML = `
-                <div class="z-name">${z.name}</div>
-                <div class="z-date">${z.date}</div>
-                <div class="z-desc">${z.desc}</div>
-            `;
-            
-            card.onclick = () => {
-                // 魔術師森森可以在這裡加入特定觸發效果
-                console.log(`點擊了 ${z.name}`);
-            };
-            
-            gallery.appendChild(card);
+            card.innerHTML = `<div class="card-name">${z.name}</div><div class="card-desc">${z.desc}</div>`;
+            card.onclick = () => openViewer(z);
+            grid.appendChild(card);
         });
 
-        // 禁止 Safari 的預設長按選單，提升 App 模擬感
+        function openViewer(z) {
+            viewerTarget.innerHTML = `
+                <div class="expanded-photo" style="background:${z.bg}">
+                    <div class="expanded-name">${z.name}</div>
+                    <div class="expanded-date">${z.date}</div>
+                    <div class="expanded-desc">${z.desc}</div>
+                </div>
+            `;
+            viewer.style.display = 'flex';
+            setTimeout(() => viewer.classList.add('show'), 10);
+        }
+
+        function closeViewer() {
+            viewer.classList.remove('show');
+            setTimeout(() => viewer.style.display = 'none', 300);
+        }
+
+        // 禁止原生長按與縮放，確保更像原生 App
         document.addEventListener('contextmenu', e => e.preventDefault());
         document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
     </script>
