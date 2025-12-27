@@ -2,173 +2,425 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>照片</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>iOS 26 Photos</title>
     <style>
         :root {
-            --ios-blue: #0a84ff;
-            --dock-bg: rgba(28, 28, 30, 0.8);
-            --blur: blur(40px) saturate(210%);
-            --ios-ease: cubic-bezier(0.3, 1, 0.3, 1);
+            --ios-bg: #ffffff;
+            --ios-text: #000000;
+            --ios-blue: #007AFF;
+            --ios-bar-bg: rgba(255, 255, 255, 0.85);
+            --ios-grid-gap: 2px;
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif; }
-
-        body { margin: 0; background-color: #000; color: #fff; overflow: hidden; position: fixed; width: 100%; height: 100%; }
-
-        #scroll-container { height: 100%; overflow-y: auto; -webkit-overflow-scrolling: touch; padding-bottom: 200px; }
-
-        header {
-            padding: calc(env(safe-area-inset-top) + 20px) 16px 12px;
-            display: flex; justify-content: space-between; align-items: flex-end;
-            background: rgba(0,0,0,0.85); backdrop-filter: blur(20px);
-            position: sticky; top: 0; z-index: 100;
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --ios-bg: #000000;
+                --ios-text: #ffffff;
+                --ios-bar-bg: rgba(30, 30, 30, 0.85);
+            }
         }
-        header h1 { font-size: 34px; margin: 0; font-weight: 700; letter-spacing: -1.2px; }
-        .header-sub { font-size: 15px; color: #98989d; font-weight: 600; margin-top: 2px; }
 
-        /* 相簿網格 */
-        .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; margin-top: 2px; }
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
 
-        .grid-item { aspect-ratio: 1/1; position: relative; overflow: hidden; background: #1c1c1e; cursor: pointer; }
-        .grid-item:active { filter: brightness(0.7); }
-        .thumb-img { width: 100%; height: 100%; object-fit: cover; }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+            background-color: var(--ios-bg);
+            color: var(--ios-text);
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
 
-        /* 星座卡片元件 (縮圖與點開完全共用樣式) */
-        .zodiac-photo {
-            width: 100%; height: 100%; display: flex; flex-direction: column;
-            padding: 30px 20px; justify-content: space-between; text-align: left;
+        /* Top Bar */
+        .top-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 88px; /* Includes notch area simulation */
+            background: var(--ios-bar-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+            padding-bottom: 10px;
+            border-bottom: 0.5px solid rgba(128,128,128,0.2);
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .nav-controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 16px;
+        }
+
+        .back-btn {
+            font-size: 17px;
+            color: var(--ios-blue);
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+        }
+        
+        .segment-control {
+            background: rgba(118, 118, 128, 0.12);
+            border-radius: 8px;
+            padding: 2px;
+            display: flex;
+            gap: 2px;
+        }
+
+        .segment-btn {
+            padding: 4px 12px;
+            font-size: 13px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--ios-text);
+            font-weight: 500;
+            cursor: pointer;
+        }
+
+        .segment-btn.active {
+            background: var(--ios-bg);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .action-btn {
+            color: var(--ios-blue);
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        /* Photo Grid */
+        .scroll-container {
+            flex: 1;
+            overflow-y: auto;
+            padding-top: 88px; /* Space for top bar */
+            padding-bottom: 83px; /* Space for bottom bar */
+        }
+
+        .grid-info {
+            padding: 10px 16px;
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: var(--ios-grid-gap);
+            padding-bottom: 20px;
+        }
+
+        .photo-item {
             position: relative;
-        }
-        .zp-header { font-size: 28px; font-weight: 800; margin-bottom: 5px; }
-        .zp-date { font-size: 14px; opacity: 0.7; margin-bottom: 25px; display: block; letter-spacing: 1px; }
-        .zp-body { font-size: 16px; line-height: 1.6; opacity: 0.95; font-weight: 400; }
-        .zp-footer { border-top: 0.5px solid rgba(255,255,255,0.3); padding-top: 20px; margin-top: 30px; }
-        .zp-lucky-label { font-size: 12px; opacity: 0.6; display: block; margin-bottom: 12px; letter-spacing: 1px; font-weight: 700; }
-        .zp-nums { display: flex; justify-content: space-between; font-size: 22px; font-weight: 700; }
-
-        /* 全螢幕檢視器 */
-        #viewer { position: fixed; inset: 0; background: #000; z-index: 2000; display: none; flex-direction: column; }
-        #viewer.active { display: flex; animation: iosPop 0.4s var(--ios-ease) forwards; }
-
-        @keyframes iosPop {
-            from { opacity: 0; transform: scale(0.9); }
-            to { opacity: 1; transform: scale(1); }
+            aspect-ratio: 1 / 1;
+            overflow: hidden;
+            background: #eee;
+            cursor: pointer;
         }
 
-        .v-nav { padding: calc(env(safe-area-inset-top) + 15px) 16px; display: flex; justify-content: space-between; align-items: center; }
-        .back-btn { color: var(--ios-blue); font-size: 18px; font-weight: 500; display: flex; align-items: center; }
-        .back-btn::before { content: "〈 "; font-weight: 700; }
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.2s;
+        }
 
-        .v-body { flex: 1; display: flex; align-items: center; justify-content: center; padding: 16px; }
-        #v-content { width: 100%; height: auto; aspect-ratio: 3/4; display: flex; justify-content: center; align-items: center; overflow: hidden; border-radius: 0px;}
+        .photo-item:active img {
+            opacity: 0.8;
+            transform: scale(0.98);
+        }
 
-        /* 底部工具列與 Dock */
-        .v-toolbar { padding: 20px 40px calc(env(safe-area-inset-bottom) + 10px); display: flex; justify-content: space-between; color: var(--ios-blue); font-size: 24px; opacity: 0.9; }
-        .dock-container { position: fixed; bottom: calc(env(safe-area-inset-bottom) + 20px); left: 0; width: 100%; display: flex; justify-content: center; z-index: 1000; pointer-events: none; }
-        .dock-capsule { pointer-events: auto; background: var(--dock-bg); backdrop-filter: var(--blur); -webkit-backdrop-filter: var(--blur); height: 64px; border-radius: 32px; display: flex; align-items: center; padding: 0 10px; border: 0.5px solid rgba(255,255,255,0.1); box-shadow: 0 15px 40px rgba(0,0,0,0.5); }
-        .dock-btn { display: flex; align-items: center; padding: 0 20px; height: 50px; border-radius: 25px; color: #fff; text-decoration: none; font-size: 14px; font-weight: 600; }
-        .dock-btn.active { background: rgba(255, 255, 255, 0.15); color: var(--ios-blue); }
+        /* Bottom Tab Bar */
+        .tab-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 83px;
+            background: var(--ios-bar-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: space-around;
+            padding-top: 10px;
+            border-top: 0.5px solid rgba(128,128,128,0.2);
+            z-index: 100;
+        }
+
+        .tab-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #999;
+            font-size: 10px;
+            font-weight: 500;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .tab-item.active {
+            color: var(--ios-blue);
+        }
+
+        .tab-icon {
+            font-size: 24px;
+        }
+
+        /* Full Screen Viewer (Overlay) */
+        .viewer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            z-index: 2000;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .viewer-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .viewer-header {
+            height: 90px;
+            padding-top: 40px;
+            padding-left: 20px;
+            display: flex;
+            align-items: center;
+            color: white;
+            z-index: 2002;
+        }
+
+        .viewer-back {
+            font-size: 24px;
+            cursor: pointer;
+            color: #007AFF;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 17px;
+        }
+        
+        .viewer-date-time {
+            flex: 1;
+            text-align: center;
+            font-size: 14px;
+            font-weight: 600;
+            color: #fff;
+            margin-right: 40px; /* Balance the back button */
+        }
+
+        .viewer-content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .viewer-content img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+
+        .viewer-footer {
+            height: 80px;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 30px;
+            align-items: center;
+            color: #007AFF;
+            font-size: 24px;
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        /* Loading Skeleton */
+        .loading {
+            animation: pulse 1.5s infinite;
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+        }
+
+        @keyframes pulse {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
     </style>
 </head>
 <body>
 
-    <div id="scroll-container">
-        <header>
-            <div><h1>圖庫</h1><div class="header-sub">36 個項目</div></div>
-            <div style="background:#2c2c2e; padding:8px 16px; border-radius:22px; font-size:15px; font-weight:600;">選取</div>
-        </header>
-        <main class="photo-grid" id="gallery"></main>
+    <div class="top-bar">
+        <div class="status-bar">
+            <span>9:41</span>
+            <span>5G <span style="font-size:12px">📶</span> 100%</span>
+        </div>
+        <div class="nav-controls">
+            <div class="back-btn">‹ 相簿</div>
+            <div class="segment-control">
+                <button class="segment-btn">年</button>
+                <button class="segment-btn">月</button>
+                <button class="segment-btn">日</button>
+                <button class="segment-btn active">所有照片</button>
+            </div>
+            <div class="action-btn">選取</div>
+        </div>
     </div>
 
-    <div id="viewer">
-        <div class="v-nav"><div class="back-btn" onclick="closeViewer()">圖庫</div><div style="font-weight:600">編輯</div><div style="color:var(--ios-blue)">⋯</div></div>
-        <div class="v-body" onclick="closeViewer()"><div id="v-content"></div></div>
-        <div class="v-toolbar"><span>📤</span><span>❤️</span><span>ℹ️</span><span>🗑️</span></div>
+    <div class="scroll-container">
+        <div class="grid-info" id="photo-count">載入中...</div>
+        <div class="photo-grid" id="grid">
+            </div>
+        
+        <div style="text-align: center; padding: 20px; color: #888; font-size: 13px;">
+            <p>已同步 iCloud</p>
+            <p>30 張照片，0 部影片</p>
+        </div>
     </div>
 
-    <div class="dock-container"><div class="dock-capsule"><a href="#" class="dock-btn active"><span>圖庫</span></a><a href="#" class="dock-btn"><span>選集</span></a></div></div>
+    <div class="tab-bar">
+        <div class="tab-item active">
+            <div class="tab-icon">🖼️</div>
+            <span>圖庫</span>
+        </div>
+        <div class="tab-item">
+            <div class="tab-icon">💖</div>
+            <span>為您推薦</span>
+        </div>
+        <div class="tab-item">
+            <div class="tab-icon">📁</div>
+            <span>相簿</span>
+        </div>
+        <div class="tab-item">
+            <div class="tab-icon">🔍</div>
+            <span>搜尋</span>
+        </div>
+    </div>
+
+    <div class="viewer-overlay" id="viewer">
+        <div class="viewer-header">
+            <div class="viewer-back" onclick="closeViewer()">‹ 圖庫</div>
+            <div class="viewer-date-time" id="viewer-date">2026年1月1日 12:00</div>
+        </div>
+        <div class="viewer-content">
+            <img src="" alt="Full View" id="viewer-img">
+        </div>
+        <div class="viewer-footer">
+            <span style="cursor:pointer">📤</span> <span style="cursor:pointer">🤍</span> <span style="cursor:pointer">ℹ️</span> <span style="cursor:pointer; color: #ff3b30;">🗑️</span> </div>
+    </div>
 
     <script>
-        // 1. 24張基礎照片
-        const basePhotos = Array.from({ length: 24 }, (_, i) => ({ type: 'img', src: `https://picsum.photos/1000/1000?random=${i + 1}` }));
+        // 30 Common Album Photo Scenarios
+        const photoTopics = [
+            "cat", "dog", "coffee", "sunset", "food", 
+            "beach", "mountain", "selfie", "friends", "party",
+            "car", "city", "book", "laptop", "gym",
+            "flower", "baby", "wedding", "concert", "art",
+            "shoes", "watch", "sky", "rain", "snow",
+            "bicycle", "bedroom", "park", "road", "smile"
+        ];
 
-        // 2. 12星座數據 (精確加總邏輯)
-        const zodiacs = [
-            { name: "摩羯座", date: "12/22-1/19", bg: "#243B55", nums: [12, 45, 38, 76, 30], desc: "您擁有無與倫比的耐力，是天生的長跑選手。在事業上總能默默耕耘並在最後達成成就。" },
-            { name: "水瓶座", date: "1/20-2/18", bg: "#141E30", nums: [24, 51, 63, 19, 45], desc: "獨特且充滿智慧的靈魂。創新是您的代名詞，這讓您在群體中總是閃耀異於常人的光芒。" },
-            { name: "雙魚座", date: "2/19-3/20", bg: "#2C3E50", nums: [33, 42, 57, 28, 43], desc: "情感豐富且具備強大直覺。您是藝術與浪漫的化身，能感知微細變化。今日能量將強化感應。" },
-            { name: "牡羊座", date: "3/21-4/19", bg: "#4B1248", nums: [15, 66, 31, 48, 44], desc: "熱情勇敢且充滿行動力。您不畏懼未知挑戰，開創精神讓您領先群倫。今日勇敢說出您的計畫。" },
-            { name: "金牛座", date: "4/20-5/20", bg: "#0F2027", nums: [28, 39, 55, 17, 66], desc: "對美與物質有極高敏銳度，追求質感與安定。您的固執往往是成功的關鍵，代表對目標忠誠。" },
-            { name: "雙子座", date: "5/21-6/21", bg: "#373B44", nums: [41, 22, 68, 35, 40], desc: "機智善變且充滿好奇心。您擁有雙倍活力與溝通技巧。今日會有意想不到的訊息傳來開啟冒險。" },
-            { name: "巨蟹座", date: "6/22-7/22", bg: "#16222A", nums: [19, 73, 24, 56, 35], desc: "溫柔體貼且重視家庭歸屬。您的防備心源於愛，一旦認定對方，將展現守護力量。享受寧靜。" },
-            { name: "獅子座", date: "7/23-8/22", bg: "#42275A", nums: [52, 31, 44, 18, 63], desc: "天生王者，充滿自信且具魅力。您喜歡成為焦點，並引領他人。今日您的創造力爆發擋不住。" },
-            { name: "處女座", date: "8/23-9/22", bg: "#1D2671", nums: [37, 49, 25, 62, 36], desc: "追求完美注重細節，是最高效率執行者。清醒邏輯讓您無可替代。微小改變將帶來幸運效應。" },
-            { name: "天蠍座", date: "10/24-11/22", bg: "#000000", nums: [44, 28, 71, 15, 52], desc: "神秘深沈且擁有洞察力。您從不妥寫，對於熱愛事物有著靈魂執著。今日能量將引導您發掘真相。" },
-            { name: "天瓶座", date: "9/23-10/23", bg: "#200122", nums: [65, 22, 39, 47, 38], desc: "優雅公正且追求和諧。您擅長平衡衝突，社交不可或缺。今日美感將協助您做出最完美的決定。" },
-            { name: "射手座", date: "11/23-12/21", bg: "#0F0C29", nums: [21, 55, 68, 34, 34], desc: "愛好自由樂觀冒險。心中裝著星辰大海，追求智慧與真理。適合規劃一場說走就走的旅行。" }
-        ].map(z => ({ ...z, type: 'card' }));
+        const grid = document.getElementById('grid');
+        const viewer = document.getElementById('viewer');
+        const viewerImg = document.getElementById('viewer-img');
+        const viewerDate = document.getElementById('viewer-date');
+        const photoCount = document.getElementById('photo-count');
 
-        const fullData = [...basePhotos, ...zodiacs];
-        const gallery = document.getElementById('gallery');
-
-        // 生成卡片樣式 (一致化模板)
-        function createZodiacHTML(item) {
-            return `
-                <div class="zodiac-photo" style="background:${item.bg};">
-                    <div>
-                        <div class="zp-header">${item.name}</div>
-                        <span class="zp-date">${item.date}</span>
-                        <div class="zp-body">${item.desc}</div>
-                    </div>
-                    <div class="zp-footer">
-                        <span class="zp-lucky-label">LUCKY NUMBERS</span>
-                        <div class="zp-nums">
-                            ${item.nums.map(n => `<span>${n}</span>`).join('')}
-                        </div>
-                    </div>
-                </div>
-            `;
+        // Generate Dates for metadata
+        function getRandomDate() {
+            const start = new Date(2025, 0, 1);
+            const end = new Date();
+            const date = new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+            return date.toLocaleString('zh-TW', { 
+                year: 'numeric', month: 'long', day: 'numeric', 
+                hour: '2-digit', minute: '2-digit' 
+            });
         }
 
-        fullData.forEach(item => {
-            const div = document.createElement('div');
-            div.className = 'grid-item';
-            if (item.type === 'img') {
-                div.innerHTML = `<img class="thumb-img" src="${item.src}" loading="lazy">`;
-            } else {
-                // 網格中的卡片：固定 1:1，但內容容器會被裁切底部
-                div.innerHTML = createZodiacHTML(item);
-            }
-            div.onclick = () => openViewer(item);
-            gallery.appendChild(div);
-        });
+        // Render Photos
+        function renderPhotos() {
+            let html = '';
+            photoTopics.forEach((topic, index) => {
+                // Using picsum with seed to get consistent "random" images
+                // Adding 'random' param to prevent caching issues sometimes
+                const imgUrl = `https://picsum.photos/seed/${topic}${index}/800/800`;
+                const dateStr = getRandomDate();
+                
+                html += `
+                    <div class="photo-item loading" onclick="openViewer('${imgUrl}', '${dateStr}')">
+                        <img src="${imgUrl}" 
+                             onload="this.parentElement.classList.remove('loading')" 
+                             alt="${topic}">
+                    </div>
+                `;
+            });
+            
+            grid.innerHTML = html;
+            photoCount.textContent = `12月`; // Simulation of header
+        }
 
-        const viewer = document.getElementById('viewer');
-        const vContent = document.getElementById('v-content');
-
-        function openViewer(item) {
-            if (item.type === 'img') {
-                vContent.style.aspectRatio = '1/1';
-                vContent.innerHTML = `<img style="width:100%; height:100%; object-fit:contain;" src="${item.src}">`;
-            } else {
-                // 點開後的卡片：展開為 3:4 比例顯示完整內容
-                vContent.style.aspectRatio = '3/4';
-                vContent.innerHTML = createZodiacHTML(item);
-            }
+        // Viewer Logic
+        function openViewer(src, date) {
+            viewerImg.src = src;
+            viewerDate.innerText = date;
+            
+            // Animation handling
             viewer.style.display = 'flex';
-            setTimeout(() => viewer.classList.add('active'), 10);
+            // Slight delay to allow display:flex to apply before changing opacity
+            requestAnimationFrame(() => {
+                viewer.classList.add('active');
+                viewerImg.style.transform = "scale(1)";
+            });
         }
 
         function closeViewer() {
             viewer.classList.remove('active');
-            setTimeout(() => viewer.style.display = 'none', 400);
+            setTimeout(() => {
+                viewer.style.display = 'none';
+                viewerImg.src = ""; // Clear to save memory
+            }, 300); // Match transition duration
         }
 
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('touchstart', e => { if (e.touches.length > 1) e.preventDefault(); }, { passive: false });
+        // Initialize
+        renderPhotos();
+
+        // Optional: Close on swiping down logic (Simulated with simple click on black area)
+        viewer.addEventListener('click', (e) => {
+            if(e.target === viewer || e.target.classList.contains('viewer-content')) {
+                closeViewer();
+            }
+        });
+
     </script>
 </body>
 </html>
