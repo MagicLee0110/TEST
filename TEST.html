@@ -2,119 +2,108 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>魔術輸入偵測</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Magic Canvas</title>
     <style>
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
             margin: 0;
-            background-color: #f0f2f5;
-        }
-
-        .container {
-            text-align: center;
-            background: white;
-            padding: 2rem;
-            border-radius: 20px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-            width: 80%;
-            max-width: 300px;
-        }
-
-        input {
-            width: 100%;
-            font-size: 24px;
-            padding: 10px;
-            text-align: center;
-            border: 2px solid #ddd;
-            border-radius: 10px;
-            margin-bottom: 20px;
-            outline: none;
-            /* 隱藏輸入框，如果魔術需要的話可以改為 opacity: 0 */
-        }
-
-        #display {
-            font-size: 80px;
-            font-weight: bold;
-            height: 120px;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background-color: #000; /* 黑底，看起來像螢幕關閉或簡約 */
             display: flex;
             align-items: center;
             justify-content: center;
+            overflow: hidden;
+            font-family: sans-serif;
+            cursor: none;
         }
 
-        .red { color: #e74c3c; }
-        .black { color: #2c3e50; }
-
-        .hint {
-            font-size: 12px;
-            color: #999;
-            margin-top: 10px;
+        /* 完全隱藏輸入框，但保持其功能 */
+        #hiddenInput {
+            position: absolute;
+            top: -100px;
+            left: -100px;
+            opacity: 0;
+            filter: alpha(opacity=0);
         }
+
+        /* 撲克牌顯示區 */
+        #display {
+            font-size: 150px; /* 超大字體，方便觀眾看清 */
+            font-weight: bold;
+            transition: all 0.2s ease-in-out;
+            user-select: none;
+        }
+
+        .red { color: #ff4d4d; }
+        .black { color: #ffffff; }
+        .none { color: #333; font-size: 24px; } /* 初始狀態 */
     </style>
 </head>
 <body>
 
-<div class="container">
-    <input type="text" id="magicInput" placeholder="請輸入3位數字" inputmode="numeric" maxlength="3" autocomplete="off">
-    
-    <div id="display">---</div>
-    
-    <div class="hint">範例：113 (黑桃K), 201 (紅心A)</div>
-</div>
+    <input type="text" id="hiddenInput" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
 
-<script>
-    const inputEl = document.getElementById('magicInput');
-    const displayEl = document.getElementById('display');
+    <div id="display" class="none">READY</div>
 
-    const suits = {
-        '1': { icon: '♠', color: 'black' },
-        '2': { icon: '♥', color: 'red' },
-        '3': { icon: '♦', color: 'red' },
-        '4': { icon: '♣', color: 'black' }
-    };
+    <script>
+        const inputEl = document.getElementById('hiddenInput');
+        const displayEl = document.getElementById('display');
 
-    const ranks = {
-        '01': 'A', '02': '2', '03': '3', '04': '4', '05': '5',
-        '06': '6', '07': '7', '08': '8', '09': '9', '10': '10',
-        '11': 'J', '12': 'Q', '13': 'K'
-    };
+        const suits = {
+            '1': { icon: '♠', color: 'black' },
+            '2': { icon: '♥', color: 'red' },
+            '3': { icon: '♦', color: 'red' },
+            '4': { icon: '♣', color: 'black' }
+        };
 
-    inputEl.addEventListener('input', (e) => {
-        const val = e.target.value;
+        const ranks = {
+            '01': 'A', '02': '2', '03': '3', '04': '4', '05': '5',
+            '06': '6', '07': '7', '08': '8', '09': '9', '10': '10',
+            '11': 'J', '12': 'Q', '13': 'K'
+        };
 
-        if (val.length === 3) {
-            const suitKey = val[0]; // 第1位
-            const rankKey = val.substring(1); // 第2~3位
+        // 核心邏輯：偵測輸入
+        inputEl.addEventListener('input', (e) => {
+            let val = e.target.value;
 
-            const suit = suits[suitKey];
-            const rank = ranks[rankKey];
+            // 每當達到 3 個數字
+            if (val.length === 3) {
+                const suitKey = val[0];
+                const rankKey = val.substring(1, 3);
 
-            if (suit && rank) {
-                displayEl.innerHTML = `${suit.icon}${rank}`;
-                displayEl.className = suit.color;
-            } else {
-                displayEl.innerHTML = 'ERR';
-                displayEl.className = 'black';
+                const suit = suits[suitKey];
+                const rank = ranks[rankKey];
+
+                if (suit && rank) {
+                    displayEl.innerHTML = `${suit.icon}${rank}`;
+                    displayEl.className = suit.color;
+                } else {
+                    // 如果輸入錯誤（例如 599），顯示一個小提示或不反應
+                    displayEl.innerHTML = '??';
+                    displayEl.className = 'none';
+                }
+
+                // 重點：立即清空輸入框，等待下一個 3 位數循環
+                e.target.value = '';
             }
+        });
 
-            // 輸入完後自動清空（或保留，視魔術需求而定）
-            // setTimeout(() => { e.target.value = ''; }, 1000);
-        } else if (val.length === 0) {
-            displayEl.innerHTML = '---';
-            displayEl.className = 'black';
-        }
-    });
+        // 點擊螢幕任何地方就強制 Focus 到輸入框，確保鍵盤彈出
+        document.body.addEventListener('click', () => {
+            inputEl.focus();
+            if(displayEl.innerHTML === 'READY') {
+                displayEl.innerHTML = ''; // 第一次點擊後清空 READY 字樣
+            }
+        });
 
-    // 點擊頁面任何地方自動聚焦輸入框 (方便盲打)
-    document.body.addEventListener('click', () => {
-        inputEl.focus();
-    });
-</script>
-
+        // 防止手機端長按彈出選單
+        window.oncontextmenu = function(event) {
+            event.preventDefault();
+            event.stopPropagation();
+            return false;
+        };
+    </script>
 </body>
 </html>
