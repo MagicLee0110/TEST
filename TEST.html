@@ -2,283 +2,119 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="theme-color" content="#050505">
-    <title>iOS 26 Unlock</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>魔術輸入偵測</title>
     <style>
-        :root {
-            --glass-bg: rgba(255, 255, 255, 0.15);
-            --glass-border: rgba(255, 255, 255, 0.2);
-            --text-color: #ffffff;
-            --press-color: rgba(255, 255, 255, 0.4);
-        }
-
-        /* 修正1：將背景設定在 html 層級，確保覆蓋瀏海/動態島區域 */
-        html {
-            height: 100%;
-            background-color: #000;
-            background-image: 
-                radial-gradient(circle at 50% 10%, rgba(60, 20, 110, 0.4) 0%, transparent 50%),
-                radial-gradient(circle at 90% 60%, rgba(20, 100, 120, 0.3) 0%, transparent 40%),
-                linear-gradient(180deg, #0f0c15 0%, #151525 100%);
-            background-size: cover;
-            background-repeat: no-repeat;
-            background-attachment: fixed; /* 防止背景滑動 */
-        }
-
         body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
             margin: 0;
-            padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            /* 修正2：使用 space-between 讓元素分散，而不是全部擠在下面 */
-            justify-content: space-between; 
-            overflow: hidden;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            color: var(--text-color);
+            background-color: #f0f2f5;
         }
 
-        /* 上方提示區：往下推一點，視覺更平衡 */
-        .header-section {
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end; /* 靠下對齊 */
-            align-items: center;
-            flex-grow: 1; /* 佔據上半部空間 */
-            padding-bottom: 40px; /* 與鍵盤的距離 */
+        .container {
+            text-align: center;
+            background: white;
+            padding: 2rem;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            width: 80%;
+            max-width: 300px;
+        }
+
+        input {
             width: 100%;
-        }
-
-        .instruction {
-            font-size: 22px;
-            font-weight: 500;
-            margin-bottom: 25px;
-            letter-spacing: 0.5px;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.5);
-        }
-
-        /* 密碼圓點 */
-        .dots-container {
-            display: flex;
-            gap: 24px;
-            height: 20px; /* 固定高度防止跳動 */
-        }
-
-        .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            border: 1.5px solid #fff;
-            background: transparent;
-            transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-            box-shadow: 0 0 8px rgba(255,255,255,0.1);
-        }
-
-        .dot.active {
-            background: #fff;
-            box-shadow: 0 0 15px rgba(255,255,255,0.9);
-            transform: scale(1.15);
-        }
-
-        @keyframes shake {
-            0%, 100% { transform: translateX(0); }
-            20%, 60% { transform: translateX(-8px); }
-            40%, 80% { transform: translateX(8px); }
-        }
-        .shake { animation: shake 0.35s cubic-bezier(.36,.07,.19,.97) both; }
-
-        /* 數字鍵盤區 */
-        .keypad {
-            width: 100%;
-            max-width: 350px;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            row-gap: 22px;
-            column-gap: 28px;
-            
-            /* 修正重點：這裡控制鍵盤離底部的距離 */
-            margin-bottom: 12vh; /* 距離底部 12% 的高度，確保位置適中 */
-            padding-bottom: env(safe-area-inset-bottom);
-        }
-
-        .key-wrapper {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-
-        .key {
-            width: 78px;
-            height: 78px;
-            border-radius: 50%;
-            background: var(--glass-bg);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            border: 1px solid var(--glass-border);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: background 0.1s, transform 0.1s;
-        }
-
-        .key:active {
-            background: var(--press-color);
-            transform: scale(0.95); /* 按下微微縮小 */
-        }
-
-        .key-num {
-            font-size: 36px;
-            font-weight: 300;
-            line-height: 1;
-            margin-bottom: 2px;
-        }
-
-        .key-sub {
-            font-size: 9px;
-            font-weight: 700;
-            letter-spacing: 2px;
-            opacity: 0.6;
-        }
-
-        /* 底部按鈕 */
-        .bottom-action {
-            font-size: 16px;
-            font-weight: 600;
-            color: #fff;
-            background: transparent;
-            border: none;
-            padding: 20px;
-            opacity: 0.9;
-        }
-        .bottom-action:active { opacity: 0.5; }
-
-        /* 相簿容器 (預留) */
-        #album-container {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: #000;
-            z-index: 200;
-            display: none;
-            opacity: 0;
-            transition: opacity 0.6s ease;
-            color: white;
-            justify-content: center;
-            align-items: center;
             font-size: 24px;
+            padding: 10px;
+            text-align: center;
+            border: 2px solid #ddd;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            outline: none;
+            /* 隱藏輸入框，如果魔術需要的話可以改為 opacity: 0 */
+        }
+
+        #display {
+            font-size: 80px;
+            font-weight: bold;
+            height: 120px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .red { color: #e74c3c; }
+        .black { color: #2c3e50; }
+
+        .hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 10px;
         }
     </style>
 </head>
 <body>
 
-    <div id="lock-interface" class="header-section">
-        <div class="instruction">輸入密碼</div>
-        <div class="dots-container" id="dots">
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-            <div class="dot"></div>
-        </div>
-    </div>
+<div class="container">
+    <input type="text" id="magicInput" placeholder="請輸入3位數字" inputmode="numeric" maxlength="3" autocomplete="off">
+    
+    <div id="display">---</div>
+    
+    <div class="hint">範例：113 (黑桃K), 201 (紅心A)</div>
+</div>
 
-    <div class="keypad" id="keypad">
-        <div class="key-wrapper"><div class="key" onclick="pressKey(1)"><span class="key-num">1</span><span class="key-sub">&nbsp;</span></div></div>
-        <div class="key-wrapper"><div class="key" onclick="pressKey(2)"><span class="key-num">2</span><span class="key-sub">ABC</span></div></div>
-        <div class="key-wrapper"><div class="key" onclick="pressKey(3)"><span class="key-num">3</span><span class="key-sub">DEF</span></div></div>
-        <div class="key-wrapper"><div class="key" onclick="pressKey(4)"><span class="key-num">4</span><span class="key-sub">GHI</span></div></div>
-        <div class="key-wrapper"><div class="key" onclick="pressKey(5)"><span class="key-num">5</span><span class="key-sub">JKL</span></div></div>
-        <div class="key-wrapper"><div class="key" onclick="pressKey(6)"><span class="key-num">6</span><span class="key-sub">MNO</span></div></div>
-        <div class="key-wrapper"><div class="key" onclick="pressKey(7)"><span class="key-num">7</span><span class="key-sub">PQRS</span></div></div>
-        <div class="key-wrapper"><div class="key" onclick="pressKey(8)"><span class="key-num">8</span><span class="key-sub">TUV</span></div></div>
-        <div class="key-wrapper"><div class="key" onclick="pressKey(9)"><span class="key-num">9</span><span class="key-sub">WXYZ</span></div></div>
-        
-        <div class="key-wrapper"><button class="bottom-action" onclick="">緊急服務</button></div>
-        <div class="key-wrapper"><div class="key" onclick="pressKey(0)"><span class="key-num">0</span></div></div>
-        <div class="key-wrapper"><button class="bottom-action" onclick="deleteKey()">取消</button></div>
-    </div>
+<script>
+    const inputEl = document.getElementById('magicInput');
+    const displayEl = document.getElementById('display');
 
-    <div id="album-container">
-        相簿載入中...
-    </div>
+    const suits = {
+        '1': { icon: '♠', color: 'black' },
+        '2': { icon: '♥', color: 'red' },
+        '3': { icon: '♦', color: 'red' },
+        '4': { icon: '♣', color: 'black' }
+    };
 
-    <script>
-        const CORRECT_PASS = '123456'; 
-        let currentInput = '';
-        const dots = document.querySelectorAll('.dot');
-        const lockInterface = document.getElementById('lock-interface');
-        const keypad = document.getElementById('keypad');
-        const albumContainer = document.getElementById('album-container');
+    const ranks = {
+        '01': 'A', '02': '2', '03': '3', '04': '4', '05': '5',
+        '06': '6', '07': '7', '08': '8', '09': '9', '10': '10',
+        '11': 'J', '12': 'Q', '13': 'K'
+    };
 
-        function pressKey(num) {
-            if (currentInput.length < 6) {
-                currentInput += num;
-                updateDots();
-                if (currentInput.length === 6) setTimeout(checkPassword, 150);
-            }
-        }
+    inputEl.addEventListener('input', (e) => {
+        const val = e.target.value;
 
-        function deleteKey() {
-            if (currentInput.length > 0) {
-                currentInput = currentInput.slice(0, -1);
-                updateDots();
-            }
-        }
+        if (val.length === 3) {
+            const suitKey = val[0]; // 第1位
+            const rankKey = val.substring(1); // 第2~3位
 
-        function updateDots() {
-            dots.forEach((dot, index) => {
-                if (index < currentInput.length) {
-                    dot.classList.add('active');
-                } else {
-                    dot.classList.remove('active');
-                }
-            });
-        }
+            const suit = suits[suitKey];
+            const rank = ranks[rankKey];
 
-        function checkPassword() {
-            if (currentInput === CORRECT_PASS) {
-                unlockSuccess();
+            if (suit && rank) {
+                displayEl.innerHTML = `${suit.icon}${rank}`;
+                displayEl.className = suit.color;
             } else {
-                shakeAnimation();
-                currentInput = '';
-                setTimeout(updateDots, 350);
+                displayEl.innerHTML = 'ERR';
+                displayEl.className = 'black';
             }
-        }
 
-        function shakeAnimation() {
-            const container = document.querySelector('.dots-container');
-            container.classList.add('shake');
-            if (navigator.vibrate) navigator.vibrate(200);
-            setTimeout(() => { container.classList.remove('shake'); }, 350);
+            // 輸入完後自動清空（或保留，視魔術需求而定）
+            // setTimeout(() => { e.target.value = ''; }, 1000);
+        } else if (val.length === 0) {
+            displayEl.innerHTML = '---';
+            displayEl.className = 'black';
         }
+    });
 
-        function unlockSuccess() {
-            document.body.style.transition = "all 0.6s ease";
-            keypad.style.opacity = '0';
-            keypad.style.transform = 'translateY(30px)';
-            lockInterface.style.opacity = '0';
-            lockInterface.style.transform = 'translateY(-30px)';
-            
-            setTimeout(() => {
-                keypad.style.display = 'none';
-                lockInterface.style.display = 'none';
-                
-                // 這裡將會切換到相簿
-                albumContainer.style.display = 'flex';
-                albumContainer.offsetHeight; 
-                albumContainer.style.opacity = '1';
-                // window.location.href = 'album.html'; // 如果相簿是另一個檔案
-            }, 400);
-        }
-    </script>
+    // 點擊頁面任何地方自動聚焦輸入框 (方便盲打)
+    document.body.addEventListener('click', () => {
+        inputEl.focus();
+    });
+</script>
+
 </body>
 </html>
