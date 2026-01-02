@@ -17,10 +17,14 @@
             margin: 0;
             padding: 0;
             overflow-y: scroll;
+            /* 防止長按選取文字 */
             user-select: none;
             -webkit-user-select: none;
+            /* 讓身體區域不要有彈回效果，增加操作穩定度 */
+            overscroll-behavior-y: contain;
         }
 
+        /* 導覽列 */
         .nav-bar {
             display: flex;
             justify-content: space-between;
@@ -38,45 +42,68 @@
 
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
-        /* 秘密數字指示器 */
+        /* 秘密指示器 (極淡，只有魔術師看得到) */
         #force-indicator {
             position: fixed;
             top: 60px;
-            left: 10px;
-            font-size: 11px;
-            color: rgba(0, 0, 0, 0.1); 
+            left: 8px;
+            font-size: 10px;
+            color: rgba(0, 0, 0, 0.08); 
             z-index: 4000;
             pointer-events: none;
             display: none;
         }
 
-        /* 0-9 頂部感應區 (全寬一格) */
-        #trigger-zero {
+        /* 秘密標記線 */
+        .marker {
             position: fixed;
-            top: 50px; /* 導覽列下方 */
-            left: 0;
-            width: 100%;
-            height: 60px; 
-            z-index: 2500;
-            /* 測試用樣式，表演時請改為 transparent */
-            background: rgba(0, 0, 255, 0.05); 
-            border: 1px dashed rgba(0,0,0,0.1);
+            width: 8px;
+            height: 1px;
+            background-color: rgba(0, 0, 0, 0.08); 
+            z-index: 3500;
+            pointer-events: none;
         }
 
-        /* 10-99 九宮格感應區 (下移至螢幕中下部) */
-        #trigger-grid {
+        /* 左側標記 (10, 40, 70) */
+        #m10 { top: 350px; left: 0; }
+        #m40 { top: 500px; left: 0; }
+        #m70 { top: 650px; left: 0; }
+        
+        /* 右側標記 (30, 60, 90) */
+        #m30 { top: 350px; right: 0; }
+        #m60 { top: 500px; right: 0; }
+        #m90 { top: 650px; right: 0; }
+
+        /* 0-9 廣域感應區 */
+        #trigger-zero {
             position: fixed;
-            top: 150px; /* 位置下移 */
+            top: 50px;
             left: 0;
             width: 100%;
-            height: 350px; 
+            height: 300px; 
+            z-index: 2500;
+            background: transparent;
+            touch-action: none; /* 禁用瀏覽器手勢 */
+        }
+
+        /* 10-99 九宮格區域 */
+        #trigger-grid {
+            position: fixed;
+            top: 350px; 
+            left: 0;
+            width: 100%;
+            height: 450px; 
             z-index: 2500;
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
-            /* 測試用樣式，表演時請改為 none */
-            background: rgba(255, 0, 0, 0.05);
-            border: 1px dashed rgba(0,0,0,0.1);
+            grid-template-columns: 1fr 1fr 1fr;
+            grid-template-rows: 1fr 1fr 1fr;
+            background: transparent;
+            touch-action: none; /* 禁用瀏覽器手勢，防止捲動干擾 */
+        }
+
+        .grid-cell {
+            background: transparent;
+            touch-action: none;
         }
 
         .content-wrap { padding: 0 20px 100px 20px; }
@@ -92,9 +119,16 @@
 
     <div id="force-indicator">0</div>
 
+    <div id="m10" class="marker"></div>
+    <div id="m30" class="marker"></div>
+    <div id="m40" class="marker"></div>
+    <div id="m60" class="marker"></div>
+    <div id="m70" class="marker"></div>
+    <div id="m90" class="marker"></div>
+
     <div class="nav-bar">
         <div class="back-btn">備忘錄</div>
-        <div style="color: #333; font-weight: 600;">動物百科</div>
+        <div style="color: #333; font-weight: 600;">清單</div>
         <div>完成</div>
     </div>
 
@@ -113,12 +147,11 @@
     </div>
 
     <div class="content-wrap">
-        <div class="note-date">2026年1月2日 21:20</div>
-        <h1>世界動物完整清單</h1>
+        <div class="note-date">2026年1月2日 21:42</div>
+        <h1>100種動物研究清單</h1>
         <p class="intro-text">
-            此清單按類別編號，包含全球 100 種具代表性的生物。請在下方瀏覽，並記住你感興趣的動物編號。
+            這是一份用於心靈感應實驗的專用清單。每一種動物都代表了一個特定的編號，請隨意捲動瀏覽。
         </p>
-
         <div id="main-list" class="list-container"></div>
     </div>
 
@@ -126,13 +159,15 @@
         const listEl = document.getElementById('main-list');
         const indicatorEl = document.getElementById('force-indicator');
         
+        // 動物清單資料
         let animals = ["非洲獅", "孟加拉虎", "亞洲象", "網紋長頸鹿", "平原斑馬", "紅袋鼠", "無尾熊", "皇帝企鵝", "河馬", "白犀牛", "山地大猩猩", "松鼠猴", "赤狐", "北極狼", "灰熊", "北極熊", "熊貓", "單峰駱駝", "加拿大馬鹿", "黑尾牛羚", "瓶鼻海豚", "藍鯨", "大白鯊", "綠蠵龜", "大王具足蟲", "月亮水母", "澳洲龍蝦", "大閘蟹", "紅海星", "大肚海馬", "安地斯神鷹", "白頭海鵰", "倉鴞", "金剛鸚鵡", "藍孔雀", "疣鼻天鵝", "美洲紅鸛", "普通翠鳥", "五色鳥", "麻雀", "高冠變色龍", "科摩多龍", "象龜", "尼羅鱷", "眼鏡蛇", "紅眼樹蛙", "大蟾蜍", "雲南蠑螈", "義大利蜂", "大樺斑蝶", "薄翅蜻蜓", "非洲綠螳螂", "熊蟬", "紅火蟻", "非洲大蝸牛", "白額高腳蛛", "帝王蠍", "小狐蝠", "赤腹松鼠", "荷蘭垂耳兔", "溝鼠", "非洲刺蝟", "水豚", "蜂猴", "三趾樹懶", "北美浣熊", "臭鼬", "黑尾土撥鼠", "九帶犰狳", "鴨嘴獸", "印度獵豹", "美洲豹", "雲豹", "雪豹", "黑豹", "斑點鬣狗", "野豬", "馴鹿", "犛牛", "羊駝", "羚牛", "劍羚", "麝牛", "綠頭鴨", "灰雁", "七面鳥", "鵪鶉", "原鴿", "小嘴烏鴉", "喜鵲", "黑脊鷗", "澳洲鵜鶘", "鸕鶿", "非洲鴕鳥", "鴯鶓", "幾維鳥", "大嘴鳥", "犀鳥", "蜂鳥", "蝙蝠"];
 
         let startY = 0;
         let baseValue = 0;
         let finalForcedNum = 0;
-        const sensitivity = 15; // 上滑 15px 數字 +1
+        const sensitivity = 15; // 每滑動15像素數字+1
 
+        // 渲染清單
         function buildList() {
             listEl.innerHTML = animals.map((a, i) => `
                 <div class="item">
@@ -142,25 +177,35 @@
             `).join('');
         }
 
+        // 核心邏輯處理
         const cells = document.querySelectorAll('.grid-cell');
         cells.forEach(cell => {
+            // 開始觸碰
             cell.addEventListener('touchstart', (e) => {
+                // 阻止捲動與原生行為，確保觸摸事件被 JS 獨佔
+                if (e.cancelable) e.preventDefault();
+                
                 startY = e.touches[0].clientY;
                 baseValue = parseInt(cell.getAttribute('data-start'));
-                finalForcedNum = baseValue;
                 
-                indicatorEl.innerText = (finalForcedNum === 0) ? 1 : finalForcedNum;
+                // 初始化數字
+                finalForcedNum = (baseValue === 0) ? 1 : baseValue;
+                
+                indicatorEl.innerText = finalForcedNum;
                 indicatorEl.style.display = 'block';
-            });
+            }, { passive: false });
 
+            // 滑動中 (上滑增加數字)
             cell.addEventListener('touchmove', (e) => {
+                if (e.cancelable) e.preventDefault();
+                
                 let currentY = e.touches[0].clientY;
-                let distance = startY - currentY; // 上滑
+                let distance = startY - currentY; // 往上滑 distance 會是正值
                 let increment = Math.floor(distance / sensitivity);
                 
                 let tempNum = baseValue + increment;
                 
-                // 邏輯處理：如果是 0-9 區，最小從 1 開始
+                // 限制範圍 0-9 或是 十位數區間
                 if (baseValue === 0) {
                     if (tempNum < 1) tempNum = 1;
                     if (tempNum > 9) tempNum = 9;
@@ -171,28 +216,33 @@
                 
                 finalForcedNum = tempNum;
                 indicatorEl.innerText = finalForcedNum;
-            });
+            }, { passive: false });
 
-            cell.addEventListener('touchend', () => {
+            // 手指放開，執行強迫 (Force)
+            cell.addEventListener('touchend', (e) => {
                 applyForce(finalForcedNum);
                 indicatorEl.style.display = 'none';
             });
         });
 
+        // 強迫邏輯：將「熊貓」與目標位置的動物交換
         function applyForce(targetNum) {
             if (targetNum <= 0) return;
-            const targetIdx = targetNum - 1;
+            const targetIdx = targetNum - 1; // 轉為陣列索引 (0-99)
             const panda = "熊貓";
             const oldIdx = animals.indexOf(panda);
 
+            // 如果位置不同，才進行交換
             if (oldIdx !== -1 && oldIdx !== targetIdx) {
                 let replacedAnimal = animals[targetIdx];
                 animals[targetIdx] = panda;
                 animals[oldIdx] = replacedAnimal;
                 buildList();
+                console.log("已將熊貓移動至編號:", targetNum);
             }
         }
 
+        // 初始化
         buildList();
     </script>
 </body>
