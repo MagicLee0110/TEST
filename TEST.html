@@ -16,13 +16,11 @@
             background-color: var(--ios-bg);
             margin: 0;
             padding: 0;
-            /* 允許捲動 */
             overflow-y: scroll;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        /* 導覽列 */
         .nav-bar {
             display: flex;
             justify-content: space-between;
@@ -34,7 +32,7 @@
             top: 0;
             background: rgba(255, 255, 255, 0.94);
             backdrop-filter: blur(20px);
-            z-index: 2000;
+            z-index: 3000;
             border-bottom: 0.5px solid #d1d1d6;
         }
 
@@ -43,28 +41,42 @@
         /* 秘密數字指示器 */
         #force-indicator {
             position: fixed;
-            top: 60px; /* 避開導覽列 */
+            top: 60px;
             left: 10px;
             font-size: 11px;
             color: rgba(0, 0, 0, 0.1); 
-            z-index: 3000;
+            z-index: 4000;
             pointer-events: none;
             display: none;
         }
 
-        /* 隱藏感應九宮格 - 位置下移且固定 */
-        #trigger-grid {
+        /* 0-9 頂部感應區 (全寬一格) */
+        #trigger-zero {
             position: fixed;
-            top: 150px; /* 從螢幕上方 150px 開始，這了大約是標題下方 */
+            top: 50px; /* 導覽列下方 */
             left: 0;
             width: 100%;
-            height: 250px; /* 感應區高度 */
-            z-index: 1500;
+            height: 60px; 
+            z-index: 2500;
+            /* 測試用樣式，表演時請改為 transparent */
+            background: rgba(0, 0, 255, 0.05); 
+            border: 1px dashed rgba(0,0,0,0.1);
+        }
+
+        /* 10-99 九宮格感應區 (下移至螢幕中下部) */
+        #trigger-grid {
+            position: fixed;
+            top: 150px; /* 位置下移 */
+            left: 0;
+            width: 100%;
+            height: 350px; 
+            z-index: 2500;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
-            /* 測試時可取消下面註解來觀察位置 */
-            /* background: rgba(255,0,0,0.1); */
+            /* 測試用樣式，表演時請改為 none */
+            background: rgba(255, 0, 0, 0.05);
+            border: 1px dashed rgba(0,0,0,0.1);
         }
 
         .content-wrap { padding: 0 20px 100px 20px; }
@@ -82,9 +94,11 @@
 
     <div class="nav-bar">
         <div class="back-btn">備忘錄</div>
-        <div style="color: #333; font-weight: 600;">動物清單</div>
+        <div style="color: #333; font-weight: 600;">動物百科</div>
         <div>完成</div>
     </div>
+
+    <div id="trigger-zero" class="grid-cell" data-start="0"></div>
 
     <div id="trigger-grid">
         <div class="grid-cell" data-start="10"></div>
@@ -99,10 +113,10 @@
     </div>
 
     <div class="content-wrap">
-        <div class="note-date">2026年1月2日 21:15</div>
-        <h1>世界動物百科</h1>
+        <div class="note-date">2026年1月2日 21:20</div>
+        <h1>世界動物完整清單</h1>
         <p class="intro-text">
-            歡迎查閱這份收錄了 100 種動物的完整名錄。這份清單旨在協助研究者快速定位不同屬性的生物，請隨意向下滑動瀏覽。
+            此清單按類別編號，包含全球 100 種具代表性的生物。請在下方瀏覽，並記住你感興趣的動物編號。
         </p>
 
         <div id="main-list" class="list-container"></div>
@@ -117,7 +131,7 @@
         let startY = 0;
         let baseValue = 0;
         let finalForcedNum = 0;
-        const sensitivity = 20; // 因為螢幕會動，靈敏度調低一點點比較好控
+        const sensitivity = 15; // 上滑 15px 數字 +1
 
         function buildList() {
             listEl.innerHTML = animals.map((a, i) => `
@@ -135,21 +149,25 @@
                 baseValue = parseInt(cell.getAttribute('data-start'));
                 finalForcedNum = baseValue;
                 
-                indicatorEl.innerText = finalForcedNum;
+                indicatorEl.innerText = (finalForcedNum === 0) ? 1 : finalForcedNum;
                 indicatorEl.style.display = 'block';
             });
 
             cell.addEventListener('touchmove', (e) => {
-                // 不再使用 preventDefault()，讓網頁正常捲動
                 let currentY = e.touches[0].clientY;
-                
-                // 上滑增加
-                let distance = startY - currentY; 
+                let distance = startY - currentY; // 上滑
                 let increment = Math.floor(distance / sensitivity);
                 
                 let tempNum = baseValue + increment;
-                if (tempNum < baseValue) tempNum = baseValue;
-                if (tempNum > baseValue + 9) tempNum = baseValue + 9;
+                
+                // 邏輯處理：如果是 0-9 區，最小從 1 開始
+                if (baseValue === 0) {
+                    if (tempNum < 1) tempNum = 1;
+                    if (tempNum > 9) tempNum = 9;
+                } else {
+                    if (tempNum < baseValue) tempNum = baseValue;
+                    if (tempNum > baseValue + 9) tempNum = baseValue + 9;
+                }
                 
                 finalForcedNum = tempNum;
                 indicatorEl.innerText = finalForcedNum;
@@ -162,6 +180,7 @@
         });
 
         function applyForce(targetNum) {
+            if (targetNum <= 0) return;
             const targetIdx = targetNum - 1;
             const panda = "熊貓";
             const oldIdx = animals.indexOf(panda);
