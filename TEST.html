@@ -16,7 +16,7 @@
             background-color: var(--ios-bg);
             margin: 0;
             padding: 0;
-            overflow-y: scroll; /* 允許正常捲動 */
+            overflow-y: scroll;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -39,45 +39,55 @@
 
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
-        /* 秘密數字指示器 (維持在左上角，方便斜眼偷瞄) */
+        /* 秘密數字指示器 (極淡) */
         #force-indicator {
             position: fixed;
             top: 60px;
             left: 10px;
-            font-size: 11px;
-            color: rgba(0, 0, 0, 0.08); 
+            font-size: 10px;
+            color: rgba(0, 0, 0, 0.05); 
             z-index: 4000;
             pointer-events: none;
             display: none;
         }
 
-        /* 0-9 感應區 (移至螢幕中段) */
+        /* 秘密標記線 (40 與 60) */
+        .secret-marker {
+            position: fixed;
+            width: 5px;
+            height: 1px;
+            background-color: rgba(0, 0, 0, 0.08); /* 極淡灰色 */
+            z-index: 3500;
+            pointer-events: none;
+        }
+        /* 40 號位置 (中排左起始) */
+        #marker-40 { top: 496px; left: 0; }
+        /* 60 號位置 (中排右起始) */
+        #marker-60 { top: 496px; right: 0; }
+
+        /* 0-9 感應區 (全隱形) */
         #trigger-zero {
             position: fixed;
-            top: 300px; /* 大約螢幕中間 */
+            top: 300px;
             left: 0;
             width: 100%;
             height: 60px; 
             z-index: 2500;
-            /* 測試用樣式，表演時請改為 background: transparent; border: none; */
-            background: rgba(0, 0, 255, 0.05); 
-            border: 1px dashed rgba(0,0,0,0.1);
+            background: transparent;
         }
 
-        /* 10-99 九宮格感應區 (移至螢幕下段) */
+        /* 10-99 九宮格感應區 (全隱形) */
         #trigger-grid {
             position: fixed;
-            top: 370px; /* 緊接在 0-9 區下方 */
+            top: 370px;
             left: 0;
             width: 100%;
-            height: 380px; /* 拉高感應範圍，確保大拇指怎麼滑都在這 */
+            height: 380px; 
             z-index: 2500;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
-            /* 測試用樣式，表演時請改為 background: transparent; border: none; */
-            background: rgba(255, 0, 0, 0.05);
-            border: 1px dashed rgba(0,0,0,0.1);
+            background: transparent;
         }
 
         .content-wrap { padding: 0 20px 100px 20px; }
@@ -93,14 +103,16 @@
 
     <div id="force-indicator">0</div>
 
+    <div id="marker-40" class="secret-marker"></div>
+    <div id="marker-60" class="secret-marker"></div>
+
     <div class="nav-bar">
         <div class="back-btn">備忘錄</div>
-        <div style="color: #333; font-weight: 600;">動物百科</div>
+        <div style="color: #333; font-weight: 600;">清單</div>
         <div>完成</div>
     </div>
 
     <div id="trigger-zero" class="grid-cell" data-start="0"></div>
-
     <div id="trigger-grid">
         <div class="grid-cell" data-start="10"></div>
         <div class="grid-cell" data-start="20"></div>
@@ -114,12 +126,11 @@
     </div>
 
     <div class="content-wrap">
-        <div class="note-date">2026年1月2日 21:25</div>
+        <div class="note-date">2026年1月2日 21:27</div>
         <h1>100種動物研究清單</h1>
         <p class="intro-text">
-            這是一份用於心靈魔術實驗的專用清單。每一種動物都代表了一個特定的頻率與編號，請隨意捲動並選出一個數字。
+            這份清單包含了全球各地的脊椎動物與無脊椎動物，用於心靈感應實驗與分類練習。請隨意滑動瀏覽。
         </p>
-
         <div id="main-list" class="list-container"></div>
     </div>
 
@@ -150,7 +161,6 @@
                 baseValue = parseInt(cell.getAttribute('data-start'));
                 finalForcedNum = baseValue;
                 
-                // 顯示指示器
                 let initialShow = (finalForcedNum === 0) ? 1 : finalForcedNum;
                 indicatorEl.innerText = initialShow;
                 indicatorEl.style.display = 'block';
@@ -158,7 +168,7 @@
 
             cell.addEventListener('touchmove', (e) => {
                 let currentY = e.touches[0].clientY;
-                let distance = startY - currentY; // 上滑增加
+                let distance = startY - currentY; 
                 let increment = Math.floor(distance / sensitivity);
                 
                 let tempNum = baseValue + increment;
