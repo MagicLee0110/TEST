@@ -1,99 +1,109 @@
 <!DOCTYPE html>
-<html lang="zh-TW">
+<html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>備忘錄</title>
     <style>
         :root {
-            --ios-yellow: #ffb400;
+            --ios-yellow: #ffb100;
             --ios-bg: #ffffff;
+            --ios-gray: #8e8e93;
         }
 
-        body, html {
-            margin: 0;
-            padding: 0;
+        body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--ios-bg);
-            color: #000;
+            margin: 0;
+            padding: 0;
             user-select: none;
-            overflow-x: hidden;
+            -webkit-user-select: none;
         }
 
-        /* iOS 標題欄 */
-        .header {
-            padding: 40px 20px 10px 20px;
+        /* 導覽列 */
+        .nav-bar {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: #fff;
-            position: sticky;
-            top: 0;
-            z-index: 10;
-        }
-
-        .back-btn {
+            padding: 10px 15px;
             color: var(--ios-yellow);
             font-size: 17px;
-            display: flex;
-            align-items: center;
-            text-decoration: none;
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+
+        .back-btn::before {
+            content: "〈 ";
+            font-weight: bold;
+        }
+
+        /* 隱藏指示器 - 只有魔術師看得到 */
+        #force-indicator {
+            position: fixed;
+            top: 5px;
+            left: 5px;
+            font-size: 12px;
+            color: rgba(0, 0, 0, 0.1); /* 非常淡的顏色 */
+            z-index: 1000;
+            display: none;
         }
 
         /* 內容區 */
         .content {
-            padding: 0 20px 100px 20px;
+            padding: 20px;
+            padding-top: 10px;
         }
 
-        .note-title {
-            font-size: 32px;
-            font-weight: bold;
+        .note-date {
+            color: var(--ios-gray);
+            text-align: center;
+            font-size: 13px;
             margin-bottom: 15px;
         }
 
-        .intro-text {
+        h1 {
+            font-size: 28px;
+            margin: 0 0 15px 0;
+        }
+
+        .intro {
             font-size: 17px;
             line-height: 1.5;
             margin-bottom: 30px;
             color: #333;
         }
 
+        /* 動物列表 */
         .animal-item {
-            padding: 12px 0;
-            border-bottom: 0.5px solid #e0e0e0;
-            font-size: 17px;
             display: flex;
+            padding: 12px 0;
+            border-bottom: 0.5px solid #e5e5e5;
+            font-size: 17px;
         }
 
-        .animal-index {
+        .animal-num {
             width: 40px;
-            color: #8e8e93;
+            color: var(--ios-gray);
         }
 
-        /* 隱藏九宮格核心機制 */
-        #magic-grid {
-            position: fixed;
+        /* 隱藏九宮格感應區 */
+        #trigger-zone {
+            position: absolute;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
+            width: 100%;
+            height: 150px; /* 標題區塊 */
+            z-index: 200;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
-            z-index: 999;
-            opacity: 0; /* 完全透明 */
         }
 
-        /* 強迫數字顯示 (極小且低調) */
-        #force-indicator {
-            position: fixed;
-            top: 5px;
-            left: 5px;
-            font-size: 10px;
-            color: rgba(0,0,0,0.1); /* 極淡的顏色 */
-            z-index: 1000;
-            display: none;
-            pointer-events: none;
+        .grid-cell {
+            /* border: 1px solid rgba(0,0,0,0.05);  測試時可開啟 */
         }
     </style>
 </head>
@@ -101,23 +111,32 @@
 
     <div id="force-indicator">0</div>
 
-    <div id="magic-grid">
-        <div data-range="10"></div><div data-range="20"></div><div data-range="30"></div>
-        <div data-range="40"></div><div data-range="50"></div><div data-range="60"></div>
-        <div data-range="70"></div><div data-range="80"></div><div data-range="90"></div>
+    <div class="nav-bar">
+        <div class="back-btn">備忘錄</div>
+        <div style="font-weight: 600; color: #333;">動物百科</div>
+        <div>完成</div>
     </div>
 
-    <div class="header">
-        <div class="back-btn">＜ 備忘錄</div>
-        <div style="color: var(--ios-yellow);">完成</div>
+    <div id="trigger-zone">
+        <div class="grid-cell" data-range="10"></div>
+        <div class="grid-cell" data-range="20"></div>
+        <div class="grid-cell" data-range="30"></div>
+        <div class="grid-cell" data-range="40"></div>
+        <div class="grid-cell" data-range="50"></div>
+        <div class="grid-cell" data-range="60"></div>
+        <div class="grid-cell" data-range="70"></div>
+        <div class="grid-cell" data-range="80"></div>
+        <div class="grid-cell" data-range="90"></div>
     </div>
 
     <div class="content">
-        <div class="note-title">關於大自然的奧秘</div>
-        <div class="intro-text">
-            動物界是一個充滿驚奇的世界。從非洲大草原到深邃的海洋，每一種生物都有其獨特的生存方式。科學家研究發現，群居動物展現了極高的社會智慧。以下是我們為這次心靈感應實驗所準備的 100 種參考動物名單：
+        <div class="note-date">2026年1月2日 21:00</div>
+        <h1>關於大自然的奇妙生物</h1>
+        <div class="intro">
+            地球是一個充滿生命力的星球，從深海到高山，無數生物在此繁衍生息。每一種動物都有其獨特的生存方式與本能，這些生物多樣性構成了我們美麗的世界。
+            以下是我們為你整理的 100 種常見與珍稀動物名錄：
         </div>
-        
+
         <div id="animal-list">
             </div>
     </div>
@@ -125,65 +144,71 @@
     <script>
         const animalListContainer = document.getElementById('animal-list');
         const indicator = document.getElementById('force-indicator');
-        const grid = document.getElementById('magic-grid');
-        
-        let animals = ["獅子", "老虎", "大象", "長頸鹿", "斑馬", "河馬", "袋鼠", "無尾熊", "企鵝", "海豚", "狐狸", "灰狼", "駱駝", "松鼠", "兔子", "梅花鹿", "犀牛", "黑猩猩", "樹懶", "獵豹", "貓頭鷹", "老鷹", "孔雀", "天鵝", "烏龜", "鱷魚", "變色龍", "章魚", "水母", "海馬"];
-        // 預填補隨機動物到100個
-        while(animals.length < 100) {
-            animals.push("未知生物" + (animals.length + 1));
-        }
+        let animals = ["獅子", "老虎", "大象", "長頸鹿", "斑馬", "袋鼠", "無尾熊", "企鵝", "河馬", "犀牛", "猩猩", "猴子", "狐狸", "灰狼", "棕熊", "北極熊", "熊貓", "駱駝", "麋鹿", "羚羊", "海豚", "鯨魚", "鯊魚", "海龜", "章魚", "水母", "龍蝦", "螃蟹", "海星", "海馬", "禿鷹", "老鷹", "貓頭鷹", "鸚鵡", "孔雀", "天鵝", "火烈鳥", "翠鳥", "啄木鳥", "麻雀", "變色龍", "蜥蜴", "烏龜", "鱷魚", "蛇", "青蛙", "蟾蜍", "蠑螈", "蜜蜂", "蝴蝶", "蜻蜓", "螳螂", "蟬", "螞蟻", "蝸牛", "蜘蛛", "蠍子", "蝙蝠", "松鼠", "兔子", "老鼠", "刺蝟", "水豚", "懶猴", "樹懶", "浣熊", "臭鼬", "土撥鼠", "犰狳", "鴨嘴獸", "獵豹", "美洲豹", "雲豹", "雪豹", "黑豹", "鬣狗", "野豬", "馴鹿", "犛牛", "羊駝", "羚牛", "羚羊", "麝牛", "鴨子", "鵝", "火雞", "鵪鶉", "鴿子", "烏鴉", "喜鵲", "海鷗", "鵜鶘", "鸕鶿", "鴕鳥", "鴯鶓", "奇異鳥", "大嘴鳥", "犀鳥", "蜂鳥", "蝙蝠"];
 
-        let currentForceNum = 0;
-        let isTouching = false;
-        let baseRange = 0;
+        let currentForceNum = -1;
+        let startY = 0;
+        let baseNum = 0;
 
-        // 初始化列表
+        // 1. 初始化列表
         function renderList() {
             animalListContainer.innerHTML = '';
-            for (let i = 1; i <= 100; i++) {
+            animals.forEach((name, index) => {
                 const item = document.createElement('div');
                 item.className = 'animal-item';
-                item.innerHTML = `<span class="animal-index">${i}.</span> <span class="animal-name">${animals[i+1]}</span>`;
+                item.innerHTML = `<div class="animal-num">${index + 1}.</div><div>${name}</div>`;
                 animalListContainer.appendChild(item);
-            }
+            });
         }
 
-        // 強迫邏輯
-        grid.addEventListener('touchstart', (e) => {
-            isTouching = true;
-            const range = e.target.getAttribute('data-range');
-            if (range) {
-                baseRange = parseInt(range);
+        // 2. 強迫邏輯
+        const cells = document.querySelectorAll('.grid-cell');
+        cells.forEach(cell => {
+            cell.addEventListener('touchstart', (e) => {
+                startY = e.touches[0].clientY;
+                baseNum = parseInt(cell.getAttribute('data-range'));
+                currentForceNum = baseNum;
+                
+                indicator.innerText = currentForceNum;
                 indicator.style.display = 'block';
-            }
+            });
+
+            cell.addEventListener('touchmove', (e) => {
+                e.preventDefault(); // 防止頁面滾動
+                let moveY = e.touches[0].clientY;
+                let diff = Math.floor((moveY - startY) / 10); // 每滑動10px數字加1
+                
+                currentForceNum = baseNum + diff;
+                
+                // 限制在該宮格的範圍內 (0-9)
+                if (currentForceNum < baseNum) currentForceNum = baseNum;
+                if (currentForceNum > baseNum + 9) currentForceNum = baseNum + 9;
+                if (currentForceNum > 100) currentForceNum = 100;
+
+                indicator.innerText = currentForceNum;
+            });
+
+            cell.addEventListener('touchend', () => {
+                forceAnimal(currentForceNum);
+                indicator.style.display = 'none';
+            });
         });
 
-        window.addEventListener('touchmove', (e) => {
-            if (!isTouching) return;
+        function forceAnimal(targetNum) {
+            if (targetNum <= 0) return;
             
-            // 根據滑動位置計算偏移量 (0-9)
-            const touch = e.touches[0];
-            const moveOffset = Math.floor((touch.clientY / window.innerHeight) * 10);
-            currentForceNum = baseRange + (moveOffset % 10);
-            
-            indicator.innerText = currentForceNum;
-        });
+            const targetIdx = targetNum - 1; // 陣列從0開始
+            const pandaName = "熊貓";
+            const currentPandaIdx = animals.indexOf(pandaName);
 
-        window.addEventListener('touchend', () => {
-            if (!isTouching) return;
-            
-            // 執行「強迫」：將該編號的動物換成熊貓
-            if (currentForceNum > 0 && currentForceNum <= 100) {
-                // 先清空原本可能存在的熊貓（選填，若要確保只有一個熊貓）
-                animals = animals.map(a => a === "熊貓" ? "隨機動物" : a);
-                // 設定目標編號為熊貓
-                animals[currentForceNum - 1] = "熊貓";
+            if (currentPandaIdx !== -1 && currentPandaIdx !== targetIdx) {
+                // 交換位置：把目標位置原有的動物換到熊貓原本的位置
+                let tempAnimal = animals[targetIdx];
+                animals[targetIdx] = pandaName;
+                animals[currentPandaIdx] = tempAnimal;
                 renderList();
             }
-
-            isTouching = false;
-            indicator.style.display = 'none';
-        });
+        }
 
         renderList();
     </script>
