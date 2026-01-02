@@ -20,9 +20,10 @@
             user-select: none;
             -webkit-user-select: none;
             overflow-x: hidden;
+            /* 防止下拉重新整理 */
+            overscroll-behavior-y: contain; 
         }
 
-        /* iOS 標題工具欄 */
         .header {
             padding: 45px 15px 10px 15px;
             display: flex;
@@ -40,17 +41,14 @@
             font-size: 17px;
             display: flex;
             align-items: center;
-            font-weight: 400;
         }
 
         .back-btn::before {
             content: "＜";
             font-size: 20px;
             margin-right: 5px;
-            font-weight: 600;
         }
 
-        /* 內容區 */
         .content {
             padding: 0 20px 100px 20px;
         }
@@ -65,29 +63,21 @@
             font-size: 17px;
             line-height: 1.45;
             margin-bottom: 25px;
-            color: #000;
         }
 
-        /* 動物列表樣式 */
         .animal-item {
             padding: 12px 0;
             border-bottom: 0.5px solid #d1d1d6;
             font-size: 17px;
             display: flex;
-            align-items: center;
         }
 
         .animal-index {
             width: 45px;
             color: var(--ios-gray);
-            font-variant-numeric: tabular-nums;
         }
 
-        .animal-name {
-            color: #000;
-        }
-
-        /* 隱藏九宮格 */
+        /* 核心隱藏機制 */
         #magic-grid {
             position: fixed;
             top: 0;
@@ -98,20 +88,19 @@
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
             z-index: 999;
-            opacity: 0;
+            opacity: 0; /* 完全透明，觀眾看不見 */
+            touch-action: none; /* 禁用瀏覽器原生手勢，完全由 JS 接手 */
         }
 
-        /* 魔術師專用的小型指示器 */
         #force-indicator {
             position: fixed;
-            top: 8px;
-            left: 8px;
+            top: 10px;
+            left: 10px;
             font-size: 12px;
-            color: rgba(0, 0, 0, 0.15); /* 極淡顏色，僅魔術師可見 */
+            color: rgba(0, 0, 0, 0.2);
             z-index: 1000;
             display: none;
             pointer-events: none;
-            font-family: monospace;
         }
     </style>
 </head>
@@ -133,11 +122,10 @@
     <div class="content">
         <div class="note-title">動物感應清單</div>
         <div class="intro-text">
-            這是一份由 AI 隨機生成的動物數據庫，包含世界各地不同環境下的生物。請在心中隨意挑選一個數字，我們將透過數字對應的動物進行心靈連結。
+            以下是我們在這次心靈實驗中會用到的 100 種動物清單。請隨意滑動觀察，這些動物都是隨機排列的。
         </div>
         
-        <div id="animal-list">
-            </div>
+        <div id="animal-list"></div>
     </div>
 
     <script>
@@ -145,7 +133,6 @@
         const indicator = document.getElementById('force-indicator');
         const grid = document.getElementById('magic-grid');
 
-        // 真實感動物清單
         const rawAnimals = [
             "獅子", "老虎", "大象", "斑馬", "長頸鹿", "河馬", "犀牛", "獵豹", "黑猩猩", "狒狒",
             "袋鼠", "無尾熊", "鴨嘴獸", "鴯鶓", "企鵝", "海豹", "海象", "北極熊", "灰狼", "狐狸",
@@ -164,22 +151,20 @@
         let isTouching = false;
         let baseRange = 0;
         let startY = 0;
-        let sensitivity = 20; // 數字跳動靈敏度：每滑動 20px 數字 +1
+        let sensitivity = 15; // 滑動 15px 數字 +1
 
         function renderList() {
-            animalListContainer.innerHTML = '';
-            animals.forEach((name, index) => {
-                const item = document.createElement('div');
-                item.className = 'animal-item';
-                item.innerHTML = `
-                    <span class="animal-index">${index + 1}.</span>
-                    <span class="animal-name">${name}</span>
-                `;
-                animalListContainer.appendChild(item);
-            });
+            let html = '';
+            for (let i = 0; i < animals.length; i++) {
+                html += `<div class="animal-item">
+                            <span class="animal-index">${i + 1}.</span>
+                            <span class="animal-name">${animals[i]}</span>
+                         </div>`;
+            }
+            animalListContainer.innerHTML = html;
         }
 
-        // 監聽九宮格觸發
+        // 觸摸開始
         grid.addEventListener('touchstart', (e) => {
             isTouching = true;
             const range = e.target.getAttribute('data-range');
@@ -190,30 +175,36 @@
                 indicator.innerText = currentForceNum;
                 indicator.style.display = 'block';
             }
-        }, { passive: true });
+        }, { passive: false });
 
-        window.addEventListener('touchmove', (e) => {
+        // 滑動中 (核心修正：加入 preventDefault)
+        grid.addEventListener('touchmove', (e) => {
             if (!isTouching) return;
+            e.preventDefault(); // 阻止頁面捲動，確保能捕捉到滑動距離
             
             const currentY = e.touches[0].clientY;
-            const diffY = currentY - startY; // 下滑值為正
+            const diffY = currentY - startY;
             
-            if (diffY > 0) {
+            if (diffY > 0) { // 往下滑
                 let increment = Math.floor(diffY / sensitivity);
-                if (increment > 9) increment = 9; // 限制在該十位數區間內
+                if (increment > 9) increment = 9;
                 
                 currentForceNum = baseRange + increment;
                 indicator.innerText = currentForceNum;
+            } else {
+                // 如果往上滑，回到 baseRange
+                currentForceNum = baseRange;
+                indicator.innerText = currentForceNum;
             }
-        }, { passive: true });
+        }, { passive: false });
 
-        window.addEventListener('touchend', () => {
+        // 觸摸結束
+        grid.addEventListener('touchend', () => {
             if (!isTouching) return;
             
             if (currentForceNum >= 1 && currentForceNum <= 100) {
-                // 重置名單，確保只有一個熊貓
+                // 更新名單：先重置，再放熊貓
                 animals = [...rawAnimals];
-                // 強迫轉換目標
                 animals[currentForceNum - 1] = "熊貓";
                 renderList();
             }
@@ -222,7 +213,6 @@
             indicator.style.display = 'none';
         });
 
-        // 初始渲染
         renderList();
     </script>
 </body>
