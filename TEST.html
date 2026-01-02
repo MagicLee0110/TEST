@@ -14,46 +14,87 @@
         body {
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--ios-bg);
-            margin: 0; padding: 0;
-            overflow-y: scroll; /* 允許捲動 */
-            user-select: none; -webkit-user-select: none;
+            margin: 0;
+            padding: 0;
+            overflow-y: scroll;
+            user-select: none;
+            -webkit-user-select: none;
         }
 
+        /* 導覽列 */
         .nav-bar {
-            display: flex; justify-content: space-between; align-items: center;
-            padding: 12px 16px; color: var(--ios-yellow); font-size: 17px;
-            position: sticky; top: 0; background: rgba(255, 255, 255, 0.94);
-            backdrop-filter: blur(20px); z-index: 4000; border-bottom: 0.5px solid #d1d1d6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 16px;
+            color: var(--ios-yellow);
+            font-size: 17px;
+            position: sticky;
+            top: 0;
+            background: rgba(255, 255, 255, 0.94);
+            backdrop-filter: blur(20px);
+            z-index: 3000;
+            border-bottom: 0.5px solid #d1d1d6;
         }
 
+        .back-btn::before { content: "〈 "; font-weight: 600; }
+
+        /* 秘密數字指示器 (極淡) */
         #force-indicator {
-            position: fixed; top: 60px; left: 8px; font-size: 10px;
-            color: rgba(0, 0, 0, 0.1); z-index: 5000; pointer-events: none; display: none;
-        }
-
-        /* 秘密感應區：只佔據左右邊緣，中間留空讓觀眾捲動 */
-        .secret-zone {
             position: fixed;
-            z-index: 3500;
-            background: rgba(255, 0, 0, 0); /* 測試時可改 0.05 觀察位置 */
-            touch-action: none; /* 阻斷捲動，專心增減數字 */
+            top: 60px;
+            left: 10px;
+            font-size: 10px;
+            color: rgba(0, 0, 0, 0.05); 
+            z-index: 4000;
+            pointer-events: none;
+            display: none;
         }
 
-        /* 0-9 區 (最上方) */
-        #zone-top { top: 50px; left: 0; width: 100%; height: 60px; }
+        /* 秘密標記線 (40 與 60) */
+        .secret-marker {
+            position: fixed;
+            width: 5px;
+            height: 1px;
+            background-color: rgba(0, 0, 0, 0.08); /* 極淡灰色 */
+            z-index: 3500;
+            pointer-events: none;
+        }
+        /* 40 號位置 (中排左起始) */
+        #marker-40 { top: 496px; left: 0; }
+        /* 60 號位置 (中排右起始) */
+        #marker-60 { top: 496px; right: 0; }
 
-        /* 左側感應柱 (10, 40, 70) */
-        #zone-left { top: 110px; left: 0; width: 20%; height: 80vh; display: flex; flex-direction: column; }
-        
-        /* 右側感應柱 (30, 60, 90) */
-        #zone-right { top: 110px; right: 0; width: 20%; height: 80vh; display: flex; flex-direction: column; }
+        /* 0-9 感應區 (全隱形) */
+        #trigger-zero {
+            position: fixed;
+            top: 300px;
+            left: 0;
+            width: 100%;
+            height: 60px; 
+            z-index: 2500;
+            background: transparent;
+        }
 
-        /* 20, 50, 80 區可以藏在左柱和右柱的交界處，或是你習慣的位置 */
-        .cell { flex: 1; }
+        /* 10-99 九宮格感應區 (全隱形) */
+        #trigger-grid {
+            position: fixed;
+            top: 370px;
+            left: 0;
+            width: 100%;
+            height: 380px; 
+            z-index: 2500;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            background: transparent;
+        }
 
-        .content-wrap { padding: 0 20px 100px 20px; position: relative; z-index: 1000; }
+        .content-wrap { padding: 0 20px 100px 20px; }
         .note-date { color: var(--ios-gray); text-align: center; font-size: 13px; margin: 15px 0; }
         h1 { font-size: 28px; font-weight: 800; margin: 0 0 12px 0; }
+        .intro-text { font-size: 17px; line-height: 1.5; margin-bottom: 25px; color: #1c1c1e; }
+        .list-container { border-top: 0.5px solid #d1d1d6; }
         .item { display: flex; padding: 12px 0; border-bottom: 0.5px solid #d1d1d6; font-size: 17px; }
         .num-label { width: 45px; color: var(--ios-gray); }
     </style>
@@ -62,68 +103,82 @@
 
     <div id="force-indicator">0</div>
 
+    <div id="marker-40" class="secret-marker"></div>
+    <div id="marker-60" class="secret-marker"></div>
+
     <div class="nav-bar">
-        <div class="back-btn">〈 備忘錄</div>
+        <div class="back-btn">備忘錄</div>
         <div style="color: #333; font-weight: 600;">清單</div>
         <div>完成</div>
     </div>
 
-    <div id="zone-top" class="secret-zone cell-btn" data-start="0"></div>
-
-    <div id="zone-left" class="secret-zone">
-        <div class="cell cell-btn" data-start="10"></div>
-        <div class="cell cell-btn" data-start="40"></div>
-        <div class="cell cell-btn" data-start="70"></div>
-    </div>
-
-    <div id="zone-right" class="secret-zone">
-        <div class="cell cell-btn" data-start="30"></div>
-        <div class="cell cell-btn" data-start="60"></div>
-        <div class="cell cell-btn" data-start="90"></div>
+    <div id="trigger-zero" class="grid-cell" data-start="0"></div>
+    <div id="trigger-grid">
+        <div class="grid-cell" data-start="10"></div>
+        <div class="grid-cell" data-start="20"></div>
+        <div class="grid-cell" data-start="30"></div>
+        <div class="grid-cell" data-start="40"></div>
+        <div class="grid-cell" data-start="50"></div>
+        <div class="grid-cell" data-start="60"></div>
+        <div class="grid-cell" data-start="70"></div>
+        <div class="grid-cell" data-start="80"></div>
+        <div class="grid-cell" data-start="90"></div>
     </div>
 
     <div class="content-wrap">
-        <div class="note-date">2026年1月2日 21:42</div>
+        <div class="note-date">2026年1月2日 21:27</div>
         <h1>100種動物研究清單</h1>
-        <p>這是一份用於心靈感應實驗的專用清單。請隨意捲動瀏覽。</p>
-        <div id="main-list"></div>
+        <p class="intro-text">
+            這份清單包含了全球各地的脊椎動物與無脊椎動物，用於心靈感應實驗與分類練習。請隨意滑動瀏覽。
+        </p>
+        <div id="main-list" class="list-container"></div>
     </div>
 
     <script>
         const listEl = document.getElementById('main-list');
         const indicatorEl = document.getElementById('force-indicator');
+        
         let animals = ["非洲獅", "孟加拉虎", "亞洲象", "網紋長頸鹿", "平原斑馬", "紅袋鼠", "無尾熊", "皇帝企鵝", "河馬", "白犀牛", "山地大猩猩", "松鼠猴", "赤狐", "北極狼", "灰熊", "北極熊", "熊貓", "單峰駱駝", "加拿大馬鹿", "黑尾牛羚", "瓶鼻海豚", "藍鯨", "大白鯊", "綠蠵龜", "大王具足蟲", "月亮水母", "澳洲龍蝦", "大閘蟹", "紅海星", "大肚海馬", "安地斯神鷹", "白頭海鵰", "倉鴞", "金剛鸚鵡", "藍孔雀", "疣鼻天鵝", "美洲紅鸛", "普通翠鳥", "五色鳥", "麻雀", "高冠變色龍", "科摩多龍", "象龜", "尼羅鱷", "眼鏡蛇", "紅眼樹蛙", "大蟾蜍", "雲南蠑螈", "義大利蜂", "大樺斑蝶", "薄翅蜻蜓", "非洲綠螳螂", "熊蟬", "紅火蟻", "非洲大蝸牛", "白額高腳蛛", "帝王蠍", "小狐蝠", "赤腹松鼠", "荷蘭垂耳兔", "溝鼠", "非洲刺蝟", "水豚", "蜂猴", "三趾樹懶", "北美浣熊", "臭鼬", "黑尾土撥鼠", "九帶犰狳", "鴨嘴獸", "印度獵豹", "美洲豹", "雲豹", "雪豹", "黑豹", "斑點鬣狗", "野豬", "馴鹿", "犛牛", "羊駝", "羚牛", "劍羚", "麝牛", "綠頭鴨", "灰雁", "七面鳥", "鵪鶉", "原鴿", "小嘴烏鴉", "喜鵲", "黑脊鷗", "澳洲鵜鶘", "鸕鶿", "非洲鴕鳥", "鴯鶓", "幾維鳥", "大嘴鳥", "犀鳥", "蜂鳥", "蝙蝠"];
+
+        let startY = 0;
+        let baseValue = 0;
+        let finalForcedNum = 0;
+        const sensitivity = 15; 
 
         function buildList() {
             listEl.innerHTML = animals.map((a, i) => `
-                <div class="item" id="item-${i}">
+                <div class="item">
                     <div class="num-label">${i + 1}.</div>
                     <div class="name-label">${a}</div>
                 </div>
             `).join('');
         }
 
-        let startY = 0, baseValue = 0, finalForcedNum = 0;
-        const sensitivity = 15;
-
-        document.querySelectorAll('.cell-btn').forEach(cell => {
+        const cells = document.querySelectorAll('.grid-cell');
+        cells.forEach(cell => {
             cell.addEventListener('touchstart', (e) => {
                 startY = e.touches[0].clientY;
                 baseValue = parseInt(cell.getAttribute('data-start'));
-                finalForcedNum = (baseValue === 0) ? 1 : baseValue;
-                indicatorEl.innerText = finalForcedNum;
+                finalForcedNum = baseValue;
+                
+                let initialShow = (finalForcedNum === 0) ? 1 : finalForcedNum;
+                indicatorEl.innerText = initialShow;
                 indicatorEl.style.display = 'block';
             });
 
             cell.addEventListener('touchmove', (e) => {
                 let currentY = e.touches[0].clientY;
-                let increment = Math.floor((startY - currentY) / sensitivity);
+                let distance = startY - currentY; 
+                let increment = Math.floor(distance / sensitivity);
+                
                 let tempNum = baseValue + increment;
                 
                 if (baseValue === 0) {
-                    tempNum = Math.max(1, Math.min(9, tempNum));
+                    if (tempNum < 1) tempNum = 1;
+                    if (tempNum > 9) tempNum = 9;
                 } else {
-                    tempNum = Math.max(baseValue, Math.min(baseValue + 9, tempNum));
+                    if (tempNum < baseValue) tempNum = baseValue;
+                    if (tempNum > baseValue + 9) tempNum = baseValue + 9;
                 }
                 
                 finalForcedNum = tempNum;
@@ -137,15 +192,16 @@
         });
 
         function applyForce(targetNum) {
+            if (targetNum <= 0) return;
             const targetIdx = targetNum - 1;
             const panda = "熊貓";
             const oldIdx = animals.indexOf(panda);
+
             if (oldIdx !== -1 && oldIdx !== targetIdx) {
                 let replacedAnimal = animals[targetIdx];
                 animals[targetIdx] = panda;
                 animals[oldIdx] = replacedAnimal;
-                document.querySelector(`#item-${targetIdx} .name-label`).innerText = panda;
-                document.querySelector(`#item-${oldIdx} .name-label`).innerText = replacedAnimal;
+                buildList();
             }
         }
 
