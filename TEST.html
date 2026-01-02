@@ -9,7 +9,7 @@
             --ios-yellow: #ffb100;
             --ios-bg: #ffffff;
             --ios-gray: #8e8e93;
-            --hint-color: rgba(0, 0, 0, 0.15); /* 提示符號的顏色，極淡 */
+            --marker-color: rgba(0, 0, 0, 0.15); /* 極淺的提示顏色 */
         }
 
         body {
@@ -22,6 +22,7 @@
             -webkit-user-select: none;
         }
 
+        /* 導覽列 */
         .nav-bar {
             display: flex;
             justify-content: space-between;
@@ -39,7 +40,7 @@
 
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
-        /* 秘密數字指示器 */
+        /* 秘密數字指示器 (僅表演者可見) */
         #force-indicator {
             position: fixed;
             top: 60px;
@@ -51,42 +52,47 @@
             display: none;
         }
 
-        /* 邊緣提示符號 - 固定定位 */
-        .edge-hint {
+        /* 隱形感應區：全透明 */
+        #trigger-zero, #trigger-grid {
             position: fixed;
-            font-size: 10px;
-            color: var(--hint-color);
-            z-index: 2600;
-            pointer-events: none;
-            font-family: monospace;
+            left: 0;
+            width: 100%;
+            z-index: 2500;
+            background: transparent; /* 隱藏顏色 */
         }
-        .left-hint { left: 2px; }
-        .right-hint { right: 2px; }
 
-        /* 0-9 頂部感應區 (全透明) */
         #trigger-zero {
-            position: fixed;
             top: 50px;
-            left: 0;
-            width: 100%;
             height: 60px; 
-            z-index: 2500;
-            background: transparent; /* 隱藏 */
         }
 
-        /* 10-99 九宮格感應區 (全透明) */
         #trigger-grid {
-            position: fixed;
-            top: 150px; 
-            left: 0;
-            width: 100%;
+            top: 150px;
             height: 350px; 
-            z-index: 2500;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
-            background: transparent; /* 隱藏 */
         }
+
+        /* 邊緣提示標記 (-) */
+        .edge-marker {
+            position: fixed;
+            font-size: 10px;
+            color: var(--marker-color);
+            pointer-events: none;
+            z-index: 2600;
+            font-family: Arial, sans-serif;
+        }
+        /* 頂部 0-9 標記 */
+        .m-top { top: 75px; left: 50%; transform: translateX(-50%); }
+        /* 左側標記 (對應 10, 40, 70) */
+        .m-l1 { top: 200px; left: 2px; }
+        .m-l2 { top: 315px; left: 2px; }
+        .m-l3 { top: 430px; left: 2px; }
+        /* 右側標記 (對應 30, 60, 90) */
+        .m-r1 { top: 200px; right: 2px; }
+        .m-r2 { top: 315px; right: 2px; }
+        .m-r3 { top: 430px; right: 2px; }
 
         .content-wrap { padding: 0 20px 100px 20px; }
         .note-date { color: var(--ios-gray); text-align: center; font-size: 13px; margin: 15px 0; }
@@ -99,15 +105,15 @@
 </head>
 <body>
 
-    <div id="force-indicator">0</div>
+    <div class="edge-marker m-top">-</div>
+    <div class="edge-marker m-l1">-</div>
+    <div class="edge-marker m-l2">-</div>
+    <div class="edge-marker m-l3">-</div>
+    <div class="edge-marker m-r1">-</div>
+    <div class="edge-marker m-r2">-</div>
+    <div class="edge-marker m-r3">-</div>
 
-    <div class="edge-hint left-hint" style="top: 150px;">-10</div>
-    <div class="edge-hint left-hint" style="top: 200px;">-30</div>
-    <div class="edge-hint left-hint" style="top: 266px;">-40</div>
-    
-    <div class="edge-hint right-hint" style="top: 266px;">60-</div>
-    <div class="edge-hint right-hint" style="top: 383px;">70-</div>
-    <div class="edge-hint right-hint" style="top: 450px;">90-</div>
+    <div id="force-indicator">0</div>
 
     <div class="nav-bar">
         <div class="back-btn">備忘錄</div>
@@ -148,7 +154,7 @@
         let startY = 0;
         let baseValue = 0;
         let finalForcedNum = 0;
-        const sensitivity = 15; // 上滑 15px 數字 +1
+        const sensitivity = 15; 
 
         function buildList() {
             listEl.innerHTML = animals.map((a, i) => `
@@ -164,16 +170,15 @@
             cell.addEventListener('touchstart', (e) => {
                 startY = e.touches[0].clientY;
                 baseValue = parseInt(cell.getAttribute('data-start'));
-                finalForcedNum = baseValue;
+                finalForcedNum = (baseValue === 0) ? 1 : baseValue;
                 
-                // 指示器僅供魔術師在極暗處微弱辨識
-                indicatorEl.innerText = (finalForcedNum === 0) ? 1 : finalForcedNum;
+                indicatorEl.innerText = finalForcedNum;
                 indicatorEl.style.display = 'block';
             });
 
             cell.addEventListener('touchmove', (e) => {
                 let currentY = e.touches[0].clientY;
-                let distance = startY - currentY; // 上滑增加
+                let distance = startY - currentY; // 上滑為正
                 let increment = Math.floor(distance / sensitivity);
                 
                 let tempNum = baseValue + increment;
@@ -202,7 +207,6 @@
             const panda = "熊貓";
             const oldIdx = animals.indexOf(panda);
 
-            // 確保熊貓位置正確移動
             if (oldIdx !== -1 && oldIdx !== targetIdx) {
                 let replacedAnimal = animals[targetIdx];
                 animals[targetIdx] = panda;
