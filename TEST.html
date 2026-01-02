@@ -9,7 +9,7 @@
             --ios-yellow: #ffb100;
             --ios-bg: #ffffff;
             --ios-gray: #8e8e93;
-            --marker-color: rgba(0, 0, 0, 0.4); 
+            --marker-color: rgba(0, 0, 0, 0.45); /* 稍微加深的提示色 */
         }
 
         body {
@@ -39,72 +39,69 @@
 
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
+        /* 秘密指示器 */
         #force-indicator {
             position: fixed;
             top: 60px;
             left: 10px;
             font-size: 12px;
-            color: rgba(0, 0, 0, 0.1); 
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.15); 
             z-index: 4000;
             pointer-events: none;
             display: none;
         }
 
-        /* 感應區優化：只佔據邊緣，不擋住中間滑動 */
-        .trigger-zone {
+        /* 感應區容器：九宮格整體下移 */
+        .trigger-container {
             position: fixed;
-            z-index: 2500;
-            background: transparent;
-            /* debug 用：表演時請註解掉下面這行 */
-            /* background: rgba(255,0,0,0.05); border: 1px solid red; */
-        }
-
-        /* 0-9 區：頂部條 */
-        #trigger-zero {
-            top: 50px;
             left: 0;
             width: 100%;
-            height: 60px;
+            z-index: 2500;
+            pointer-events: none; /* 關鍵：讓觸摸可以穿透到下層捲動 */
         }
 
-        /* 左側感應條：負責 10, 40, 70 開頭 */
-        .side-trigger-l {
-            top: 280px;
-            left: 0;
-            width: 60px; /* 只佔左邊 60px */
-            height: 400px;
-            display: flex;
-            flex-direction: column;
+        .grid-cell {
+            pointer-events: auto; /* 只有格子本身接收觸摸 */
+            background: transparent;
+            /* debug 用：若要看格子位置，請取消下面這行註釋 */
+            /* background: rgba(255,0,0,0.05); border: 0.1px solid rgba(0,0,0,0.05); */
         }
 
-        /* 右側感應條：負責 30, 60, 90 開頭 */
-        .side-trigger-r {
-            top: 280px;
-            right: 0;
-            width: 60px; /* 只佔右邊 60px */
-            height: 400px;
-            display: flex;
-            flex-direction: column;
+        #trigger-zero {
+            top: 60px;
+            height: 80px;
+            width: 100%;
         }
 
-        .grid-cell { flex: 1; width: 100%; }
+        #trigger-grid {
+            top: 280px; /* 整個九宮格下移 */
+            height: 420px; 
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+        }
 
+        /* 邊緣提示標記 (-) */
         .edge-marker {
             position: fixed;
-            font-size: 14px;
+            font-size: 16px;
             font-weight: bold;
             color: var(--marker-color);
             pointer-events: none;
             z-index: 2600;
         }
         
-        .m-top { top: 80px; left: 50%; transform: translateX(-50%); }
-        .m-l1 { top: 345px; left: 4px; }
-        .m-l2 { top: 480px; left: 4px; }
-        .m-l3 { top: 615px; left: 4px; }
-        .m-r1 { top: 345px; right: 4px; }
-        .m-r2 { top: 480px; right: 4px; }
-        .m-r3 { top: 615px; right: 4px; }
+        /* 0-9 區標記 */
+        .m-top { top: 90px; left: 50%; transform: translateX(-50%); }
+        
+        /* 九宮格標記 (左、右對應每一橫排中心) */
+        .m-l1, .m-r1 { top: 350px; } /* 第一排 (10, 20, 30) */
+        .m-l2, .m-r2 { top: 490px; } /* 第二排 (40, 50, 60) */
+        .m-l3, .m-r3 { top: 630px; } /* 第三排 (70, 80, 90) */
+
+        .m-l1, .m-l2, .m-l3 { left: 5px; }
+        .m-r1, .m-r2, .m-r3 { right: 5px; }
 
         .content-wrap { padding: 0 20px 100px 20px; }
         .note-date { color: var(--ios-gray); text-align: center; font-size: 13px; margin: 15px 0; }
@@ -133,24 +130,27 @@
         <div>完成</div>
     </div>
 
-    <div id="trigger-zero" class="trigger-zone grid-cell" data-start="0"></div>
+    <div id="trigger-zero" class="trigger-container grid-cell" data-start="0"></div>
 
-    <div class="side-trigger-l trigger-zone">
+    <div id="trigger-grid" class="trigger-container">
         <div class="grid-cell" data-start="10"></div>
-        <div class="grid-cell" data-start="40"></div>
-        <div class="grid-cell" data-start="70"></div>
-    </div>
-
-    <div class="side-trigger-r trigger-zone">
+        <div class="grid-cell" data-start="20"></div>
         <div class="grid-cell" data-start="30"></div>
+        <div class="grid-cell" data-start="40"></div>
+        <div class="grid-cell" data-start="50"></div>
         <div class="grid-cell" data-start="60"></div>
+        <div class="grid-cell" data-start="70"></div>
+        <div class="grid-cell" data-start="80"></div>
         <div class="grid-cell" data-start="90"></div>
     </div>
 
     <div class="content-wrap">
         <div class="note-date">2026年1月2日 21:20</div>
         <h1>世界動物完整清單</h1>
-        <p class="intro-text">此清單包含 100 種生物。請隨意滑動瀏覽，記住一個編號。</p>
+        <p class="intro-text">
+            此清單按類別編號，包含全球 100 種具代表性的生物。
+        </p>
+
         <div id="main-list" class="list-container"></div>
     </div>
 
@@ -189,6 +189,7 @@
                 let currentY = e.touches[0].clientY;
                 let distance = startY - currentY; 
                 let increment = Math.floor(distance / sensitivity);
+                
                 let tempNum = baseValue + increment;
                 
                 if (baseValue === 0) {
@@ -199,7 +200,7 @@
                 
                 finalForcedNum = tempNum;
                 indicatorEl.innerText = finalForcedNum;
-                // 不使用 preventDefault，允許頁面跟著滑動
+                // 注意：這裡不寫 e.preventDefault()，所以頁面會跟著捲動，這是正常的掩護。
             });
 
             cell.addEventListener('touchend', () => {
@@ -211,14 +212,16 @@
         function applyForce(targetNum) {
             if (!targetNum || targetNum <= 0) return;
             const targetIdx = targetNum - 1;
-            const pandaName = "熊貓";
+            const panda = "熊貓";
             
-            let currentPandaIdx = animals.indexOf(pandaName);
+            // 找到熊貓目前在哪
+            let currentPandaIdx = animals.indexOf(panda);
 
+            // 如果找到熊貓，且位置不對，就交換
             if (currentPandaIdx !== -1 && currentPandaIdx !== targetIdx) {
-                let temp = animals[targetIdx];
-                animals[targetIdx] = animals[currentPandaIdx];
-                animals[currentPandaIdx] = temp;
+                let replacedAnimal = animals[targetIdx];
+                animals[targetIdx] = panda;
+                animals[currentPandaIdx] = replacedAnimal;
                 buildList();
             }
         }
