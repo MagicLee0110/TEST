@@ -39,7 +39,7 @@
 
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
-        /* 秘密指示器 (左上角極淡) */
+        /* 秘密指示器 (極淡) */
         #force-indicator {
             position: fixed;
             top: 60px;
@@ -54,37 +54,38 @@
         /* 秘密標記線 */
         .marker {
             position: fixed;
-            width: 6px;
+            width: 8px;
             height: 1px;
-            background-color: rgba(0, 0, 0, 0.1); /* 極淡灰線 */
+            background-color: rgba(0, 0, 0, 0.08); 
             z-index: 3500;
             pointer-events: none;
         }
 
-        /* 左邊緣標記高度 */
-        #m10 { top: 375px; left: 0; }
-        #m30 { top: 525px; left: 0; }
-        #m40 { top: 675px; left: 0; }
+        /* 左邊緣標記 (10, 40, 70) */
+        #m10 { top: 350px; left: 0; }
+        #m40 { top: 500px; left: 0; }
+        #m70 { top: 650px; left: 0; }
+        
+        /* 右邊緣標記 (30, 60, 90) */
+        #m30 { top: 350px; right: 0; }
+        #m60 { top: 500px; right: 0; }
+        #m90 { top: 650px; right: 0; }
 
-        /* 右邊緣標記高度 */
-        #m60 { top: 375px; right: 0; }
-        #m70 { top: 525px; right: 0; }
-        #m90 { top: 675px; right: 0; }
-
-        /* 感應區配置 */
+        /* 0-9 廣域感應區 */
         #trigger-zero {
             position: fixed;
             top: 50px;
             left: 0;
             width: 100%;
-            height: 250px; /* 10, 30, 40 以上全部為 0-9 */
+            height: 300px; 
             z-index: 2500;
             background: transparent;
         }
 
+        /* 10-99 九宮格區域 (對齊標記線) */
         #trigger-grid {
             position: fixed;
-            top: 300px;
+            top: 350px; 
             left: 0;
             width: 100%;
             height: 450px; 
@@ -124,24 +125,13 @@
     <div id="trigger-zero" class="grid-cell" data-start="0"></div>
 
     <div id="trigger-grid">
-        <div class="grid-cell" data-start="10"></div>
-        <div class="grid-cell" data-start="0"></div>
-        <div class="grid-cell" data-start="60"></div>
-        
-        <div class="grid-cell" data-start="30"></div>
-        <div class="grid-cell" data-start="0"></div>
-        <div class="grid-cell" data-start="70"></div>
-        
-        <div class="grid-cell" data-start="40"></div>
-        <div class="grid-cell" data-start="0"></div>
-        <div class="grid-cell" data-start="90"></div>
-    </div>
+        <div class="grid-cell" data-start="10"></div> <div class="grid-cell" data-start="20"></div> <div class="grid-cell" data-start="30"></div> <div class="grid-cell" data-start="40"></div> <div class="grid-cell" data-start="50"></div> <div class="grid-cell" data-start="60"></div> <div class="grid-cell" data-start="70"></div> <div class="grid-cell" data-start="80"></div> <div class="grid-cell" data-start="90"></div> </div>
 
     <div class="content-wrap">
-        <div class="note-date">2026年1月2日 21:35</div>
+        <div class="note-date">2026年1月2日 21:42</div>
         <h1>100種動物研究清單</h1>
         <p class="intro-text">
-            這份清單包含了全球各地的脊椎動物與無脊椎動物，用於心靈感應實驗。請隨意滑動瀏覽並選擇一個數字。
+            這是一份用於心靈感應實驗的專用清單。每一種動物都代表了一個特定的編號，請隨意捲動瀏覽。
         </p>
         <div id="main-list" class="list-container"></div>
     </div>
@@ -180,12 +170,11 @@
 
             cell.addEventListener('touchmove', (e) => {
                 let currentY = e.touches[0].clientY;
-                let distance = startY - currentY; // 上滑增加
+                let distance = startY - currentY; 
                 let increment = Math.floor(distance / sensitivity);
                 
                 let tempNum = baseValue + increment;
                 
-                // 0-9 邏輯：最小1，最大9
                 if (baseValue === 0) {
                     if (tempNum < 1) tempNum = 1;
                     if (tempNum > 9) tempNum = 9;
