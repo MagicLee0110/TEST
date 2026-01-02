@@ -9,7 +9,6 @@
             --ios-yellow: #ffb100;
             --ios-bg: #ffffff;
             --ios-gray: #8e8e93;
-            --ios-text: #1c1c1e;
         }
 
         body {
@@ -20,7 +19,6 @@
             overflow-y: scroll;
             user-select: none;
             -webkit-user-select: none;
-            color: var(--ios-text);
         }
 
         /* 導覽列 */
@@ -35,81 +33,81 @@
             top: 0;
             background: rgba(255, 255, 255, 0.94);
             backdrop-filter: blur(20px);
-            z-index: 5000;
+            z-index: 3000;
             border-bottom: 0.5px solid #d1d1d6;
         }
 
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
-        /* 秘密指示器 (左上角) */
+        /* 秘密指示器 (極淡) */
         #force-indicator {
             position: fixed;
             top: 60px;
             left: 8px;
             font-size: 10px;
             color: rgba(0, 0, 0, 0.05); 
-            z-index: 6000;
+            z-index: 4000;
             pointer-events: none;
             display: none;
         }
 
-        /* 秘密標記線 (左右邊緣) */
+        /* 秘密標記線 */
         .marker {
             position: fixed;
             width: 8px;
             height: 1px;
             background-color: rgba(0, 0, 0, 0.08); 
-            z-index: 5500;
+            z-index: 3500;
             pointer-events: none;
         }
 
-        /* 標記高度：依照九宮格排列 */
+        /* 左邊緣標記 (10, 40, 70) */
         #m10 { top: 350px; left: 0; }
         #m40 { top: 500px; left: 0; }
         #m70 { top: 650px; left: 0; }
+        
+        /* 右邊緣標記 (30, 60, 90) */
         #m30 { top: 350px; right: 0; }
         #m60 { top: 500px; right: 0; }
         #m90 { top: 650px; right: 0; }
 
-        /* 感應區 - 固定在螢幕上，不隨捲動消失 */
+        /* 0-9 廣域感應區 */
         #trigger-zero {
             position: fixed;
             top: 50px;
             left: 0;
             width: 100%;
             height: 300px; 
-            z-index: 4500;
+            z-index: 2500;
             background: transparent;
         }
 
+        /* 10-99 九宮格區域 (對齊標記線) */
         #trigger-grid {
             position: fixed;
             top: 350px; 
             left: 0;
             width: 100%;
             height: 450px; 
-            z-index: 4500;
+            z-index: 2500;
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
             grid-template-rows: 1fr 1fr 1fr;
             background: transparent;
         }
 
-        .content-wrap { padding: 0 20px 100px 20px; position: relative; z-index: 10; }
+        .content-wrap { padding: 0 20px 100px 20px; }
         .note-date { color: var(--ios-gray); text-align: center; font-size: 13px; margin: 15px 0; }
-        h1 { font-size: 26px; font-weight: 800; margin: 0 0 15px 0; line-height: 1.2; }
-        
-        .story-section { font-size: 17px; line-height: 1.6; margin-bottom: 25px; text-align: justify; }
-        .divider { height: 1px; background-color: #d1d1d6; margin: 40px 0; }
-
-        /* 列表樣式 */
-        .item { display: flex; padding: 14px 0; border-bottom: 0.5px solid #e5e5e5; font-size: 17px; background: white; }
-        .num-label { width: 45px; color: var(--ios-gray); font-variant-numeric: tabular-nums; }
+        h1 { font-size: 28px; font-weight: 800; margin: 0 0 12px 0; }
+        .intro-text { font-size: 17px; line-height: 1.5; margin-bottom: 25px; color: #1c1c1e; }
+        .list-container { border-top: 0.5px solid #d1d1d6; }
+        .item { display: flex; padding: 12px 0; border-bottom: 0.5px solid #d1d1d6; font-size: 17px; }
+        .num-label { width: 45px; color: var(--ios-gray); }
     </style>
 </head>
 <body>
 
-    <div id="force-indicator">1</div>
+    <div id="force-indicator">0</div>
 
     <div id="m10" class="marker"></div>
     <div id="m30" class="marker"></div>
@@ -120,77 +118,42 @@
 
     <div class="nav-bar">
         <div class="back-btn">備忘錄</div>
-        <div style="color: #333; font-weight: 600;">研究筆記</div>
+        <div style="color: #333; font-weight: 600;">清單</div>
         <div>完成</div>
     </div>
 
     <div id="trigger-zero" class="grid-cell" data-start="0"></div>
+
     <div id="trigger-grid">
-        <div class="grid-cell" data-start="10"></div>
-        <div class="grid-cell" data-start="20"></div>
-        <div class="grid-cell" data-start="30"></div>
-        <div class="grid-cell" data-start="40"></div>
-        <div class="grid-cell" data-start="50"></div>
-        <div class="grid-cell" data-start="60"></div>
-        <div class="grid-cell" data-start="70"></div>
-        <div class="grid-cell" data-start="80"></div>
-        <div class="grid-cell" data-start="90"></div>
-    </div>
+        <div class="grid-cell" data-start="10"></div> <div class="grid-cell" data-start="20"></div> <div class="grid-cell" data-start="30"></div> <div class="grid-cell" data-start="40"></div> <div class="grid-cell" data-start="50"></div> <div class="grid-cell" data-start="60"></div> <div class="grid-cell" data-start="70"></div> <div class="grid-cell" data-start="80"></div> <div class="grid-cell" data-start="90"></div> </div>
 
     <div class="content-wrap">
-        <div class="note-date">2026年1月2日 下午9:50</div>
-        <h1>生命序列的解密：艾德恩博士的百種生物實驗報告</h1>
-        
-        <div class="story-section">
-            1924年，生物學家艾德恩博士（Dr. Edwin Thorne）在他的私人日記中記錄了一個大膽的假設。他認為，地球上的所有生物並非雜亂無章地演化，而是遵循著一種隱形的「生命序列」。他花了三十年的時間，走遍了從亞馬遜雨林到西伯利亞荒原的每一個角落，只為了捕捉那些隱藏在生物本能中的微弱聯繫。
-        </div>
-
-        <div class="story-section">
-            「每一種動物都是一個音符，」博士曾在他的講座中提到，「當 100 種音符按照正確的頻率排列時，我們就能聽見大自然的交響樂。」這份報告在當時被視為偽科學，但在現代量子生物學的觀察下，博士的研究似乎揭示了某種潛意識與物種間的同步現象。
-        </div>
-
-        <div class="story-section">
-            博士的筆記中詳盡記載了他在各地的觀察：他曾在撒哈拉沙漠中對著駱駝沉思，也曾在喜馬拉雅山脈的高處，與雪豹進行心靈上的對話。他發現，當人類在放鬆狀態下隨機想到一個數字時，那個數字往往能精確地對應到當下與其能量最接近的生物。這項實驗在他生前進行了數千次，成功率高達驚人的 90% 以上。
-        </div>
-
-        <div class="story-section">
-            雖然博士的原始手稿在二戰期間幾近遺失，但幸運的是，他的學生們保住了這份核心清單。這份名單並非按照生物分類法排列，而是按照艾德恩博士所感知的「生命能量強度」從 1 編號到 100。
-        </div>
-
-        <div class="story-section">
-            現在，請你一邊閱讀這段文字，一邊讓你的思緒自由流動。當你準備好探索這 100 種生命時，請慢慢向下滑動螢幕，直到看見那個屬於你的生物編號。或許，這並非巧合，而是艾德恩博士所說的，生命間跨越時空的共鳴...
-        </div>
-
-        <div class="story-section">
-            （下方為數位化修復後的艾德恩博士生物頻率名錄）
-        </div>
-
-        <div class="divider"></div>
-
-        <div id="main-list"></div>
+        <div class="note-date">2026年1月2日 21:42</div>
+        <h1>100種動物研究清單</h1>
+        <p class="intro-text">
+            這是一份用於心靈感應實驗的專用清單。每一種動物都代表了一個特定的編號，請隨意捲動瀏覽。
+        </p>
+        <div id="main-list" class="list-container"></div>
     </div>
 
     <script>
         const listEl = document.getElementById('main-list');
         const indicatorEl = document.getElementById('force-indicator');
         
-        // 100種動物清單
         let animals = ["非洲獅", "孟加拉虎", "亞洲象", "網紋長頸鹿", "平原斑馬", "紅袋鼠", "無尾熊", "皇帝企鵝", "河馬", "白犀牛", "山地大猩猩", "松鼠猴", "赤狐", "北極狼", "灰熊", "北極熊", "熊貓", "單峰駱駝", "加拿大馬鹿", "黑尾牛羚", "瓶鼻海豚", "藍鯨", "大白鯊", "綠蠵龜", "大王具足蟲", "月亮水母", "澳洲龍蝦", "大閘蟹", "紅海星", "大肚海馬", "安地斯神鷹", "白頭海鵰", "倉鴞", "金剛鸚鵡", "藍孔雀", "疣鼻天鵝", "美洲紅鸛", "普通翠鳥", "五色鳥", "麻雀", "高冠變色龍", "科摩多龍", "象龜", "尼羅鱷", "眼鏡蛇", "紅眼樹蛙", "大蟾蜍", "雲南蠑螈", "義大利蜂", "大樺斑蝶", "薄翅蜻蜓", "非洲綠螳螂", "熊蟬", "紅火蟻", "非洲大蝸牛", "白額高腳蛛", "帝王蠍", "小狐蝠", "赤腹松鼠", "荷蘭垂耳兔", "溝鼠", "非洲刺蝟", "水豚", "蜂猴", "三趾樹懶", "北美浣熊", "臭鼬", "黑尾土撥鼠", "九帶犰狳", "鴨嘴獸", "印度獵豹", "美洲豹", "雲豹", "雪豹", "黑豹", "斑點鬣狗", "野豬", "馴鹿", "犛牛", "羊駝", "羚牛", "劍羚", "麝牛", "綠頭鴨", "灰雁", "七面鳥", "鵪鶉", "原鴿", "小嘴烏鴉", "喜鵲", "黑脊鷗", "澳洲鵜鶘", "鸕鶿", "非洲鴕鳥", "鴯鶓", "幾維鳥", "大嘴鳥", "犀鳥", "蜂鳥", "蝙蝠"];
 
         let startY = 0;
         let baseValue = 0;
         let finalForcedNum = 0;
-        let hasMoved = false; // 判斷是否真的有滑動
         const sensitivity = 15; 
 
         function buildList() {
-            listEl.innerHTML = '';
-            animals.forEach((name, i) => {
-                const item = document.createElement('div');
-                item.className = 'item';
-                item.innerHTML = `<div class="num-label">${i + 1}.</div><div>${name}</div>`;
-                listEl.appendChild(item);
-            });
+            listEl.innerHTML = animals.map((a, i) => `
+                <div class="item">
+                    <div class="num-label">${i + 1}.</div>
+                    <div class="name-label">${a}</div>
+                </div>
+            `).join('');
         }
 
         const cells = document.querySelectorAll('.grid-cell');
@@ -198,57 +161,48 @@
             cell.addEventListener('touchstart', (e) => {
                 startY = e.touches[0].clientY;
                 baseValue = parseInt(cell.getAttribute('data-start'));
-                finalForcedNum = (baseValue === 0) ? 1 : baseValue;
-                hasMoved = false; 
+                finalForcedNum = baseValue;
                 
-                indicatorEl.innerText = finalForcedNum;
+                let initialShow = (finalForcedNum === 0) ? 1 : finalForcedNum;
+                indicatorEl.innerText = initialShow;
                 indicatorEl.style.display = 'block';
             });
 
             cell.addEventListener('touchmove', (e) => {
                 let currentY = e.touches[0].clientY;
-                let distance = startY - currentY; // 上滑增加
+                let distance = startY - currentY; 
+                let increment = Math.floor(distance / sensitivity);
                 
-                if (Math.abs(distance) > 5) {
-                    hasMoved = true;
-                    let increment = Math.floor(distance / sensitivity);
-                    let tempNum = baseValue + increment;
-                    
-                    if (baseValue === 0) {
-                        if (tempNum < 1) tempNum = 1;
-                        if (tempNum > 9) tempNum = 9;
-                    } else {
-                        if (tempNum < baseValue) tempNum = baseValue;
-                        if (tempNum > baseValue + 9) tempNum = baseValue + 9;
-                    }
-                    
-                    finalForcedNum = tempNum;
-                    indicatorEl.innerText = finalForcedNum;
+                let tempNum = baseValue + increment;
+                
+                if (baseValue === 0) {
+                    if (tempNum < 1) tempNum = 1;
+                    if (tempNum > 9) tempNum = 9;
+                } else {
+                    if (tempNum < baseValue) tempNum = baseValue;
+                    if (tempNum > baseValue + 9) tempNum = baseValue + 9;
                 }
+                
+                finalForcedNum = tempNum;
+                indicatorEl.innerText = finalForcedNum;
             });
 
             cell.addEventListener('touchend', () => {
-                if (hasMoved) {
-                    applyForce(finalForcedNum);
-                }
+                applyForce(finalForcedNum);
                 indicatorEl.style.display = 'none';
             });
         });
 
         function applyForce(targetNum) {
+            if (targetNum <= 0) return;
             const targetIdx = targetNum - 1;
             const panda = "熊貓";
-            
-            // 找出熊貓當前的位置
-            let currentPandaIdx = animals.indexOf(panda);
-            
-            if (currentPandaIdx !== -1 && currentPandaIdx !== targetIdx) {
-                // 將目標位置的動物換到熊貓原本的位置
+            const oldIdx = animals.indexOf(panda);
+
+            if (oldIdx !== -1 && oldIdx !== targetIdx) {
                 let replacedAnimal = animals[targetIdx];
                 animals[targetIdx] = panda;
-                animals[currentPandaIdx] = replacedAnimal;
-                
-                // 立即更新介面
+                animals[oldIdx] = replacedAnimal;
                 buildList();
             }
         }
