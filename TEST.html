@@ -3,107 +3,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Magic Canvas</title>
+    <title>備忘錄</title>
     <style>
-        body {
+        :root {
+            --ios-yellow: #ffb400;
+            --ios-bg: #ffffff;
+        }
+
+        body, html {
             margin: 0;
             padding: 0;
-            width: 100vw;
-            height: 100vh;
-            background-color: #000; /* 黑底，看起來像螢幕關閉或簡約 */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--ios-bg);
+            color: #000;
+            user-select: none;
+            overflow-x: hidden;
+        }
+
+        /* iOS 標題欄 */
+        .header {
+            padding: 40px 20px 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #fff;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+
+        .back-btn {
+            color: var(--ios-yellow);
+            font-size: 17px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            overflow: hidden;
-            font-family: sans-serif;
-            cursor: none;
+            text-decoration: none;
         }
 
-        /* 完全隱藏輸入框，但保持其功能 */
-        #hiddenInput {
-            position: absolute;
-            top: -100px;
-            left: -100px;
-            opacity: 0;
-            filter: alpha(opacity=0);
+        /* 內容區 */
+        .content {
+            padding: 0 20px 100px 20px;
         }
 
-        /* 撲克牌顯示區 */
-        #display {
-            font-size: 150px; /* 超大字體，方便觀眾看清 */
+        .note-title {
+            font-size: 32px;
             font-weight: bold;
-            transition: all 0.2s ease-in-out;
-            user-select: none;
+            margin-bottom: 15px;
         }
 
-        .red { color: #ff4d4d; }
-        .black { color: #ffffff; }
-        .none { color: #333; font-size: 24px; } /* 初始狀態 */
+        .intro-text {
+            font-size: 17px;
+            line-height: 1.5;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .animal-item {
+            padding: 12px 0;
+            border-bottom: 0.5px solid #e0e0e0;
+            font-size: 17px;
+            display: flex;
+        }
+
+        .animal-index {
+            width: 40px;
+            color: #8e8e93;
+        }
+
+        /* 隱藏九宮格核心機制 */
+        #magic-grid {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            z-index: 999;
+            opacity: 0; /* 完全透明 */
+        }
+
+        /* 強迫數字顯示 (極小且低調) */
+        #force-indicator {
+            position: fixed;
+            top: 5px;
+            left: 5px;
+            font-size: 10px;
+            color: rgba(0,0,0,0.1); /* 極淡的顏色 */
+            z-index: 1000;
+            display: none;
+            pointer-events: none;
+        }
     </style>
 </head>
 <body>
 
-    <input type="text" id="hiddenInput" inputmode="numeric" pattern="[0-9]*" autocomplete="off">
+    <div id="force-indicator">0</div>
 
-    <div id="display" class="none">READY</div>
+    <div id="magic-grid">
+        <div data-range="10"></div><div data-range="20"></div><div data-range="30"></div>
+        <div data-range="40"></div><div data-range="50"></div><div data-range="60"></div>
+        <div data-range="70"></div><div data-range="80"></div><div data-range="90"></div>
+    </div>
+
+    <div class="header">
+        <div class="back-btn">＜ 備忘錄</div>
+        <div style="color: var(--ios-yellow);">完成</div>
+    </div>
+
+    <div class="content">
+        <div class="note-title">關於大自然的奧秘</div>
+        <div class="intro-text">
+            動物界是一個充滿驚奇的世界。從非洲大草原到深邃的海洋，每一種生物都有其獨特的生存方式。科學家研究發現，群居動物展現了極高的社會智慧。以下是我們為這次心靈感應實驗所準備的 100 種參考動物名單：
+        </div>
+        
+        <div id="animal-list">
+            </div>
+    </div>
 
     <script>
-        const inputEl = document.getElementById('hiddenInput');
-        const displayEl = document.getElementById('display');
+        const animalListContainer = document.getElementById('animal-list');
+        const indicator = document.getElementById('force-indicator');
+        const grid = document.getElementById('magic-grid');
+        
+        let animals = ["獅子", "老虎", "大象", "長頸鹿", "斑馬", "河馬", "袋鼠", "無尾熊", "企鵝", "海豚", "狐狸", "灰狼", "駱駝", "松鼠", "兔子", "梅花鹿", "犀牛", "黑猩猩", "樹懶", "獵豹", "貓頭鷹", "老鷹", "孔雀", "天鵝", "烏龜", "鱷魚", "變色龍", "章魚", "水母", "海馬"];
+        // 預填補隨機動物到100個
+        while(animals.length < 100) {
+            animals.push("未知生物" + (animals.length + 1));
+        }
 
-        const suits = {
-            '1': { icon: '♠', color: 'black' },
-            '2': { icon: '♥', color: 'red' },
-            '3': { icon: '♦', color: 'red' },
-            '4': { icon: '♣', color: 'black' }
-        };
+        let currentForceNum = 0;
+        let isTouching = false;
+        let baseRange = 0;
 
-        const ranks = {
-            '01': 'A', '02': '2', '03': '3', '04': '4', '05': '5',
-            '06': '6', '07': '7', '08': '8', '09': '9', '10': '10',
-            '11': 'J', '12': 'Q', '13': 'K'
-        };
+        // 初始化列表
+        function renderList() {
+            animalListContainer.innerHTML = '';
+            for (let i = 1; i <= 100; i++) {
+                const item = document.createElement('div');
+                item.className = 'animal-item';
+                item.innerHTML = `<span class="animal-index">${i}.</span> <span class="animal-name">${animals[i-1]}</span>`;
+                animalListContainer.appendChild(item);
+            }
+        }
 
-        // 核心邏輯：偵測輸入
-        inputEl.addEventListener('input', (e) => {
-            let val = e.target.value;
-
-            // 每當達到 3 個數字
-            if (val.length === 3) {
-                const suitKey = val[0];
-                const rankKey = val.substring(1, 3);
-
-                const suit = suits[suitKey];
-                const rank = ranks[rankKey];
-
-                if (suit && rank) {
-                    displayEl.innerHTML = `${suit.icon}${rank}`;
-                    displayEl.className = suit.color;
-                } else {
-                    // 如果輸入錯誤（例如 599），顯示一個小提示或不反應
-                    displayEl.innerHTML = '??';
-                    displayEl.className = 'none';
-                }
-
-                // 重點：立即清空輸入框，等待下一個 3 位數循環
-                e.target.value = '';
+        // 強迫邏輯
+        grid.addEventListener('touchstart', (e) => {
+            isTouching = true;
+            const range = e.target.getAttribute('data-range');
+            if (range) {
+                baseRange = parseInt(range);
+                indicator.style.display = 'block';
             }
         });
 
-        // 點擊螢幕任何地方就強制 Focus 到輸入框，確保鍵盤彈出
-        document.body.addEventListener('click', () => {
-            inputEl.focus();
-            if(displayEl.innerHTML === 'READY') {
-                displayEl.innerHTML = ''; // 第一次點擊後清空 READY 字樣
-            }
+        window.addEventListener('touchmove', (e) => {
+            if (!isTouching) return;
+            
+            // 根據滑動位置計算偏移量 (0-9)
+            const touch = e.touches[0];
+            const moveOffset = Math.floor((touch.clientY / window.innerHeight) * 10);
+            currentForceNum = baseRange + (moveOffset % 10);
+            
+            indicator.innerText = currentForceNum;
         });
 
-        // 防止手機端長按彈出選單
-        window.oncontextmenu = function(event) {
-            event.preventDefault();
-            event.stopPropagation();
-            return false;
-        };
+        window.addEventListener('touchend', () => {
+            if (!isTouching) return;
+            
+            // 執行「強迫」：將該編號的動物換成熊貓
+            if (currentForceNum > 0 && currentForceNum <= 100) {
+                // 先清空原本可能存在的熊貓（選填，若要確保只有一個熊貓）
+                animals = animals.map(a => a === "熊貓" ? "隨機動物" : a);
+                // 設定目標編號為熊貓
+                animals[currentForceNum - 1] = "熊貓";
+                renderList();
+            }
+
+            isTouching = false;
+            indicator.style.display = 'none';
+        });
+
+        renderList();
     </script>
 </body>
 </html>
