@@ -16,11 +16,13 @@
             background-color: var(--ios-bg);
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
+            /* 允許捲動 */
+            overflow-y: scroll;
             user-select: none;
             -webkit-user-select: none;
         }
 
+        /* 導覽列 */
         .nav-bar {
             display: flex;
             justify-content: space-between;
@@ -32,34 +34,37 @@
             top: 0;
             background: rgba(255, 255, 255, 0.94);
             backdrop-filter: blur(20px);
-            z-index: 1000;
+            z-index: 2000;
             border-bottom: 0.5px solid #d1d1d6;
         }
 
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
-        /* 極淡的數字指示器 */
+        /* 秘密數字指示器 */
         #force-indicator {
             position: fixed;
-            top: 5px;
-            left: 5px;
+            top: 60px; /* 避開導覽列 */
+            left: 10px;
             font-size: 11px;
-            color: rgba(0, 0, 0, 0.08); 
-            z-index: 2000;
+            color: rgba(0, 0, 0, 0.1); 
+            z-index: 3000;
+            pointer-events: none;
             display: none;
         }
 
-        /* 秘密觸發九宮格 */
+        /* 隱藏感應九宮格 - 位置下移且固定 */
         #trigger-grid {
-            position: absolute;
-            top: 0;
+            position: fixed;
+            top: 150px; /* 從螢幕上方 150px 開始，這了大約是標題下方 */
             left: 0;
             width: 100%;
-            height: 200px; /* 覆蓋標題與導覽列區域 */
+            height: 250px; /* 感應區高度 */
             z-index: 1500;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
+            /* 測試時可取消下面註解來觀察位置 */
+            /* background: rgba(255,0,0,0.1); */
         }
 
         .content-wrap { padding: 0 20px 100px 20px; }
@@ -77,7 +82,7 @@
 
     <div class="nav-bar">
         <div class="back-btn">備忘錄</div>
-        <div style="color: #333; font-weight: 600;">動物百科</div>
+        <div style="color: #333; font-weight: 600;">動物清單</div>
         <div>完成</div>
     </div>
 
@@ -94,10 +99,10 @@
     </div>
 
     <div class="content-wrap">
-        <div class="note-date">2026年1月2日 晚上9:10</div>
-        <h1>世界動物名錄</h1>
+        <div class="note-date">2026年1月2日 21:15</div>
+        <h1>世界動物百科</h1>
         <p class="intro-text">
-            這是一份用於記憶練習的清單。包含了 100 種不同的生物，每種生物都有一個唯一的編號，請隨意滑動選擇。
+            歡迎查閱這份收錄了 100 種動物的完整名錄。這份清單旨在協助研究者快速定位不同屬性的生物，請隨意向下滑動瀏覽。
         </p>
 
         <div id="main-list" class="list-container"></div>
@@ -107,18 +112,18 @@
         const listEl = document.getElementById('main-list');
         const indicatorEl = document.getElementById('force-indicator');
         
-        let animals = ["獅子", "老虎", "大象", "長頸鹿", "斑馬", "袋鼠", "無尾熊", "企鵝", "河馬", "犀牛", "猩猩", "猴子", "狐狸", "灰狼", "棕熊", "北極熊", "熊貓", "駱駝", "麋鹿", "羚羊", "海豚", "鯨魚", "鯊魚", "海龜", "章魚", "水母", "龍蝦", "螃蟹", "海星", "海馬", "禿鷹", "老鷹", "貓頭鷹", "鸚鵡", "孔雀", "天鵝", "火烈鳥", "翠鳥", "啄木鳥", "麻雀", "變色龍", "蜥蜴", "烏龜", "鱷魚", "蛇", "青蛙", "蟾蜍", "蠑螈", "蜜蜂", "蝴蝶", "蜻蜓", "螳螂", "蟬", "螞蟻", "蝸牛", "蜘蛛", "蠍子", "蝙蝠", "松鼠", "兔子", "老鼠", "刺蝟", "水豚", "懶猴", "樹懶", "浣熊", "臭鼬", "土撥鼠", "犰狳", "鴨嘴獸", "獵豹", "美洲豹", "雲豹", "雪豹", "黑豹", "鬣狗", "野豬", "馴鹿", "犛牛", "羊駝", "羚牛", "羚羊", "麝牛", "鴨子", "鵝", "火雞", "鵪鶉", "鴿子", "烏鴉", "喜鵲", "海鷗", "鵜鶘", "鸕鶿", "鴕鳥", "鴯鶓", "奇異鳥", "大嘴鳥", "犀鳥", "蜂鳥", "金絲雀"];
+        let animals = ["非洲獅", "孟加拉虎", "亞洲象", "網紋長頸鹿", "平原斑馬", "紅袋鼠", "無尾熊", "皇帝企鵝", "河馬", "白犀牛", "山地大猩猩", "松鼠猴", "赤狐", "北極狼", "灰熊", "北極熊", "熊貓", "單峰駱駝", "加拿大馬鹿", "黑尾牛羚", "瓶鼻海豚", "藍鯨", "大白鯊", "綠蠵龜", "大王具足蟲", "月亮水母", "澳洲龍蝦", "大閘蟹", "紅海星", "大肚海馬", "安地斯神鷹", "白頭海鵰", "倉鴞", "金剛鸚鵡", "藍孔雀", "疣鼻天鵝", "美洲紅鸛", "普通翠鳥", "五色鳥", "麻雀", "高冠變色龍", "科摩多龍", "象龜", "尼羅鱷", "眼鏡蛇", "紅眼樹蛙", "大蟾蜍", "雲南蠑螈", "義大利蜂", "大樺斑蝶", "薄翅蜻蜓", "非洲綠螳螂", "熊蟬", "紅火蟻", "非洲大蝸牛", "白額高腳蛛", "帝王蠍", "小狐蝠", "赤腹松鼠", "荷蘭垂耳兔", "溝鼠", "非洲刺蝟", "水豚", "蜂猴", "三趾樹懶", "北美浣熊", "臭鼬", "黑尾土撥鼠", "九帶犰狳", "鴨嘴獸", "印度獵豹", "美洲豹", "雲豹", "雪豹", "黑豹", "斑點鬣狗", "野豬", "馴鹿", "犛牛", "羊駝", "羚牛", "劍羚", "麝牛", "綠頭鴨", "灰雁", "七面鳥", "鵪鶉", "原鴿", "小嘴烏鴉", "喜鵲", "黑脊鷗", "澳洲鵜鶘", "鸕鶿", "非洲鴕鳥", "鴯鶓", "幾維鳥", "大嘴鳥", "犀鳥", "蜂鳥", "蝙蝠"];
 
         let startY = 0;
         let baseValue = 0;
         let finalForcedNum = 0;
-        const sensitivity = 15; // 靈敏度：上滑 15px 數字 +1
+        const sensitivity = 20; // 因為螢幕會動，靈敏度調低一點點比較好控
 
         function buildList() {
             listEl.innerHTML = animals.map((a, i) => `
                 <div class="item">
                     <div class="num-label">${i + 1}.</div>
-                    <div>${a}</div>
+                    <div class="name-label">${a}</div>
                 </div>
             `).join('');
         }
@@ -132,13 +137,13 @@
                 
                 indicatorEl.innerText = finalForcedNum;
                 indicatorEl.style.display = 'block';
-            }, {passive: false});
+            });
 
             cell.addEventListener('touchmove', (e) => {
-                e.preventDefault(); 
+                // 不再使用 preventDefault()，讓網頁正常捲動
                 let currentY = e.touches[0].clientY;
                 
-                // 這裡改為上滑邏輯：起點減掉當前點
+                // 上滑增加
                 let distance = startY - currentY; 
                 let increment = Math.floor(distance / sensitivity);
                 
@@ -148,7 +153,7 @@
                 
                 finalForcedNum = tempNum;
                 indicatorEl.innerText = finalForcedNum;
-            }, {passive: false});
+            });
 
             cell.addEventListener('touchend', () => {
                 applyForce(finalForcedNum);
