@@ -8,32 +8,28 @@
         :root {
             --ios-yellow: #ffb400;
             --ios-bg: #ffffff;
-            --ios-gray: #8e8e93;
         }
 
         body, html {
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--ios-bg);
             color: #000;
             user-select: none;
-            -webkit-user-select: none;
             overflow-x: hidden;
-            /* 防止下拉重新整理 */
-            overscroll-behavior-y: contain; 
         }
 
+        /* iOS 標題欄 */
         .header {
-            padding: 45px 15px 10px 15px;
+            padding: 40px 20px 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            background: rgba(255, 255, 255, 0.95);
+            background: #fff;
             position: sticky;
             top: 0;
-            z-index: 100;
-            backdrop-filter: blur(10px);
+            z-index: 10;
         }
 
         .back-btn {
@@ -41,43 +37,40 @@
             font-size: 17px;
             display: flex;
             align-items: center;
+            text-decoration: none;
         }
 
-        .back-btn::before {
-            content: "＜";
-            font-size: 20px;
-            margin-right: 5px;
-        }
-
+        /* 內容區 */
         .content {
             padding: 0 20px 100px 20px;
         }
 
         .note-title {
-            font-size: 30px;
-            font-weight: 700;
-            margin: 10px 0 15px 0;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 15px;
         }
 
         .intro-text {
             font-size: 17px;
-            line-height: 1.45;
-            margin-bottom: 25px;
+            line-height: 1.5;
+            margin-bottom: 30px;
+            color: #333;
         }
 
         .animal-item {
             padding: 12px 0;
-            border-bottom: 0.5px solid #d1d1d6;
+            border-bottom: 0.5px solid #e0e0e0;
             font-size: 17px;
             display: flex;
         }
 
         .animal-index {
-            width: 45px;
-            color: var(--ios-gray);
+            width: 40px;
+            color: #8e8e93;
         }
 
-        /* 核心隱藏機制 */
+        /* 隱藏九宮格核心機制 */
         #magic-grid {
             position: fixed;
             top: 0;
@@ -88,16 +81,16 @@
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
             z-index: 999;
-            opacity: 0; /* 完全透明，觀眾看不見 */
-            touch-action: none; /* 禁用瀏覽器原生手勢，完全由 JS 接手 */
+            opacity: 0; /* 完全透明 */
         }
 
+        /* 強迫數字顯示 (極小且低調) */
         #force-indicator {
             position: fixed;
-            top: 10px;
-            left: 10px;
-            font-size: 12px;
-            color: rgba(0, 0, 0, 0.2);
+            top: 5px;
+            left: 5px;
+            font-size: 10px;
+            color: rgba(0,0,0,0.1); /* 極淡的顏色 */
             z-index: 1000;
             display: none;
             pointer-events: none;
@@ -106,7 +99,7 @@
 </head>
 <body>
 
-    <div id="force-indicator">--</div>
+    <div id="force-indicator">0</div>
 
     <div id="magic-grid">
         <div data-range="10"></div><div data-range="20"></div><div data-range="30"></div>
@@ -115,96 +108,75 @@
     </div>
 
     <div class="header">
-        <div class="back-btn">備忘錄</div>
-        <div style="color: var(--ios-yellow); font-weight: 600;">完成</div>
+        <div class="back-btn">＜ 備忘錄</div>
+        <div style="color: var(--ios-yellow);">完成</div>
     </div>
 
     <div class="content">
-        <div class="note-title">動物感應清單</div>
+        <div class="note-title">關於大自然的奧秘</div>
         <div class="intro-text">
-            以下是我們在這次心靈實驗中會用到的 100 種動物清單。請隨意滑動觀察，這些動物都是隨機排列的。
+            動物界是一個充滿驚奇的世界。從非洲大草原到深邃的海洋，每一種生物都有其獨特的生存方式。科學家研究發現，群居動物展現了極高的社會智慧。以下是我們為這次心靈感應實驗所準備的 100 種參考動物名單：
         </div>
         
-        <div id="animal-list"></div>
+        <div id="animal-list">
+            </div>
     </div>
 
     <script>
         const animalListContainer = document.getElementById('animal-list');
         const indicator = document.getElementById('force-indicator');
         const grid = document.getElementById('magic-grid');
+        
+        let animals = ["獅子", "老虎", "大象", "長頸鹿", "斑馬", "河馬", "袋鼠", "無尾熊", "企鵝", "海豚", "狐狸", "灰狼", "駱駝", "松鼠", "兔子", "梅花鹿", "犀牛", "黑猩猩", "樹懶", "獵豹", "貓頭鷹", "老鷹", "孔雀", "天鵝", "烏龜", "鱷魚", "變色龍", "章魚", "水母", "海馬"];
+        // 預填補隨機動物到100個
+        while(animals.length < 100) {
+            animals.push("未知生物" + (animals.length + 1));
+        }
 
-        const rawAnimals = [
-            "獅子", "老虎", "大象", "斑馬", "長頸鹿", "河馬", "犀牛", "獵豹", "黑猩猩", "狒狒",
-            "袋鼠", "無尾熊", "鴨嘴獸", "鴯鶓", "企鵝", "海豹", "海象", "北極熊", "灰狼", "狐狸",
-            "松鼠", "兔子", "梅花鹿", "馴鹿", "駱駝", "羊駝", "水牛", "羚羊", "土撥鼠", "刺蝟",
-            "貓頭鷹", "老鷹", "孔雀", "天鵝", "蜂鳥", "鸚鵡", "啄木鳥", "鵜鶘", "火烈鳥", "海鷗",
-            "烏龜", "鱷魚", "變色龍", "壁虎", "響尾蛇", "眼鏡蛇", "青蛙", "蟾蜍", "蠑螈", "大鯢",
-            "章魚", "水母", "海馬", "魷魚", "龍蝦", "螃蟹", "海星", "珊瑚", "海豚", "鯨魚",
-            "鯊魚", "魟魚", "海龜", "抹香鯨", "虎鯨", "金魚", "鯉魚", "熱帶魚", "食人魚", "電鰻",
-            "蜜蜂", "蝴蝶", "螢火蟲", "蜻蜓", "螳螂", "蟬", "甲蟲", "螞蟻", "蝸牛", "蜘蛛",
-            "蝙蝠", "樹懶", "食蟻獸", "犰狳", "鴨子", "鵝", "火雞", "烏鴉", "麻雀", "鴿子",
-            "馬", "驢子", "豬", "牛", "綿羊", "山羊", "貓", "狗", "倉鼠", "鼴鼠"
-        ];
-
-        let animals = [...rawAnimals];
         let currentForceNum = 0;
         let isTouching = false;
         let baseRange = 0;
-        let startY = 0;
-        let sensitivity = 15; // 滑動 15px 數字 +1
 
+        // 初始化列表
         function renderList() {
-            let html = '';
-            for (let i = 0; i < animals.length; i++) {
-                html += `<div class="animal-item">
-                            <span class="animal-index">${i + 1}.</span>
-                            <span class="animal-name">${animals[i]}</span>
-                         </div>`;
+            animalListContainer.innerHTML = '';
+            for (let i = 1; i <= 100; i++) {
+                const item = document.createElement('div');
+                item.className = 'animal-item';
+                item.innerHTML = `<span class="animal-index">${i}.</span> <span class="animal-name">${animals[i+1]}</span>`;
+                animalListContainer.appendChild(item);
             }
-            animalListContainer.innerHTML = html;
         }
 
-        // 觸摸開始
+        // 強迫邏輯
         grid.addEventListener('touchstart', (e) => {
             isTouching = true;
             const range = e.target.getAttribute('data-range');
             if (range) {
                 baseRange = parseInt(range);
-                startY = e.touches[0].clientY;
-                currentForceNum = baseRange;
-                indicator.innerText = currentForceNum;
                 indicator.style.display = 'block';
             }
-        }, { passive: false });
+        });
 
-        // 滑動中 (核心修正：加入 preventDefault)
-        grid.addEventListener('touchmove', (e) => {
-            if (!isTouching) return;
-            e.preventDefault(); // 阻止頁面捲動，確保能捕捉到滑動距離
-            
-            const currentY = e.touches[0].clientY;
-            const diffY = currentY - startY;
-            
-            if (diffY > 0) { // 往下滑
-                let increment = Math.floor(diffY / sensitivity);
-                if (increment > 9) increment = 9;
-                
-                currentForceNum = baseRange + increment;
-                indicator.innerText = currentForceNum;
-            } else {
-                // 如果往上滑，回到 baseRange
-                currentForceNum = baseRange;
-                indicator.innerText = currentForceNum;
-            }
-        }, { passive: false });
-
-        // 觸摸結束
-        grid.addEventListener('touchend', () => {
+        window.addEventListener('touchmove', (e) => {
             if (!isTouching) return;
             
-            if (currentForceNum >= 1 && currentForceNum <= 100) {
-                // 更新名單：先重置，再放熊貓
-                animals = [...rawAnimals];
+            // 根據滑動位置計算偏移量 (0-9)
+            const touch = e.touches[0];
+            const moveOffset = Math.floor((touch.clientY / window.innerHeight) * 10);
+            currentForceNum = baseRange + (moveOffset % 10);
+            
+            indicator.innerText = currentForceNum;
+        });
+
+        window.addEventListener('touchend', () => {
+            if (!isTouching) return;
+            
+            // 執行「強迫」：將該編號的動物換成熊貓
+            if (currentForceNum > 0 && currentForceNum <= 100) {
+                // 先清空原本可能存在的熊貓（選填，若要確保只有一個熊貓）
+                animals = animals.map(a => a === "熊貓" ? "隨機動物" : a);
+                // 設定目標編號為熊貓
                 animals[currentForceNum - 1] = "熊貓";
                 renderList();
             }
