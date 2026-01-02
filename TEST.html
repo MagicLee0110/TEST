@@ -9,7 +9,8 @@
             --ios-yellow: #ffb100;
             --ios-bg: #ffffff;
             --ios-gray: #8e8e93;
-            --marker-color: rgba(0, 0, 0, 0.15); /* 極淺的提示顏色 */
+            /* 強化標記顏色，讓表演者更易看清 */
+            --marker-color: rgba(0, 0, 0, 0.4); 
         }
 
         body {
@@ -22,7 +23,6 @@
             -webkit-user-select: none;
         }
 
-        /* 導覽列 */
         .nav-bar {
             display: flex;
             justify-content: space-between;
@@ -40,7 +40,6 @@
 
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
-        /* 秘密數字指示器 (僅表演者可見) */
         #force-indicator {
             position: fixed;
             top: 60px;
@@ -52,47 +51,54 @@
             display: none;
         }
 
-        /* 隱形感應區：全透明 */
+        /* 隱形感應區 */
         #trigger-zero, #trigger-grid {
             position: fixed;
             left: 0;
             width: 100%;
             z-index: 2500;
-            background: transparent; /* 隱藏顏色 */
+            background: transparent;
         }
 
+        /* 0-9 區稍微下移一點點 */
         #trigger-zero {
-            top: 50px;
-            height: 60px; 
+            top: 60px;
+            height: 70px; 
         }
 
+        /* 九宮格整體下移至螢幕中下部 */
         #trigger-grid {
-            top: 150px;
-            height: 350px; 
+            top: 280px; 
+            height: 360px; 
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
         }
 
-        /* 邊緣提示標記 (-) */
+        /* 邊緣提示標記 (-) 強化版 */
         .edge-marker {
             position: fixed;
-            font-size: 10px;
+            font-size: 14px;
+            font-weight: bold;
             color: var(--marker-color);
             pointer-events: none;
             z-index: 2600;
             font-family: Arial, sans-serif;
         }
+        
         /* 頂部 0-9 標記 */
-        .m-top { top: 75px; left: 50%; transform: translateX(-50%); }
-        /* 左側標記 (對應 10, 40, 70) */
-        .m-l1 { top: 200px; left: 2px; }
-        .m-l2 { top: 315px; left: 2px; }
-        .m-l3 { top: 430px; left: 2px; }
-        /* 右側標記 (對應 30, 60, 90) */
-        .m-r1 { top: 200px; right: 2px; }
-        .m-r2 { top: 315px; right: 2px; }
-        .m-r3 { top: 430px; right: 2px; }
+        .m-top { top: 85px; left: 50%; transform: translateX(-50%); }
+        
+        /* 左/右側標記 (精確對準 360px 高度的三等分中心) */
+        /* 第一排中心：280 + 60 = 340px */
+        .m-l1, .m-r1 { top: 340px; }
+        /* 第二排中心：280 + 180 = 460px */
+        .m-l2, .m-r2 { top: 460px; }
+        /* 第三排中心：280 + 300 = 580px */
+        .m-l3, .m-r3 { top: 580px; }
+
+        .m-l1, .m-l2, .m-l3 { left: 4px; }
+        .m-r1, .m-r2, .m-r3 { right: 4px; }
 
         .content-wrap { padding: 0 20px 100px 20px; }
         .note-date { color: var(--ios-gray); text-align: center; font-size: 13px; margin: 15px 0; }
@@ -178,7 +184,7 @@
 
             cell.addEventListener('touchmove', (e) => {
                 let currentY = e.touches[0].clientY;
-                let distance = startY - currentY; // 上滑為正
+                let distance = startY - currentY; // 上滑數字增加
                 let increment = Math.floor(distance / sensitivity);
                 
                 let tempNum = baseValue + increment;
