@@ -9,7 +9,6 @@
             --ios-yellow: #ffb100;
             --ios-bg: #ffffff;
             --ios-gray: #8e8e93;
-            /* 強化標記顏色，讓表演者更易看清 */
             --marker-color: rgba(0, 0, 0, 0.4); 
         }
 
@@ -40,42 +39,41 @@
 
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
+        /* 秘密數字指示器 - 表演時顏色調極淡 */
         #force-indicator {
             position: fixed;
             top: 60px;
             left: 10px;
-            font-size: 11px;
-            color: rgba(0, 0, 0, 0.05); 
+            font-size: 12px;
+            font-weight: bold;
+            color: rgba(0, 0, 0, 0.1); 
             z-index: 4000;
             pointer-events: none;
             display: none;
         }
 
-        /* 隱形感應區 */
+        /* 感應區 */
         #trigger-zero, #trigger-grid {
             position: fixed;
             left: 0;
             width: 100%;
             z-index: 2500;
-            background: transparent;
         }
 
-        /* 0-9 區稍微下移一點點 */
         #trigger-zero {
             top: 60px;
             height: 70px; 
         }
 
-        /* 九宮格整體下移至螢幕中下部 */
         #trigger-grid {
             top: 280px; 
-            height: 360px; 
+            height: 400px; /* 稍微加高感應範圍 */
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
         }
 
-        /* 邊緣提示標記 (-) 強化版 */
+        /* 標記點 */
         .edge-marker {
             position: fixed;
             font-size: 14px;
@@ -83,20 +81,12 @@
             color: var(--marker-color);
             pointer-events: none;
             z-index: 2600;
-            font-family: Arial, sans-serif;
         }
         
-        /* 頂部 0-9 標記 */
         .m-top { top: 85px; left: 50%; transform: translateX(-50%); }
-        
-        /* 左/右側標記 (精確對準 360px 高度的三等分中心) */
-        /* 第一排中心：280 + 60 = 340px */
-        .m-l1, .m-r1 { top: 340px; }
-        /* 第二排中心：280 + 180 = 460px */
-        .m-l2, .m-r2 { top: 460px; }
-        /* 第三排中心：280 + 300 = 580px */
-        .m-l3, .m-r3 { top: 580px; }
-
+        .m-l1, .m-r1 { top: 345px; }
+        .m-l2, .m-r2 { top: 480px; }
+        .m-l3, .m-r3 { top: 615px; }
         .m-l1, .m-l2, .m-l3 { left: 4px; }
         .m-r1, .m-r2, .m-r3 { right: 4px; }
 
@@ -107,6 +97,10 @@
         .list-container { border-top: 0.5px solid #d1d1d6; }
         .item { display: flex; padding: 12px 0; border-bottom: 0.5px solid #d1d1d6; font-size: 17px; }
         .num-label { width: 45px; color: var(--ios-gray); }
+
+        /* 測試模式下的顯色樣式 */
+        .debug-grid { background: rgba(255, 0, 0, 0.1) !important; border: 1px solid red !important; }
+        .debug-zero { background: rgba(0, 0, 255, 0.1) !important; border: 1px solid blue !important; }
     </style>
 </head>
 <body>
@@ -144,14 +138,19 @@
     <div class="content-wrap">
         <div class="note-date">2026年1月2日 21:20</div>
         <h1>世界動物完整清單</h1>
-        <p class="intro-text">
-            此清單按類別編號，包含全球 100 種具代表性的生物。請在下方瀏覽，並記住你感興趣的動物編號。
-        </p>
-
+        <p class="intro-text">此清單按類別編號，包含全球 100 種具代表性的生物。</p>
         <div id="main-list" class="list-container"></div>
     </div>
 
     <script>
+        // === 測試模式開關：表演時請改為 false ===
+        const debugMode = false; 
+
+        if (debugMode) {
+            document.getElementById('trigger-zero').classList.add('debug-zero');
+            document.querySelectorAll('.grid-cell').forEach(el => el.classList.add('debug-grid'));
+        }
+
         const listEl = document.getElementById('main-list');
         const indicatorEl = document.getElementById('force-indicator');
         
@@ -184,23 +183,22 @@
 
             cell.addEventListener('touchmove', (e) => {
                 let currentY = e.touches[0].clientY;
-                let distance = startY - currentY; // 上滑數字增加
+                let distance = startY - currentY; 
                 let increment = Math.floor(distance / sensitivity);
-                
                 let tempNum = baseValue + increment;
                 
                 if (baseValue === 0) {
-                    if (tempNum < 1) tempNum = 1;
-                    if (tempNum > 9) tempNum = 9;
+                    tempNum = Math.max(1, Math.min(9, tempNum));
                 } else {
-                    if (tempNum < baseValue) tempNum = baseValue;
-                    if (tempNum > baseValue + 9) tempNum = baseValue + 9;
+                    tempNum = Math.max(baseValue, Math.min(baseValue + 9, tempNum));
                 }
                 
                 finalForcedNum = tempNum;
                 indicatorEl.innerText = finalForcedNum;
-            });
+                e.preventDefault(); // 阻止背景捲動
+            }, { passive: false });
 
+            // 使用 touchend 處理
             cell.addEventListener('touchend', () => {
                 applyForce(finalForcedNum);
                 indicatorEl.style.display = 'none';
@@ -208,16 +206,20 @@
         });
 
         function applyForce(targetNum) {
-            if (targetNum <= 0) return;
+            if (!targetNum || targetNum <= 0) return;
             const targetIdx = targetNum - 1;
-            const panda = "熊貓";
-            const oldIdx = animals.indexOf(panda);
+            const pandaName = "熊貓";
+            
+            // 找出目前熊貓在哪裡
+            let currentPandaIdx = animals.findIndex(a => a.trim() === pandaName);
 
-            if (oldIdx !== -1 && oldIdx !== targetIdx) {
-                let replacedAnimal = animals[targetIdx];
-                animals[targetIdx] = panda;
-                animals[oldIdx] = replacedAnimal;
+            if (currentPandaIdx !== -1 && currentPandaIdx !== targetIdx) {
+                // 交換位置
+                let temp = animals[targetIdx];
+                animals[targetIdx] = animals[currentPandaIdx];
+                animals[currentPandaIdx] = temp;
                 buildList();
+                console.log("已強迫成功：", targetNum, "號現在是熊貓");
             }
         }
 
