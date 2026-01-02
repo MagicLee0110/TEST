@@ -39,41 +39,56 @@
 
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
-        /* 秘密數字指示器 - 表演時顏色調極淡 */
         #force-indicator {
             position: fixed;
             top: 60px;
             left: 10px;
             font-size: 12px;
-            font-weight: bold;
             color: rgba(0, 0, 0, 0.1); 
             z-index: 4000;
             pointer-events: none;
             display: none;
         }
 
-        /* 感應區 */
-        #trigger-zero, #trigger-grid {
+        /* 感應區優化：只佔據邊緣，不擋住中間滑動 */
+        .trigger-zone {
             position: fixed;
+            z-index: 2500;
+            background: transparent;
+            /* debug 用：表演時請註解掉下面這行 */
+            /* background: rgba(255,0,0,0.05); border: 1px solid red; */
+        }
+
+        /* 0-9 區：頂部條 */
+        #trigger-zero {
+            top: 50px;
             left: 0;
             width: 100%;
-            z-index: 2500;
+            height: 60px;
         }
 
-        #trigger-zero {
-            top: 60px;
-            height: 70px; 
+        /* 左側感應條：負責 10, 40, 70 開頭 */
+        .side-trigger-l {
+            top: 280px;
+            left: 0;
+            width: 60px; /* 只佔左邊 60px */
+            height: 400px;
+            display: flex;
+            flex-direction: column;
         }
 
-        #trigger-grid {
-            top: 280px; 
-            height: 400px; /* 稍微加高感應範圍 */
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
+        /* 右側感應條：負責 30, 60, 90 開頭 */
+        .side-trigger-r {
+            top: 280px;
+            right: 0;
+            width: 60px; /* 只佔右邊 60px */
+            height: 400px;
+            display: flex;
+            flex-direction: column;
         }
 
-        /* 標記點 */
+        .grid-cell { flex: 1; width: 100%; }
+
         .edge-marker {
             position: fixed;
             font-size: 14px;
@@ -83,12 +98,13 @@
             z-index: 2600;
         }
         
-        .m-top { top: 85px; left: 50%; transform: translateX(-50%); }
-        .m-l1, .m-r1 { top: 345px; }
-        .m-l2, .m-r2 { top: 480px; }
-        .m-l3, .m-r3 { top: 615px; }
-        .m-l1, .m-l2, .m-l3 { left: 4px; }
-        .m-r1, .m-r2, .m-r3 { right: 4px; }
+        .m-top { top: 80px; left: 50%; transform: translateX(-50%); }
+        .m-l1 { top: 345px; left: 4px; }
+        .m-l2 { top: 480px; left: 4px; }
+        .m-l3 { top: 615px; left: 4px; }
+        .m-r1 { top: 345px; right: 4px; }
+        .m-r2 { top: 480px; right: 4px; }
+        .m-r3 { top: 615px; right: 4px; }
 
         .content-wrap { padding: 0 20px 100px 20px; }
         .note-date { color: var(--ios-gray); text-align: center; font-size: 13px; margin: 15px 0; }
@@ -97,10 +113,6 @@
         .list-container { border-top: 0.5px solid #d1d1d6; }
         .item { display: flex; padding: 12px 0; border-bottom: 0.5px solid #d1d1d6; font-size: 17px; }
         .num-label { width: 45px; color: var(--ios-gray); }
-
-        /* 測試模式下的顯色樣式 */
-        .debug-grid { background: rgba(255, 0, 0, 0.1) !important; border: 1px solid red !important; }
-        .debug-zero { background: rgba(0, 0, 255, 0.1) !important; border: 1px solid blue !important; }
     </style>
 </head>
 <body>
@@ -121,36 +133,28 @@
         <div>完成</div>
     </div>
 
-    <div id="trigger-zero" class="grid-cell" data-start="0"></div>
+    <div id="trigger-zero" class="trigger-zone grid-cell" data-start="0"></div>
 
-    <div id="trigger-grid">
+    <div class="side-trigger-l trigger-zone">
         <div class="grid-cell" data-start="10"></div>
-        <div class="grid-cell" data-start="20"></div>
-        <div class="grid-cell" data-start="30"></div>
         <div class="grid-cell" data-start="40"></div>
-        <div class="grid-cell" data-start="50"></div>
-        <div class="grid-cell" data-start="60"></div>
         <div class="grid-cell" data-start="70"></div>
-        <div class="grid-cell" data-start="80"></div>
+    </div>
+
+    <div class="side-trigger-r trigger-zone">
+        <div class="grid-cell" data-start="30"></div>
+        <div class="grid-cell" data-start="60"></div>
         <div class="grid-cell" data-start="90"></div>
     </div>
 
     <div class="content-wrap">
         <div class="note-date">2026年1月2日 21:20</div>
         <h1>世界動物完整清單</h1>
-        <p class="intro-text">此清單按類別編號，包含全球 100 種具代表性的生物。</p>
+        <p class="intro-text">此清單包含 100 種生物。請隨意滑動瀏覽，記住一個編號。</p>
         <div id="main-list" class="list-container"></div>
     </div>
 
     <script>
-        // === 測試模式開關：表演時請改為 false ===
-        const debugMode = false; 
-
-        if (debugMode) {
-            document.getElementById('trigger-zero').classList.add('debug-zero');
-            document.querySelectorAll('.grid-cell').forEach(el => el.classList.add('debug-grid'));
-        }
-
         const listEl = document.getElementById('main-list');
         const indicatorEl = document.getElementById('force-indicator');
         
@@ -195,10 +199,9 @@
                 
                 finalForcedNum = tempNum;
                 indicatorEl.innerText = finalForcedNum;
-                e.preventDefault(); // 阻止背景捲動
-            }, { passive: false });
+                // 不使用 preventDefault，允許頁面跟著滑動
+            });
 
-            // 使用 touchend 處理
             cell.addEventListener('touchend', () => {
                 applyForce(finalForcedNum);
                 indicatorEl.style.display = 'none';
@@ -210,16 +213,13 @@
             const targetIdx = targetNum - 1;
             const pandaName = "熊貓";
             
-            // 找出目前熊貓在哪裡
-            let currentPandaIdx = animals.findIndex(a => a.trim() === pandaName);
+            let currentPandaIdx = animals.indexOf(pandaName);
 
             if (currentPandaIdx !== -1 && currentPandaIdx !== targetIdx) {
-                // 交換位置
                 let temp = animals[targetIdx];
                 animals[targetIdx] = animals[currentPandaIdx];
                 animals[currentPandaIdx] = temp;
                 buildList();
-                console.log("已強迫成功：", targetNum, "號現在是熊貓");
             }
         }
 
