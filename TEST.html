@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>iOS Magic Dark - Final Fix</title>
+    <title>iOS Magic Center - Bottom Grid</title>
     <style>
         :root {
             --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
@@ -27,7 +27,14 @@
             background-attachment: fixed;
             position: relative;
             color: white;
-            display: block;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-content {
+            flex: 0 0 auto;
+            z-index: 10;
+            pointer-events: auto; /* 讓通知卡片區域可以正常點擊（如果需要） */
         }
 
         .clock-container {
@@ -53,26 +60,20 @@
         .notif-title-row { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; }
         .notif-time { font-weight: 400; opacity: 0.6; font-size: 13px; }
         .notif-body { font-size: 14px; line-height: 1.4; opacity: 0.9; }
-        
-        .notif-actions { display: flex; gap: 8px; margin-top: 15px; }
-        .action-btn { flex: 1; background: rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; text-align: center; font-size: 15px; }
 
-        /* --- 隱形六宮格 (強制覆蓋式佈局) --- */
-        .magic-grid {
-            position: absolute;
-            top: 35%;    /* 從螢幕中間偏上開始，確保抓到第一排 */
-            bottom: 50px; 
-            left: 0; 
-            width: 100%;
+        /* --- 隱形六宮格 (精確位於通知下方空白處) --- */
+        .magic-area {
+            flex: 1; /* 自動填滿剩餘的空白區域 */
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(2, 1fr);
-            z-index: 9999; /* 絕對最上層，不被通知卡片擋住 */
+            z-index: 999;
+            margin-bottom: 40px; /* 留一點點距離給 Home Bar */
         }
         .magic-btn {
             width: 100%; height: 100%;
-            background: rgba(255,255,255,0); /* 保持透明 */
-            /* border: 1px solid rgba(255,255,255,0.1); */ /* 測試時可開啟此行看格子位置 */
+            background: transparent;
+            /* border: 1px solid rgba(255,255,255,0.1); */ /* 表演前可解除註解檢查位置 */
         }
 
         /* --- 備忘錄 --- */
@@ -83,7 +84,7 @@
             color: #fff;
             display: none;
             flex-direction: column;
-            z-index: 10000;
+            z-index: 2000;
         }
 
         .memo-header {
@@ -98,56 +99,54 @@
             justify-content: center;
             align-items: center;
             font-family: "Cursive", "Bradley Hand", "Marker Felt", sans-serif;
-            font-size: 250px; /* 數字再加大 */
+            font-size: 250px;
             font-weight: bold;
             color: white;
-            margin-top: -30px; /* 視覺重心微調 */
+            padding-bottom: 50px; /* 視覺置中微調 */
         }
 
         .home-bar {
             position: fixed; bottom: 8px; left: 50%;
             transform: translateX(-50%); width: 140px; height: 5px;
             background: rgba(255, 255, 255, 0.4);
-            border-radius: 10px; z-index: 11000;
+            border-radius: 10px; z-index: 3000;
         }
     </style>
 </head>
 <body>
 
     <div id="notification-center">
-        <div class="clock-container">
-            <div class="date-text" id="dateDisplay">1月3日 週六</div>
-            <h1 class="time-text" id="timeDisplay">15:02</h1>
-        </div>
-        <div class="notification-header">通知中心</div>
-
-        <div class="notification-list">
-            <div class="notif-card">
-                <div class="notif-top">
-                    <div class="notif-icon" style="background-color: #ff4500;">S<span class="notif-badge">23</span></div>
-                    <div class="notif-content">
-                        <div class="notif-title-row"><span>您關注的賣家開始直播了！</span><span class="notif-time">1小時前</span></div>
-                        <div class="notif-body">觀看 Yomigirls 的直播：神美浩肯包🤩...</div>
-                    </div>
-                </div>
+        <div class="top-content">
+            <div class="clock-container">
+                <div class="date-text" id="dateDisplay">1月3日 週六</div>
+                <h1 class="time-text" id="timeDisplay">15:02</h1>
             </div>
+            <div class="notification-header">通知中心</div>
 
-            <div class="notif-card">
-                <div class="notif-top">
-                    <div class="notif-icon" style="background-color: #006aa6;">D<span class="notif-badge">19</span></div>
-                    <div class="notif-content">
-                        <div class="notif-title-row"><span>你追蹤的「理財板」新文章</span><span class="notif-time">2小時前</span></div>
-                        <div class="notif-body">「台股瘋了 正二也瘋了」</div>
+            <div class="notification-list">
+                <div class="notif-card">
+                    <div class="notif-top">
+                        <div class="notif-icon" style="background-color: #ff4500;">S<span class="notif-badge">23</span></div>
+                        <div class="notif-content">
+                            <div class="notif-title-row"><span>您關注的賣家開始直播了！</span><span class="notif-time">1小時前</span></div>
+                            <div class="notif-body">觀看 Yomigirls 的直播：神美浩肯包🤩...</div>
+                        </div>
                     </div>
                 </div>
-                <div style="text-align:center; font-size: 13px; margin: 15px 0 10px; opacity: 0.8;">要繼續接收「Dcard」App的通知嗎？</div>
-                <div class="notif-actions">
-                    <div class="action-btn">繼續⋯</div><div class="action-btn">關閉⋯</div>
+
+                <div class="notif-card">
+                    <div class="notif-top">
+                        <div class="notif-icon" style="background-color: #006aa6;">D<span class="notif-badge">19</span></div>
+                        <div class="notif-content">
+                            <div class="notif-title-row"><span>你追蹤的「理財板」新文章</span><span class="notif-time">2小時前</span></div>
+                            <div class="notif-body">「台股瘋了 正二也瘋了」</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <div class="magic-grid">
+        <div class="magic-area">
             <div class="magic-btn" onclick="openMemo(36)"></div>
             <div class="magic-btn" onclick="openMemo(45)"></div>
             <div class="magic-btn" onclick="openMemo(54)"></div>
@@ -190,7 +189,7 @@
 
         function closeMemo() {
             memoScreen.style.display = 'none';
-            notifScreen.style.display = 'block';
+            notifScreen.style.display = 'flex'; // 使用 flex 回復
         }
 
         setInterval(updateClock, 1000);
