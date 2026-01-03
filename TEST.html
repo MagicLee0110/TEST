@@ -6,79 +6,114 @@
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>iOS Magic Ultimate Fix</title>
+    <title>iOS Magic Pro - Stroke Synced</title>
     <style>
         :root {
             --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-            --handwriting-font: "Cursive", "Bradley Hand", "Marker Felt", sans-serif;
-            --ios-gold: #d4a017;
-            --ios-gray: #8e8e93;
-            --ios-card-bg: rgba(28, 28, 30, 0.7);
+            /* 統一手寫字體設定 */
+            --handwriting-font: "Cursive", "Bradley Hand", "Marker Felt", "Chalkboard SE", sans-serif;
             --main-gradient: linear-gradient(180deg, #000000 0%, #1a152e 40%, #000000 100%);
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-        html, body { margin: 0; padding: 0; width: 100%; height: 100%; font-family: var(--ios-font); overflow: hidden; background-color: #000; touch-action: none; }
+        html, body {
+            margin: 0; padding: 0; width: 100%; height: 100%;
+            font-family: var(--ios-font);
+            overflow: hidden;
+            background-color: #000;
+            touch-action: none; 
+        }
 
-        /* --- 1. 通知中心 --- */
-        #notification-center { width: 100%; height: 100%; background: var(--main-gradient); background-attachment: fixed; position: relative; color: white; display: flex; flex-direction: column; }
-        
-        .clock-container { text-align: center; padding-top: calc(env(safe-area-inset-top) + 60px); user-select: none; }
+        /* --- 通知中心 --- */
+        #notification-center {
+            width: 100%; height: 100%;
+            background: var(--main-gradient);
+            background-attachment: fixed;
+            position: relative;
+            color: white;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .top-content { flex: 0 0 auto; z-index: 10; }
+
+        .clock-container {
+            text-align: center;
+            padding-top: calc(env(safe-area-inset-top) + 60px);
+            user-select: none;
+            -webkit-user-select: none;
+        }
         .time-text { font-size: 95px; font-weight: 200; margin: 0; letter-spacing: -2px; }
         .date-text { font-size: 19px; opacity: 0.9; }
-        
-        .notification-header { display: flex; justify-content: space-between; align-items: center; padding: 40px 25px 15px; }
-        .notification-header h2 { font-size: 28px; margin: 0; font-weight: 600; }
-        .close-btn { width: 28px; height: 28px; background: rgba(255,255,255,0.15); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+
+        .notification-header { padding: 40px 25px 15px; font-size: 28px; font-weight: 600; }
 
         .notification-list { padding: 0 15px; }
-        .notif-card { background: rgba(40, 40, 40, 0.4); backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px); border-radius: 24px; padding: 15px; margin-bottom: 12px; display: flex; flex-direction: column; }
+        .notif-card {
+            background: rgba(40, 40, 40, 0.4);
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border-radius: 24px; padding: 15px; margin-bottom: 12px;
+            display: flex; flex-direction: column;
+        }
         .notif-top { display: flex; gap: 12px; }
-        .notif-icon { width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; position: relative; }
-        .notif-badge { position: absolute; top: -5px; right: -5px; background: white; color: black; font-size: 10px; font-weight: bold; padding: 2px 4px; border-radius: 10px; }
         .notif-content { flex: 1; }
-        .notif-title-row { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; margin-bottom: 2px; }
-        .notif-time { font-weight: 400; opacity: 0.6; font-size: 13px; }
+        .notif-title-row { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; }
         .notif-body { font-size: 14px; line-height: 1.4; opacity: 0.9; }
-        .notif-actions { display: flex; gap: 8px; margin-top: 15px; }
-        .action-btn { flex: 1; background: rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; text-align: center; font-size: 15px; }
 
-        .magic-area { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr); z-index: 999; margin-bottom: 40px; }
+        /* --- 九宮格 --- */
+        .magic-area {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            z-index: 999;
+            margin-bottom: 40px;
+        }
         .magic-btn { width: 100%; height: 100%; background: transparent; }
 
-        /* --- 2. 備忘錄內頁 --- */
-        #memo-detail { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #fff; display: none; flex-direction: column; z-index: 2000; }
-        .memo-detail-header { padding: calc(env(safe-area-inset-top) + 10px) 20px 10px; display: flex; justify-content: space-between; align-items: center; color: var(--ios-gold); font-size: 17px; }
-        .handwriting-area { flex: 1; display: flex; justify-content: center; align-items: center; font-family: var(--handwriting-font); font-size: 250px; font-weight: 500; color: white; }
-        #sketchCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 2005; }
-
-        /* --- 3. 備忘錄列表頁 (像素級還原) --- */
-        #memo-list { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #000; color: #fff; display: none; flex-direction: column; z-index: 3000; padding-top: env(safe-area-inset-top); }
-        .list-header-group { padding: 15px 20px 5px; }
-        .back-to-folders { color: var(--ios-gold); font-size: 17px; display: flex; align-items: center; margin-bottom: 5px; }
-        .list-title { font-size: 34px; font-weight: 700; margin: 0; }
+        /* --- 備忘錄 --- */
+        #memo-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; color: #fff;
+            display: none; flex-direction: column; z-index: 2000;
+        }
+        .memo-header { padding: calc(env(safe-area-inset-top) + 10px) 20px 10px; display: flex; justify-content: space-between; align-items: center; color: #d4a017; font-size: 17px; z-index: 2010; }
         
-        .search-bar { background: #1c1c1e; border-radius: 10px; margin: 15px 20px; padding: 8px 12px; display: flex; align-items: center; color: var(--ios-gray); font-size: 17px; }
-        .search-bar::before { content: "🔍"; margin-right: 8px; font-size: 14px; }
+        .memo-content-area {
+            flex: 1; position: relative; width: 100%;
+            display: flex; justify-content: center; align-items: center;
+        }
+        
+        /* 預設數字顯示：優化字重與尺寸 */
+        #handwritingNumber {
+            font-family: var(--handwriting-font);
+            font-size: 220px; 
+            font-weight: 500; /* 調整字重使其與畫筆一致 */
+            color: rgba(255, 255, 255, 0.95);
+            z-index: 2001;
+            user-select: none;
+        }
 
-        .notes-group { background: #1c1c1e; border-radius: 12px; margin: 0 20px; overflow: hidden; }
-        .note-item { padding: 12px 16px; position: relative; cursor: pointer; }
-        .note-item:not(:last-child)::after { content: ""; position: absolute; bottom: 0; right: 0; width: calc(100% - 16px); height: 0.5px; background: #38383a; }
-        .note-item-title { font-size: 17px; font-weight: 600; margin-bottom: 2px; display: block; }
-        .note-item-sub { font-size: 15px; color: var(--ios-gray); display: flex; gap: 8px; }
-        .note-item-time { color: var(--ios-gray); }
-        .note-item-snippet { color: #888; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        /* 真實手寫畫布 */
+        #sketchCanvas {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 2005;
+        }
 
-        .list-footer { position: fixed; bottom: 0; width: 100%; height: 85px; background: #161616; border-top: 0.5px solid #2c2c2e; padding: 10px 25px; display: flex; justify-content: space-between; align-items: flex-start; }
-        .notes-count { position: absolute; left: 50%; transform: translateX(-50%); top: 15px; font-size: 12px; color: white; }
-        .footer-icon { color: var(--ios-gold); font-size: 22px; }
+        /* --- 後台 --- */
+        #backstage-screen {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); color: white;
+            display: none; flex-direction: column; z-index: 3000;
+            padding: calc(env(safe-area-inset-top) + 20px) 20px;
+            box-sizing: border-box;
+        }
+        .grid-inputs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 30px; }
+        .grid-inputs input { background: #222; border: 1px solid #444; color: white; padding: 15px 5px; border-radius: 8px; text-align: center; font-size: 18px; width: 100%; }
+        .save-btn { background: #d4a017; color: black; border: none; padding: 15px; border-radius: 12px; font-size: 18px; font-weight: bold; width: 100%; }
 
-        /* --- 4. 後台 --- */
-        #backstage { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #111; color: white; display: none; flex-direction: column; z-index: 4000; padding: calc(env(safe-area-inset-top) + 20px) 20px; }
-        .grid-inputs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
-        .grid-inputs input { background: #222; border: 1px solid #444; color: white; padding: 15px 5px; border-radius: 8px; text-align: center; }
-
-        .home-bar { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); width: 140px; height: 5px; background: rgba(255, 255, 255, 0.4); border-radius: 10px; z-index: 5000; }
+        .home-bar { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); width: 140px; height: 5px; background: rgba(255, 255, 255, 0.3); border-radius: 10px; z-index: 4000; }
     </style>
 </head>
 <body>
@@ -89,104 +124,59 @@
                 <div class="date-text" id="dateDisplay">1月3日 週六</div>
                 <h1 class="time-text" id="timeDisplay">15:02</h1>
             </div>
-            
-            <div class="notification-header">
-                <h2>通知中心</h2>
-                <div class="close-btn">✕</div>
-            </div>
-
+            <div class="notification-header">通知中心</div>
             <div class="notification-list">
                 <div class="notif-card">
                     <div class="notif-top">
-                        <div class="notif-icon" style="background-color: #ff4500;">S<span class="notif-badge">23</span></div>
+                        <div style="width:38px; height:38px; background:#ff4500; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold;">S</div>
                         <div class="notif-content">
-                            <div class="notif-title-row"><span>您關注的賣家開始直播了！</span><span class="notif-time">1小時前</span></div>
+                            <div class="notif-title-row"><span>您關注的賣家開始直播了！</span><span style="opacity:0.6; font-size:13px;">1小時前</span></div>
                             <div class="notif-body">觀看 Yomigirls 的直播：神美浩肯包🤩...</div>
                         </div>
                     </div>
                 </div>
-
                 <div class="notif-card">
                     <div class="notif-top">
-                        <div class="notif-icon" style="background-color: #006aa6;">D<span class="notif-badge">19</span></div>
+                        <div style="width:38px; height:38px; background:#006aa6; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold;">D</div>
                         <div class="notif-content">
-                            <div class="notif-title-row"><span>你追蹤的「理財板」新文章</span><span class="notif-time">2小時前</span></div>
+                            <div class="notif-title-row"><span>你追蹤的「理財板」新文章</span><span style="opacity:0.6; font-size:13px;">2小時前</span></div>
                             <div class="notif-body">「台股瘋了 正二也瘋了」</div>
                         </div>
-                    </div>
-                    <div style="text-align:center; font-size: 13px; margin: 15px 0 10px; opacity: 0.8;">要繼續接收「Dcard」App的通知嗎？</div>
-                    <div class="notif-actions">
-                        <div class="action-btn">繼續⋯</div><div class="action-btn">關閉⋯</div>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="magic-area">
-            <div class="magic-btn" onclick="openMemo(0)"></div><div class="magic-btn" onclick="openMemo(1)"></div><div class="magic-btn" onclick="openMemo(2)"></div>
-            <div class="magic-btn" onclick="openMemo(3)"></div><div class="magic-btn" onclick="openMemo(4)"></div><div class="magic-btn" onclick="openMemo(5)"></div>
-            <div class="magic-btn" onclick="openMemo(6)"></div><div class="magic-btn" onclick="openMemo(7)"></div><div class="magic-btn" onclick="openMemo(8)"></div>
+            <div class="magic-btn" onclick="openMemo(0)"></div>
+            <div class="magic-btn" onclick="openMemo(1)"></div>
+            <div class="magic-btn" onclick="openMemo(2)"></div>
+            <div class="magic-btn" onclick="openMemo(3)"></div>
+            <div class="magic-btn" onclick="openMemo(4)"></div>
+            <div class="magic-btn" onclick="openMemo(5)"></div>
+            <div class="magic-btn" onclick="openMemo(6)"></div>
+            <div class="magic-btn" onclick="openMemo(7)"></div>
+            <div class="magic-btn" onclick="openMemo(8)"></div>
         </div>
         <div class="home-bar"></div>
     </div>
 
-    <div id="memo-detail">
-        <div class="memo-detail-header">
-            <span onclick="showList()">＜ 備忘錄</span>
-            <div style="display:flex; gap: 20px;">
-                <span class="footer-icon"> share</span>
-                <span style="font-weight:600;" onclick="closeAll()">完成</span>
-            </div>
+    <div id="memo-screen">
+        <div class="memo-header">
+            <span onclick="closeMemo()">＜ 備忘錄</span>
+            <span style="font-weight:600;" onclick="closeMemo()">完成</span>
         </div>
-        <div class="handwriting-area" id="handwritingNumber"></div>
-        <canvas id="sketchCanvas"></canvas>
-        <div class="home-bar"></div>
-    </div>
-
-    <div id="memo-list">
-        <div class="list-header-group">
-            <div class="back-to-folders" onclick="closeAll()">＜ 資料夾</div>
-            <h1 class="list-title">備忘錄</h1>
-        </div>
-        
-        <div class="search-bar">搜尋</div>
-
-        <div class="notes-group">
-            <div class="note-item" onclick="showDetail()">
-                <span class="note-item-title" id="listFirstTitle">36</span>
-                <div class="note-item-sub">
-                    <span class="note-item-time" id="listFirstTime">15:02</span>
-                    <span class="note-item-snippet">尚無額外文字</span>
-                </div>
-            </div>
-            <div class="note-item">
-                <span class="note-item-title">魔術講座筆記 (2025)</span>
-                <div class="note-item-sub">
-                    <span class="note-item-time">昨天</span>
-                    <span class="note-item-snippet">關於心靈魔術的幾個關鍵動作...</span>
-                </div>
-            </div>
-            <div class="note-item">
-                <span class="note-item-title">晚餐採買清單</span>
-                <div class="note-item-sub">
-                    <span class="note-item-time">週二</span>
-                    <span class="note-item-snippet">雞蛋、牛奶、蠟燭、絲巾...</span>
-                </div>
-            </div>
-        </div>
-
-        <div class="list-footer">
-            <span class="footer-icon">checklist</span>
-            <span class="notes-count">4 個備忘錄</span>
-            <span class="footer-icon" style="font-size: 26px;">📝</span>
+        <div class="memo-content-area">
+            <div id="handwritingNumber"></div>
+            <canvas id="sketchCanvas"></canvas>
         </div>
         <div class="home-bar"></div>
     </div>
 
-    <div id="backstage">
-        <div style="text-align:center; font-size:20px; margin-bottom:20px;">九宮格預設值</div>
+    <div id="backstage-screen">
+        <div style="font-size:24px; font-weight:bold; margin-bottom:20px; text-align:center;">九宮格數值同步設定</div>
         <div class="grid-inputs" id="inputContainer"></div>
-        <button onclick="saveSettings()" style="margin-top:20px; background:var(--ios-gold); border:none; padding:15px; width:100%; border-radius:12px; font-weight:bold;">儲存並返回</button>
+        <button class="save-btn" onclick="saveSettings()">儲存設置</button>
     </div>
 
     <script>
@@ -201,80 +191,89 @@
             inputContainer.appendChild(input);
         });
 
-        // 長按時鐘進入後台
+        // 長按進入後台
         let pressTimer;
-        document.getElementById('clockZone').addEventListener('touchstart', (e) => {
-            pressTimer = setTimeout(() => { document.getElementById('backstage').style.display = 'flex'; }, 1500);
+        const clockZone = document.getElementById('clockZone');
+        clockZone.addEventListener('touchstart', (e) => {
+            pressTimer = setTimeout(() => {
+                document.getElementById('backstage-screen').style.display = 'flex';
+            }, 1500);
         });
-        document.getElementById('clockZone').addEventListener('touchend', () => clearTimeout(pressTimer));
+        clockZone.addEventListener('touchend', () => clearTimeout(pressTimer));
 
         function saveSettings() {
             for (let i = 0; i < 9; i++) magicValues[i] = document.getElementById(`input-${i}`).value;
             localStorage.setItem('magicNumbers', JSON.stringify(magicValues));
-            document.getElementById('backstage').style.display = 'none';
+            document.getElementById('backstage-screen').style.display = 'none';
         }
+
+        // --- 畫布同步邏輯 ---
+        const canvas = document.getElementById('sketchCanvas');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            // 關鍵調整：同步筆觸粗度與顏色
+            ctx.strokeStyle = "rgba(255, 255, 255, 0.95)"; 
+            ctx.lineWidth = 10; // 增加粗度以匹配 220px 的字體重量
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+            // 加入些微模糊感模擬真實墨水在螢幕上的感覺
+            ctx.shadowBlur = 1;
+            ctx.shadowColor = "rgba(255, 255, 255, 0.5)";
+        }
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+
+        function startDrawing(e) { drawing = true; draw(e); }
+        function stopDrawing() { drawing = false; ctx.beginPath(); }
+        function draw(e) {
+            if (!drawing) return;
+            const x = e.touches ? e.touches[0].clientX : e.clientX;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        window.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e); });
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
+        canvas.addEventListener('touchend', stopDrawing);
 
         function openMemo(index) {
             document.getElementById('notification-center').style.display = 'none';
-            document.getElementById('memo-detail').style.display = 'flex';
-            const displayNum = document.getElementById('handwritingNumber');
-            const canvas = document.getElementById('sketchCanvas');
+            document.getElementById('memo-screen').style.display = 'flex';
             
             if (index === null) {
-                displayNum.style.display = 'none';
+                document.getElementById('handwritingNumber').style.display = 'none';
                 canvas.style.display = 'block';
-                document.getElementById('listFirstTitle').textContent = "新筆記";
+                ctx.clearRect(0, 0, canvas.width, canvas.height); 
             } else {
-                displayNum.textContent = magicValues[index];
-                displayNum.style.display = 'flex';
+                document.getElementById('handwritingNumber').textContent = magicValues[index];
+                document.getElementById('handwritingNumber').style.display = 'block';
                 canvas.style.display = 'none';
-                document.getElementById('listFirstTitle').textContent = magicValues[index];
             }
         }
 
-        function showList() {
-            document.getElementById('memo-detail').style.display = 'none';
-            document.getElementById('memo-list').style.display = 'flex';
-        }
-
-        function showDetail() {
-            document.getElementById('memo-list').style.display = 'none';
-            document.getElementById('memo-detail').style.display = 'flex';
-        }
-
-        function closeAll() {
-            document.getElementById('memo-detail').style.display = 'none';
-            document.getElementById('memo-list').style.display = 'none';
+        function closeMemo() {
+            document.getElementById('memo-screen').style.display = 'none';
             document.getElementById('notification-center').style.display = 'flex';
         }
 
-        // --- 畫布邏輯 ---
-        const canvas = document.getElementById('sketchCanvas');
-        const ctx = canvas.getContext('2d');
-        function initCanvas() {
-            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
-            ctx.strokeStyle = "white"; ctx.lineWidth = 10; ctx.lineCap = "round";
-        }
-        initCanvas();
-        let drawing = false;
-        canvas.addEventListener('touchstart', (e) => { drawing = true; ctx.beginPath(); });
-        canvas.addEventListener('touchmove', (e) => {
-            if (!drawing) return; e.preventDefault();
-            const x = e.touches[0].clientX; const y = e.touches[0].clientY;
-            ctx.lineTo(x, y); ctx.stroke();
-        });
-        canvas.addEventListener('touchend', () => drawing = false);
-
-        // --- 時間更新 ---
         function updateClock() {
             const now = new Date();
-            const timeStr = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
-            document.getElementById('timeDisplay').textContent = timeStr;
-            document.getElementById('listFirstTime').textContent = timeStr;
+            document.getElementById('timeDisplay').textContent = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
             const weekDays = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
             document.getElementById('dateDisplay').textContent = `${now.getMonth() + 1}月${now.getDate()}日 ${weekDays[now.getDay()]} · 乙巳年冬月十五`;
         }
-        setInterval(updateClock, 1000); updateClock();
+        setInterval(updateClock, 1000);
+        updateClock();
     </script>
 </body>
 </html>
