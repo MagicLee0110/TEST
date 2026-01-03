@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>iOS Magic Center - Bottom Grid</title>
+    <title>iOS Magic Professional</title>
     <style>
         :root {
             --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
@@ -31,15 +31,13 @@
             flex-direction: column;
         }
 
-        .top-content {
-            flex: 0 0 auto;
-            z-index: 10;
-            pointer-events: auto; /* 讓通知卡片區域可以正常點擊（如果需要） */
-        }
+        .top-content { flex: 0 0 auto; z-index: 10; }
 
         .clock-container {
             text-align: center;
             padding-top: calc(env(safe-area-inset-top) + 60px);
+            user-select: none;
+            -webkit-user-select: none;
         }
         .time-text { font-size: 95px; font-weight: 200; margin: 0; letter-spacing: -2px; }
         .date-text { font-size: 19px; opacity: 0.9; }
@@ -61,68 +59,53 @@
         .notif-time { font-weight: 400; opacity: 0.6; font-size: 13px; }
         .notif-body { font-size: 14px; line-height: 1.4; opacity: 0.9; }
 
-        /* --- 隱形六宮格 (精確位於通知下方空白處) --- */
+        /* --- 隱形九宮格 (3x3) --- */
         .magic-area {
-            flex: 1; /* 自動填滿剩餘的空白區域 */
+            flex: 1;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(2, 1fr);
+            grid-template-rows: repeat(3, 1fr); /* 改為三列 */
             z-index: 999;
-            margin-bottom: 40px; /* 留一點點距離給 Home Bar */
+            margin-bottom: 40px;
         }
-        .magic-btn {
-            width: 100%; height: 100%;
-            background: transparent;
-            /* border: 1px solid rgba(255,255,255,0.1); */ /* 表演前可解除註解檢查位置 */
-        }
+        .magic-btn { width: 100%; height: 100%; background: transparent; }
 
         /* --- 備忘錄 --- */
         #memo-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: #000;
-            color: #fff;
-            display: none;
-            flex-direction: column;
-            z-index: 2000;
+            background: #000; color: #fff;
+            display: none; flex-direction: column; z-index: 2000;
         }
+        .memo-header { padding: calc(env(safe-area-inset-top) + 10px) 20px 10px; display: flex; justify-content: space-between; align-items: center; color: #d4a017; font-size: 17px; }
+        .handwriting-area { flex: 1; display: flex; justify-content: center; align-items: center; font-family: "Cursive", "Bradley Hand", "Marker Felt", sans-serif; font-size: 200px; font-weight: bold; padding-bottom: 50px; }
 
-        .memo-header {
-            padding: calc(env(safe-area-inset-top) + 10px) 20px 10px;
-            display: flex; justify-content: space-between;
-            align-items: center; color: #d4a017; font-size: 17px;
+        /* --- 後台設定畫面 --- */
+        #backstage-screen {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); color: white;
+            display: none; flex-direction: column; z-index: 3000;
+            padding: calc(env(safe-area-inset-top) + 20px) 20px;
+            box-sizing: border-box; overflow-y: auto;
         }
+        .backstage-title { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center; }
+        .grid-inputs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 30px; }
+        .grid-inputs input { background: #222; border: 1px solid #444; color: white; padding: 15px 5px; border-radius: 8px; text-align: center; font-size: 18px; width: 100%; box-sizing: border-box; }
+        .save-btn { background: #d4a017; color: black; border: none; padding: 15px; border-radius: 12px; font-size: 18px; font-weight: bold; width: 100%; }
 
-        .handwriting-area {
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-family: "Cursive", "Bradley Hand", "Marker Felt", sans-serif;
-            font-size: 250px;
-            font-weight: bold;
-            color: white;
-            padding-bottom: 50px; /* 視覺置中微調 */
-        }
-
-        .home-bar {
-            position: fixed; bottom: 8px; left: 50%;
-            transform: translateX(-50%); width: 140px; height: 5px;
-            background: rgba(255, 255, 255, 0.4);
-            border-radius: 10px; z-index: 3000;
-        }
+        .home-bar { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); width: 140px; height: 5px; background: rgba(255, 255, 255, 0.4); border-radius: 10px; z-index: 4000; }
     </style>
 </head>
 <body>
 
     <div id="notification-center">
         <div class="top-content">
-            <div class="clock-container">
+            <div class="clock-container" id="clockZone">
                 <div class="date-text" id="dateDisplay">1月3日 週六</div>
                 <h1 class="time-text" id="timeDisplay">15:02</h1>
             </div>
             <div class="notification-header">通知中心</div>
-
             <div class="notification-list">
                 <div class="notif-card">
                     <div class="notif-top">
@@ -133,7 +116,6 @@
                         </div>
                     </div>
                 </div>
-
                 <div class="notif-card">
                     <div class="notif-top">
                         <div class="notif-icon" style="background-color: #006aa6;">D<span class="notif-badge">19</span></div>
@@ -146,50 +128,97 @@
             </div>
         </div>
 
-        <div class="magic-area">
-            <div class="magic-btn" onclick="openMemo(36)"></div>
-            <div class="magic-btn" onclick="openMemo(45)"></div>
-            <div class="magic-btn" onclick="openMemo(54)"></div>
-            <div class="magic-btn" onclick="openMemo(63)"></div>
-            <div class="magic-btn" onclick="openMemo(72)"></div>
-            <div class="magic-btn" onclick="openMemo(81)"></div>
+        <div class="magic-area" id="magicGrid">
+            <div class="magic-btn" onclick="triggerMagic(0)"></div>
+            <div class="magic-btn" onclick="triggerMagic(1)"></div>
+            <div class="magic-btn" onclick="triggerMagic(2)"></div>
+            <div class="magic-btn" onclick="triggerMagic(3)"></div>
+            <div class="magic-btn" onclick="triggerMagic(4)"></div>
+            <div class="magic-btn" onclick="triggerMagic(5)"></div>
+            <div class="magic-btn" onclick="triggerMagic(6)"></div>
+            <div class="magic-btn" onclick="triggerMagic(7)"></div>
+            <div class="magic-btn" onclick="triggerMagic(8)"></div>
         </div>
-        
         <div class="home-bar"></div>
     </div>
 
     <div id="memo-screen" onclick="closeMemo()">
-        <div class="memo-header">
-            <span>＜ 備忘錄</span>
-            <span style="font-weight:600;">完成</span>
-        </div>
+        <div class="memo-header"><span>＜ 備忘錄</span><span style="font-weight:600;">完成</span></div>
         <div class="handwriting-area" id="handwritingNumber"></div>
         <div class="home-bar"></div>
     </div>
 
+    <div id="backstage-screen">
+        <div class="backstage-title">九宮格內容設定</div>
+        <div class="grid-inputs" id="inputContainer">
+            </div>
+        <button class="save-btn" onclick="saveSettings()">儲存並返回</button>
+        <p style="color: #666; font-size: 14px; text-align: center; margin-top: 20px;">提示：點擊儲存後，長按通知中心時間可再次進入此畫面。</p>
+    </div>
+
     <script>
-        const notifScreen = document.getElementById('notification-center');
-        const memoScreen = document.getElementById('memo-screen');
-        const numDisplay = document.getElementById('handwritingNumber');
+        // 預設數字
+        let magicValues = ["11", "22", "33", "44", "55", "66", "77", "88", "99"];
+        
+        // 初始化：讀取儲存的資料或生成輸入框
+        const inputContainer = document.getElementById('inputContainer');
+        const savedData = localStorage.getItem('magicNumbers');
+        if (savedData) {
+            magicValues = JSON.parse(savedData);
+        }
+
+        magicValues.forEach((val, index) => {
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.value = val;
+            input.id = `input-${index}`;
+            inputContainer.appendChild(input);
+        });
+
+        // 長按檢測
+        let timer;
+        const clockZone = document.getElementById('clockZone');
+        
+        clockZone.addEventListener('touchstart', () => {
+            timer = setTimeout(() => {
+                document.getElementById('backstage-screen').style.display = 'flex';
+            }, 1500); // 長按 1.5 秒進入後台
+        });
+
+        clockZone.addEventListener('touchend', () => clearTimeout(timer));
+        clockZone.addEventListener('mousedown', () => { // 支援電腦測試
+            timer = setTimeout(() => {
+                document.getElementById('backstage-screen').style.display = 'flex';
+            }, 1500);
+        });
+        clockZone.addEventListener('mouseup', () => clearTimeout(timer));
+
+        function saveSettings() {
+            for (let i = 0; i < 9; i++) {
+                magicValues[i] = document.getElementById(`input-${i}`).value;
+            }
+            localStorage.setItem('magicNumbers', JSON.stringify(magicValues));
+            document.getElementById('backstage-screen').style.display = 'none';
+        }
+
+        function triggerMagic(index) {
+            document.getElementById('handwritingNumber').textContent = magicValues[index];
+            document.getElementById('notification-center').style.display = 'none';
+            document.getElementById('memo-screen').style.display = 'flex';
+        }
+
+        function closeMemo() {
+            document.getElementById('memo-screen').style.display = 'none';
+            document.getElementById('notification-center').style.display = 'flex';
+        }
 
         function updateClock() {
             const now = new Date();
-            const hours = now.getHours();
+            const hours = now.getHours().toString().padStart(2, '0');
             const minutes = now.getMinutes().toString().padStart(2, '0');
             document.getElementById('timeDisplay').textContent = `${hours}:${minutes}`;
             const weekDays = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
             document.getElementById('dateDisplay').textContent = `${now.getMonth() + 1}月${now.getDate()}日 ${weekDays[now.getDay()]} · 乙巳年冬月十五`;
-        }
-
-        function openMemo(num) {
-            numDisplay.textContent = num;
-            notifScreen.style.display = 'none';
-            memoScreen.style.display = 'flex';
-        }
-
-        function closeMemo() {
-            memoScreen.style.display = 'none';
-            notifScreen.style.display = 'flex'; // 使用 flex 回復
         }
 
         setInterval(updateClock, 1000);
