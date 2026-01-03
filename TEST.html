@@ -3,28 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <meta id="theme-meta" name="theme-color" content="#1a152e">
+    <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>iOS Magic Center</title>
+    <title>iOS Magic Dark</title>
     <style>
         :root {
             --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-            --notif-bg: #1a152e;
-            --memo-bg: #ffffff;
+            --bg-black: #000000;
+            --memo-black: #000000;
+            /* 漸層：從純黑開始向下延伸至深藍紫，再回到黑 */
+            --main-gradient: linear-gradient(180deg, #000000 0%, #1a152e 40%, #000000 100%);
         }
 
         html, body {
             margin: 0; padding: 0; width: 100%; height: 100%;
             font-family: var(--ios-font);
             overflow: hidden;
-            background-color: var(--notif-bg);
+            background-color: var(--bg-black);
         }
 
         /* --- 通知中心畫面 --- */
         #notification-center {
             width: 100%; height: 100%;
-            background: linear-gradient(180deg, #1a152e 0%, #3a2b5e 50%, #1a152e 100%);
+            background: var(--main-gradient);
             background-attachment: fixed;
             display: block;
             position: relative;
@@ -40,12 +42,12 @@
 
         .notification-header { padding: 40px 25px 15px; font-size: 28px; font-weight: 600; }
 
-        /* 還原通知卡片樣式 */
+        /* 通知卡片樣式 */
         .notification-list { padding: 0 15px; }
         .notif-card {
             background: rgba(40, 40, 40, 0.4);
-            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
-            border-radius: 24px; padding: 15px; margin-bottom: 10px;
+            backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
+            border-radius: 24px; padding: 15px; margin-bottom: 12px;
             display: flex; flex-direction: column;
         }
         .notif-top { display: flex; gap: 12px; }
@@ -55,10 +57,11 @@
         .notif-title-row { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; }
         .notif-time { font-weight: 400; opacity: 0.6; font-size: 13px; }
         .notif-body { font-size: 14px; line-height: 1.4; opacity: 0.9; }
+        
         .notif-actions { display: flex; gap: 8px; margin-top: 15px; }
         .action-btn { flex: 1; background: rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; text-align: center; font-size: 15px; }
 
-        /* --- 隱形六宮格區域 --- */
+        /* --- 隱形六宮格感應區 --- */
         .magic-grid {
             position: absolute;
             bottom: 50px; left: 0; width: 100%; height: 45%;
@@ -68,13 +71,13 @@
             z-index: 100;
         }
 
-        /* --- 備忘錄畫面 --- */
+        /* --- 備忘錄畫面 (深色版) --- */
         #memo-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--memo-bg);
-            color: #000;
-            display: none; /* 預設隱藏 */
+            background: var(--memo-black);
+            color: #ffffff;
+            display: none;
             flex-direction: column;
             z-index: 200;
         }
@@ -82,23 +85,26 @@
         .memo-header {
             padding: calc(env(safe-area-inset-top) + 10px) 20px 10px;
             display: flex; justify-content: space-between;
-            align-items: center; color: #d4a017; font-size: 17px;
+            align-items: center; 
+            color: #d4a017; /* 經典備忘錄金黃色 */
+            font-size: 17px;
         }
 
         .handwriting-area {
             flex: 1; padding: 60px 20px;
+            /* 備忘錄深色模式下，手寫字體通常為白色 */
             font-family: "Cursive", "Bradley Hand", "Marker Felt", sans-serif;
-            font-size: 110px; text-align: center;
+            font-size: 120px; text-align: center;
+            color: #ffffff;
         }
 
         /* 底部 Home Bar */
         .home-bar {
             position: fixed; bottom: 8px; left: 50%;
             transform: translateX(-50%); width: 140px; height: 5px;
+            background: rgba(255, 255, 255, 0.5);
             border-radius: 10px; z-index: 300;
         }
-        .bar-notif { background: white; }
-        .bar-memo { background: #ddd; }
     </style>
 </head>
 <body>
@@ -106,7 +112,7 @@
     <div id="notification-center">
         <div class="clock-container">
             <div class="date-text" id="dateDisplay">1月3日 週六</div>
-            <h1 class="time-text" id="timeDisplay">02:38</h1>
+            <h1 class="time-text" id="timeDisplay">15:02</h1>
         </div>
         <div class="notification-header">通知中心</div>
 
@@ -134,16 +140,7 @@
                     <div class="action-btn">繼續⋯</div><div class="action-btn">關閉⋯</div>
                 </div>
             </div>
-
-            <div class="notif-card">
-                <div class="notif-top">
-                    <div class="notif-icon" style="background-color: #00c300;">L<span class="notif-badge">2</span></div>
-                    <div class="notif-content">
-                        <div class="notif-body">新一季優惠‼️人氣商品◤購好券享 30% 回饋⚡◢ 海底撈、瀧厚炙燒熟成牛排...</div>
-                    </div>
-                </div>
             </div>
-        </div>
 
         <div class="magic-grid">
             <div onclick="openMemo(36)"></div>
@@ -154,7 +151,7 @@
             <div onclick="openMemo(81)"></div>
         </div>
         
-        <div class="home-bar bar-notif"></div>
+        <div class="home-bar"></div>
     </div>
 
     <div id="memo-screen" onclick="closeMemo()">
@@ -163,11 +160,10 @@
             <span style="font-weight:600;">完成</span>
         </div>
         <div class="handwriting-area" id="handwritingNumber"></div>
-        <div class="home-bar bar-memo"></div>
+        <div class="home-bar"></div>
     </div>
 
     <script>
-        const themeMeta = document.getElementById('theme-meta');
         const notifScreen = document.getElementById('notification-center');
         const memoScreen = document.getElementById('memo-screen');
         const numDisplay = document.getElementById('handwritingNumber');
@@ -183,18 +179,14 @@
 
         function openMemo(num) {
             numDisplay.textContent = num;
-            // 瞬間切換
             notifScreen.style.display = 'none';
             memoScreen.style.display = 'flex';
-            // 修改頂部狀態列顏色為白色以匹配備忘錄
-            themeMeta.setAttribute('content', '#ffffff');
+            // 頂部狀態列在此版本始終保持黑色，無需動態修改 meta
         }
 
         function closeMemo() {
             memoScreen.style.display = 'none';
             notifScreen.style.display = 'block';
-            // 還原頂部狀態列顏色為深色
-            themeMeta.setAttribute('content', '#1a152e');
         }
 
         setInterval(updateClock, 1000);
