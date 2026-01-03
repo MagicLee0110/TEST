@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>iOS Magic Dark - 6 Grid Fix</title>
+    <title>iOS Magic Dark - Final Fix</title>
     <style>
         :root {
             --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
@@ -57,18 +57,22 @@
         .notif-actions { display: flex; gap: 8px; margin-top: 15px; }
         .action-btn { flex: 1; background: rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; text-align: center; font-size: 15px; }
 
-        /* --- 隱形六宮格 (精確 2x3 分配) --- */
+        /* --- 隱形六宮格 (強制覆蓋式佈局) --- */
         .magic-grid {
             position: absolute;
-            bottom: 60px; left: 0; width: 100%; height: 45%;
+            top: 35%;    /* 從螢幕中間偏上開始，確保抓到第一排 */
+            bottom: 50px; 
+            left: 0; 
+            width: 100%;
             display: grid;
-            grid-template-columns: repeat(3, 1fr); /* 橫向三列 */
-            grid-template-rows: repeat(2, 1fr);    /* 縱向兩列 */
-            z-index: 100;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            z-index: 9999; /* 絕對最上層，不被通知卡片擋住 */
         }
-        .magic-grid div {
-            /* border: 1px solid rgba(255,255,255,0.1); */ /* 表演時可註解掉此行來隱藏格子 */
+        .magic-btn {
             width: 100%; height: 100%;
+            background: rgba(255,255,255,0); /* 保持透明 */
+            /* border: 1px solid rgba(255,255,255,0.1); */ /* 測試時可開啟此行看格子位置 */
         }
 
         /* --- 備忘錄 --- */
@@ -79,7 +83,7 @@
             color: #fff;
             display: none;
             flex-direction: column;
-            z-index: 200;
+            z-index: 10000;
         }
 
         .memo-header {
@@ -88,23 +92,23 @@
             align-items: center; color: #d4a017; font-size: 17px;
         }
 
-        /* 數字置中與放大 */
         .handwriting-area {
             flex: 1;
             display: flex;
-            justify-content: center; /* 水平置中 */
-            align-items: center;     /* 垂直置中 */
+            justify-content: center;
+            align-items: center;
             font-family: "Cursive", "Bradley Hand", "Marker Felt", sans-serif;
-            font-size: 200px;        /* 數字放大 */
+            font-size: 250px; /* 數字再加大 */
             font-weight: bold;
-            margin-top: -50px;       /* 稍微往上一點，視覺上更平衡 */
+            color: white;
+            margin-top: -30px; /* 視覺重心微調 */
         }
 
         .home-bar {
             position: fixed; bottom: 8px; left: 50%;
             transform: translateX(-50%); width: 140px; height: 5px;
             background: rgba(255, 255, 255, 0.4);
-            border-radius: 10px; z-index: 300;
+            border-radius: 10px; z-index: 11000;
         }
     </style>
 </head>
@@ -144,12 +148,12 @@
         </div>
 
         <div class="magic-grid">
-            <div onclick="openMemo(36)"></div>
-            <div onclick="openMemo(45)"></div>
-            <div onclick="openMemo(54)"></div>
-            <div onclick="openMemo(63)"></div>
-            <div onclick="openMemo(72)"></div>
-            <div onclick="openMemo(81)"></div>
+            <div class="magic-btn" onclick="openMemo(36)"></div>
+            <div class="magic-btn" onclick="openMemo(45)"></div>
+            <div class="magic-btn" onclick="openMemo(54)"></div>
+            <div class="magic-btn" onclick="openMemo(63)"></div>
+            <div class="magic-btn" onclick="openMemo(72)"></div>
+            <div class="magic-btn" onclick="openMemo(81)"></div>
         </div>
         
         <div class="home-bar"></div>
