@@ -6,230 +6,258 @@
     <title>備忘錄</title>
     <style>
         :root {
-            --ios-yellow: #ffb900;
-            --ios-bg: #f2f2f7;
+            --ios-gold: #d4a373;
+            --ios-bg: #ffffff;
+            --ios-gray: #f2f2f7;
         }
 
-        body, html {
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: white;
-            overflow-x: hidden;
+            background-color: var(--ios-bg);
             user-select: none;
             -webkit-user-select: none;
+            overflow-x: hidden;
         }
 
-        /* 導覽列 */
-        .nav-bar {
+        /* 頂部狀態列模擬 */
+        .status-bar {
+            height: 44px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 15px;
-            background-color: white;
+            padding: 0 20px;
+            font-size: 14px;
+            font-weight: 600;
             position: sticky;
             top: 0;
+            background: white;
             z-index: 100;
         }
 
-        .back-button {
-            color: var(--ios-yellow);
-            font-size: 17px;
-            text-decoration: none;
-            display: flex;
-            align-items: center;
+        #force-indicator {
+            color: rgba(0,0,0,0.3); /* 極淡的顏色，只有表演者看得到 */
         }
 
-        .done-button {
-            color: var(--ios-yellow);
+        /* 列表頁面 */
+        #list-page {
+            display: block;
+        }
+
+        .header {
+            padding: 10px 20px;
+        }
+
+        h1 {
+            font-size: 34px;
+            margin: 10px 0;
+        }
+
+        .note-item {
+            padding: 15px 20px;
+            border-bottom: 0.5px solid #c6c6c8;
+            cursor: pointer;
+        }
+
+        .note-item:active {
+            background-color: #e5e5ea;
+        }
+
+        .note-title {
             font-weight: 600;
             font-size: 17px;
         }
 
-        /* 內容區 */
-        .content {
-            padding: 0 20px 100px 20px;
+        .note-subtitle {
+            font-size: 15px;
+            color: #8e8e93;
         }
 
-        .note-date {
-            color: #8e8e93;
-            font-size: 13px;
-            text-align: center;
-            margin-bottom: 20px;
+        /* 內容頁面 */
+        #content-page {
+            display: none;
+            position: relative;
+        }
+
+        .nav-bar {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            color: var(--ios-gold);
+            cursor: pointer;
+        }
+
+        .content-area {
+            padding: 20px;
+            line-height: 1.6;
+            font-size: 18px;
         }
 
         .intro-text {
-            font-size: 17px;
-            line-height: 1.5;
-            margin-bottom: 30px;
-            border-bottom: 1px solid #e5e5e5;
-            padding-bottom: 15px;
+            margin-bottom: 20px;
+            color: #333;
         }
 
-        .animal-item {
-            font-size: 17px;
+        .animal-list {
+            margin-top: 30px;
+        }
+
+        .animal-line {
             padding: 8px 0;
             border-bottom: 0.5px solid #eee;
-            display: flex;
-        }
-
-        .animal-num {
-            width: 40px;
-            color: #8e8e93;
-        }
-
-        /* 隱藏的提示數字 (左上角) */
-        #secret-counter {
-            position: fixed;
-            top: 15px;
-            left: 50px;
-            font-size: 12px;
-            color: rgba(0,0,0,0.1); /* 非常淡，只有表演者看得到 */
-            z-index: 200;
-            pointer-events: none;
-            font-weight: bold;
         }
 
         /* 隱藏的九宮格感應區 */
-        .grid-container {
+        #secret-grid {
             position: fixed;
-            bottom: 50px;
-            left: 5%;
-            width: 90%;
-            height: 300px;
+            top: 20%;
+            left: 0;
+            width: 100%;
+            height: 60%;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
-            z-index: 150;
+            z-index: 999;
             opacity: 0; /* 完全透明 */
         }
 
         .grid-cell {
-            border: 1px solid rgba(0,0,0,0.05);
+            border: 1px solid transparent;
         }
     </style>
 </head>
 <body>
 
-    <div id="secret-counter"></div>
-
-    <div class="nav-bar">
-        <div class="back-button">〈 備忘錄</div>
-        <div class="done-button">完成</div>
+    <div class="status-bar">
+        <div id="force-indicator">9:41</div>
+        <div>
+            <span style="margin-right: 5px;">📶</span>
+            <span>🔋</span>
+        </div>
     </div>
 
-    <div class="content">
-        <div class="note-date">2026年1月3日 10:30</div>
-        
-        <div class="intro-text">
-            <strong>【世界動物百科】</strong><br>
-            動物界是生物的一界。動物是多細胞真核生命體，能夠主動運動，以有機物為食。以下是本次研究選出的 100 種代表性動物清單：
+    <div id="list-page">
+        <div class="header">
+            <h1 style="color: var(--ios-gold);">備忘錄</h1>
+        </div>
+        <div class="note-item" onclick="openNote()">
+            <div class="note-title">動物小百科</div>
+            <div class="note-subtitle">下午 2:30 這裡記錄了關於100種動物...</div>
+        </div>
+        <div class="note-item">
+            <div class="note-title">購物清單</div>
+            <div class="note-subtitle">昨天 11:15 牛奶, 雞蛋, 咖啡豆...</div>
+        </div>
+    </div>
+
+    <div id="content-page">
+        <div class="nav-bar" onclick="goBack()">
+            <span style="font-size: 24px; margin-right: 5px;">‹</span> 備忘錄
         </div>
 
-        <div id="animal-list">
+        <div class="content-area">
+            <div class="intro-text">
+                這是一份關於地球上多樣生物的簡介。動物界包含了數百萬種生物，從微小的昆蟲到巨大的藍鯨。了解它們的習性與生態環境對保護地球至關重要。
             </div>
-    </div>
+            <hr>
+            <div class="animal-list" id="animal-container">
+                </div>
+        </div>
 
-    <div class="grid-container" id="grid">
-        <div class="grid-cell" data-range="10"></div>
-        <div class="grid-cell" data-range="20"></div>
-        <div class="grid-cell" data-range="30"></div>
-        <div class="grid-cell" data-range="40"></div>
-        <div class="grid-cell" data-range="50"></div>
-        <div class="grid-cell" data-range="60"></div>
-        <div class="grid-cell" data-range="70"></div>
-        <div class="grid-cell" data-range="80"></div>
-        <div class="grid-cell" data-range="90"></div>
+        <div id="secret-grid">
+            <div class="grid-cell" data-base="10"></div>
+            <div class="grid-cell" data-base="20"></div>
+            <div class="grid-cell" data-base="30"></div>
+            <div class="grid-cell" data-base="40"></div>
+            <div class="grid-cell" data-base="50"></div>
+            <div class="grid-cell" data-base="60"></div>
+            <div class="grid-cell" data-base="70"></div>
+            <div class="grid-cell" data-base="80"></div>
+            <div class="grid-cell" data-base="90"></div>
+        </div>
     </div>
 
     <script>
-        const animalNames = [
-            "獅子", "老虎", "大象", "長頸鹿", "斑馬", "河馬", "犀牛", "獵豹", "大猩猩", "黑猩猩",
-            "袋鼠", "無尾熊", "企鵝", "北極熊", "棕熊", "狐狸", "灰狼", "浣熊", "水豚", "懶猴",
-            "樹懶", "食蟻獸", "犰狳", "鴨嘴獸", "刺蝟", "松鼠", "兔子", "倉鼠", "海獺", "海豹",
-            "海豚", "鯨魚", "鯊魚", "章魚", "水母", "海馬", "烏龜", "鱷魚", "變色龍", "蛇",
-            "青蛙", "蟾蜍", "蠑螈", "老鷹", "貓頭鷹", "鸚鵡", "蜂鳥", "孔雀", "天鵝", "火烈鳥",
-            "蝴蝶", "蜜蜂", "蜻蜓", "螳螂", "螢火蟲", "蟬", "甲蟲", "螞蟻", "蜘蛛", "蠍子",
-            "駱駝", "羊駝", "馴鹿", "羚羊", "犛牛", "水牛", "野豬", "馬", "驢子", "綿羊",
-            "山羊", "乳牛", "貓", "狗", "狐獴", "土撥鼠", "金倉鼠", "天竺鼠", "龍貓", "臭鼬",
-            "穿山甲", "食蟹獴", "石虎", "台灣黑熊", "梅花鹿", "藍鵲", "帝雉", "綠蠵龜", "櫻花鉤吻鮭", "曼波魚",
-            "儒艮", "海牛", "信天翁", "鵜鶘", "鸕鶿", "黑面琵鷺", "啄木鳥", "翠鳥", "杜鵑", "燕子"
-        ];
+        const animals = ["獅子", "老虎", "大象", "長頸鹿", "斑馬", "袋鼠", "企鵝", "海豚", "獵豹", "河馬", "犀牛", "黑猩猩", "無尾熊", "火烈鳥", "北極熊", "海龜", "駱駝", "狼", "狐狸", "浣熊", "松鼠", "兔子", "蝙蝠", "刺蝟", "水獺", "海豹", "鯨魚", "鯊魚", "章魚", "水母", "鸚鵡", "老鷹", "鴞", "孔雀", "天鵝", "鱷魚", "變色龍", "蛇", "青蛙", "蟬", "蝴蝶", "蜜蜂", "螞蟻", "瓢蟲", "蜘蛛", "蠍子", "大猩猩", "羚羊", "馴鹿", "犰狳", "獺狸", "樹懶", "食蟻獸", "鴨嘴獸", "土撥鼠", "野豬", "犛牛", "羊駝", "水牛", "黑豹", "金絲猴", "貓頭鷹", "啄木鳥", "鵜鶘", "信天翁", "鴕鳥", "奇異鳥", "蜂鳥", "金魚", "熱帶魚", "海馬", "螃蟹", "龍蝦", "海星", "珊瑚", "大鯢", "壁虎", "蜥蜴", "烏龜", "蠶", "螢火蟲", "蜻蜓", "螳螂", "蚱蜢", "蝸牛", "蛞蝓", "蚯蚓", "龍貓", "土狼", "小熊貓", "北極狐", "雪豹", "藏羚羊", "麝香鹿", "犀鳥", "火雞", "梅花鹿", "野兔", "土豚", "鼬鼠"];
 
-        let currentForceNumber = -1;
-        const listContainer = document.getElementById('animal-list');
-        const counterDisplay = document.getElementById('secret-counter');
-        const sensitivity = 15; // 滑動 15 像素數字變動一次
+        let currentTargetNumber = null;
+        let startY = 0;
+        let baseNum = 0;
 
         // 初始化列表
-        function renderList(forceIndex = -1) {
-            listContainer.innerHTML = '';
+        function initList() {
+            const container = document.getElementById('animal-container');
+            container.innerHTML = '';
             for (let i = 1; i <= 100; i++) {
-                let name = animalNames[(i - 1) % animalNames.length];
-                
-                // 強迫邏輯：如果當前數字是被選中的數字，顯示熊貓
-                if (i === forceIndex) {
-                    name = "熊貓 🐼";
-                }
-
-                const item = document.createElement('div');
-                item.className = 'animal-item';
-                item.innerHTML = `<span class="animal-num">${i}.</span> <span class="animal-name">${name}</span>`;
-                listContainer.appendChild(item);
+                const div = document.createElement('div');
+                div.className = 'animal-line';
+                div.id = `animal-${i}`;
+                div.innerText = `${i}. ${animals[i-1] || '未知生物'}`;
+                container.appendChild(div);
             }
         }
 
-        renderList();
+        function openNote() {
+            document.getElementById('list-page').style.display = 'none';
+            document.getElementById('content-page').style.display = 'block';
+            window.scrollTo(0, 0);
+        }
 
-        // 觸控邏輯
-        let startY = 0;
-        let baseValue = 0;
-        let activeCell = null;
+        function goBack() {
+            document.getElementById('list-page').style.display = 'block';
+            document.getElementById('content-page').style.display = 'none';
+        }
 
-        const grid = document.getElementById('grid');
+        // 強迫邏輯
+        const gridCells = document.querySelectorAll('.grid-cell');
+        const indicator = document.getElementById('force-indicator');
 
-        grid.addEventListener('touchstart', (e) => {
-            const cell = e.target;
-            if (cell.classList.contains('grid-cell')) {
-                startY = e.touches[0].pageY;
-                baseValue = parseInt(cell.dataset.range);
-                activeCell = cell;
-                updateCounter(baseValue);
-            }
-        }, { passive: false });
+        gridCells.forEach(cell => {
+            cell.addEventListener('touchstart', (e) => {
+                startY = e.touches[0].clientY;
+                baseNum = parseInt(cell.getAttribute('data-base'));
+                updateForce(baseNum);
+            });
 
-        grid.addEventListener('touchmove', (e) => {
-            if (!activeCell) return;
-            e.preventDefault(); // 防止頁面捲動
+            cell.addEventListener('touchmove', (e) => {
+                e.preventDefault(); // 防止滾動頁面
+                let moveY = e.touches[0].clientY;
+                let diff = Math.floor((moveY - startY) / 15); // 每滑動15px數字+1
+                if (diff < 0) diff = 0;
+                if (diff > 9) diff = 9;
+                
+                currentTargetNumber = baseNum + diff;
+                updateForce(currentTargetNumber);
+            });
 
-            const moveY = e.touches[0].pageY;
-            const diff = moveY - startY;
-            const step = Math.floor(diff / sensitivity);
-            
-            let finalNum = baseValue + step;
-            
-            // 限制在該格的範圍內 (例如 10-19)
-            if (finalNum < baseValue) finalNum = baseValue;
-            if (finalNum > baseValue + 9) finalNum = baseValue + 9;
-
-            currentForceNumber = finalNum;
-            updateCounter(finalNum);
-        }, { passive: false });
-
-        grid.addEventListener('touchend', () => {
-            if (currentForceNumber !== -1) {
-                renderList(currentForceNumber);
-            }
-            // 清除提示
-            setTimeout(() => {
-                counterDisplay.innerText = '';
-            }, 500);
-            activeCell = null;
+            cell.addEventListener('touchend', () => {
+                applyForce();
+                indicator.innerText = "9:41"; // 恢復時間格式
+            });
         });
 
-        function updateCounter(val) {
-            counterDisplay.innerText = val;
+        function updateForce(num) {
+            currentTargetNumber = num;
+            // 在左上角時間位置偷偷顯示數字，例如 "9:15" 代表 15
+            indicator.innerText = `9:${num}`; 
         }
+
+        function applyForce() {
+            if (!currentTargetNumber) return;
+            
+            // 將所有動物恢復原始（選擇性，如果你怕重複操作）
+            initList();
+
+            // 執行強迫：將目標編號改為熊貓
+            const targetEl = document.getElementById(`animal-${currentTargetNumber}`);
+            if (targetEl) {
+                targetEl.innerText = `${currentTargetNumber}. 熊貓`;
+                targetEl.style.fontWeight = "bold"; // 稍微加粗方便你自己確認，也可以拿掉
+            }
+        }
+
+        initList();
     </script>
 </body>
 </html>
