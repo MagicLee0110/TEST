@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iOS 通知中心模擬 - 簡潔版</title>
+    <title>iOS 通知中心 - 動態時間版</title>
     <style>
         :root {
             --glass-bg: rgba(255, 255, 255, 0.15);
@@ -19,12 +19,10 @@
             font-family: var(--font-main);
             color: white;
             overflow: hidden;
-            /* 模擬背景漸層 */
             background: linear-gradient(180deg, #1a152e 0%, #3a2b5e 50%, #1a152e 100%);
             background-size: cover;
         }
 
-        /* 時間日期區 - 稍微往下移動補足頂部空間 */
         .clock-container {
             text-align: center;
             margin-top: 60px;
@@ -44,7 +42,6 @@
             letter-spacing: -2px;
         }
 
-        /* 通知中心標題 */
         .notification-header {
             display: flex;
             justify-content: space-between;
@@ -68,7 +65,6 @@
             font-size: 14px;
         }
 
-        /* 通知卡片列表 */
         .notification-list {
             padding: 0 15px;
             display: flex;
@@ -86,16 +82,13 @@
             flex-direction: column;
         }
 
-        .notif-top {
-            display: flex;
-            gap: 12px;
-        }
+        .notif-top { display: flex; gap: 12px; }
 
         .notif-icon {
             width: 38px; height: 38px;
             border-radius: 8px;
-            background-size: cover;
             position: relative;
+            display: flex; align-items: center; justify-content: center; font-weight: bold;
         }
 
         .notif-badge {
@@ -106,58 +99,34 @@
             padding: 2px 4px; border-radius: 10px;
         }
 
-        .notif-content { flex: 1; }
-
         .notif-title-row {
-            display: flex;
-            justify-content: space-between;
-            font-size: 15px;
-            font-weight: 600;
-            margin-bottom: 2px;
+            display: flex; justify-content: space-between;
+            font-size: 15px; font-weight: 600; margin-bottom: 2px;
         }
 
         .notif-time { font-weight: 400; opacity: 0.6; font-size: 13px; }
 
-        .notif-body {
-            font-size: 14px;
-            line-height: 1.4;
-            opacity: 0.9;
-        }
+        .notif-body { font-size: 14px; line-height: 1.4; opacity: 0.9; }
 
-        /* Dcard 按鈕區 */
-        .notif-actions {
-            display: flex;
-            gap: 8px;
-            margin-top: 15px;
-        }
+        .notif-actions { display: flex; gap: 8px; margin-top: 15px; }
 
         .action-btn {
-            flex: 1;
-            background: rgba(255,255,255,0.1);
-            border-radius: 12px;
-            padding: 12px;
-            text-align: center;
-            font-size: 15px;
+            flex: 1; background: rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 12px; text-align: center; font-size: 15px;
         }
 
-        /* 底部 Home Bar */
         .home-bar {
-            position: absolute;
-            bottom: 8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 140px;
-            height: 5px;
-            background: white;
-            border-radius: 10px;
+            position: absolute; bottom: 8px; left: 50%;
+            transform: translateX(-50%); width: 140px; height: 5px;
+            background: white; border-radius: 10px;
         }
     </style>
 </head>
 <body>
 
     <div class="clock-container">
-        <div class="date-text">1月3日 週六 · 乙巳年冬月十五</div>
-        <h1 class="time-text">2:38</h1>
+        <div class="date-text" id="dateDisplay">1月3日 週六</div>
+        <h1 class="time-text" id="timeDisplay">00:00</h1>
     </div>
 
     <div class="notification-header">
@@ -168,10 +137,8 @@
     <div class="notification-list">
         <div class="notif-card">
             <div class="notif-top">
-                <div class="notif-icon" style="background-color: #ff4500; display:flex; align-items:center; justify-content:center; font-weight:bold;">S
-                    <span class="notif-badge">23</span>
-                </div>
-                <div class="notif-content">
+                <div class="notif-icon" style="background-color: #ff4500;">S<span class="notif-badge">23</span></div>
+                <div class="notif-content" style="flex:1;">
                     <div class="notif-title-row">
                         <span>您關注的賣家開始直播了！</span>
                         <span class="notif-time">1小時前</span>
@@ -183,10 +150,8 @@
 
         <div class="notif-card">
             <div class="notif-top">
-                <div class="notif-icon" style="background-color: #006aa6; display:flex; align-items:center; justify-content:center; font-weight:bold;">D
-                    <span class="notif-badge">19</span>
-                </div>
-                <div class="notif-content">
+                <div class="notif-icon" style="background-color: #006aa6;">D<span class="notif-badge">19</span></div>
+                <div class="notif-content" style="flex:1;">
                     <div class="notif-title-row">
                         <span>你追蹤的「理財板」新文章</span>
                         <span class="notif-time">2小時前</span>
@@ -200,20 +165,32 @@
                 <div class="action-btn">關閉⋯</div>
             </div>
         </div>
-
-        <div class="notif-card">
-            <div class="notif-top">
-                <div class="notif-icon" style="background-color: #00c300; display:flex; align-items:center; justify-content:center; font-weight:bold;">L
-                    <span class="notif-badge">2</span>
-                </div>
-                <div class="notif-content">
-                    <div class="notif-body">新一季優惠‼️人氣商品◤購好券享 30% 回饋⚡◢ 海底撈、瀧厚炙燒熟成牛排...</div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <div class="home-bar"></div>
 
+    <script>
+        function updateClock() {
+            const now = new Date();
+            
+            // 更新時間 (24小時制，如需12小時制可再調整)
+            const hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('timeDisplay').textContent = `${hours}:${minutes}`;
+
+            // 更新日期與星期
+            const month = now.getMonth() + 1;
+            const date = now.getDate();
+            const weekDays = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
+            const dayName = weekDays[now.getDay()];
+            
+            // 這裡模擬截圖中的日期格式，農曆部分通常在模擬中可維持靜態或隱藏
+            document.getElementById('dateDisplay').textContent = `${month}月${date}日 ${dayName} · 乙巳年冬月十五`;
+        }
+
+        // 每秒檢查一次時間
+        setInterval(updateClock, 1000);
+        updateClock(); // 初始化
+    </script>
 </body>
 </html>
