@@ -49,19 +49,21 @@
             display: none;
         }
 
-        /* 0-9 區：九宮格以上的所有區域 */
+        /* --- 修改區域：位置下移 --- */
+
+        /* 0-9 頂部感應區：下移到標題下方一點 */
         #trigger-zero {
             position: fixed;
-            top: 50px;
+            top: 110px; 
             left: 0;
             width: 100%;
-            height: 230px; 
+            height: 60px; 
             z-index: 2500;
-            background: rgba(0, 0, 255, 0.05); 
+            background: rgba(0, 0, 255, 0.05); /* 測試用顏色 */
             border: 1px dashed rgba(0,0,0,0.1);
         }
 
-        /* 10-99 九宮格區：中下段 */
+        /* 10-99 九宮格感應區：移至螢幕中下部，符合拇指位置 */
         #trigger-grid {
             position: fixed;
             top: 280px; 
@@ -72,9 +74,11 @@
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
-            background: rgba(255, 0, 0, 0.05); 
+            background: rgba(255, 0, 0, 0.05); /* 測試用顏色 */
             border: 1px dashed rgba(0,0,0,0.1);
         }
+        
+        /* ----------------------- */
 
         .content-wrap { padding: 0 20px 100px 20px; }
         .note-date { color: var(--ios-gray); text-align: center; font-size: 13px; margin: 15px 0; }
@@ -113,8 +117,9 @@
         <div class="note-date">2026年1月2日 21:20</div>
         <h1>世界動物完整清單</h1>
         <p class="intro-text">
-            此清單按類別編號，包含全球 100 種具代表性的生物。
+            此清單按類別編號，包含全球 100 種具代表性的生物。請在下方瀏覽，並記住你感興趣的動物編號。
         </p>
+
         <div id="main-list" class="list-container"></div>
     </div>
 
@@ -143,15 +148,17 @@
             cell.addEventListener('touchstart', (e) => {
                 startY = e.touches[0].clientY;
                 baseValue = parseInt(cell.getAttribute('data-start'));
-                finalForcedNum = (baseValue === 0) ? 1 : baseValue;
-                indicatorEl.innerText = finalForcedNum;
+                finalForcedNum = baseValue;
+                
+                indicatorEl.innerText = (finalForcedNum === 0) ? 1 : finalForcedNum;
                 indicatorEl.style.display = 'block';
             });
 
             cell.addEventListener('touchmove', (e) => {
                 let currentY = e.touches[0].clientY;
-                let distance = startY - currentY; // 上滑增加
+                let distance = startY - currentY; 
                 let increment = Math.floor(distance / sensitivity);
+                
                 let tempNum = baseValue + increment;
                 
                 if (baseValue === 0) {
@@ -173,13 +180,15 @@
         });
 
         function applyForce(targetNum) {
+            if (targetNum <= 0) return;
             const targetIdx = targetNum - 1;
             const panda = "熊貓";
             const oldIdx = animals.indexOf(panda);
+
             if (oldIdx !== -1 && oldIdx !== targetIdx) {
-                let replaced = animals[targetIdx];
+                let replacedAnimal = animals[targetIdx];
                 animals[targetIdx] = panda;
-                animals[oldIdx] = replaced;
+                animals[oldIdx] = replacedAnimal;
                 buildList();
             }
         }
