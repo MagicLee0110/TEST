@@ -11,7 +11,6 @@
             --ios-gold: #d4a373;
             --ios-bg: #ffffff;
             --ios-divider: #c6c6c8;
-            --hint-color: rgba(0, 0, 0, 0.04); /* 極淡的提示色 */
         }
 
         body {
@@ -19,87 +18,88 @@
             margin: 0; padding: 0;
             background-color: var(--ios-bg);
             user-select: none; -webkit-user-select: none;
-            overscroll-behavior-y: contain;
         }
 
-        /* 隱藏的數字提示器 */
+        /* 數字提示器 - 極淡 */
         #force-indicator {
             position: fixed;
             top: 10px; left: 15px;
             font-size: 14px; font-weight: 600;
             color: rgba(0, 0, 0, 0.05);
-            z-index: 1001;
+            z-index: 10001;
         }
 
-        /* 邊緣提示刻度 */
+        /* 側邊刻度提示 */
         .edge-hint {
             position: fixed;
-            left: 0; width: 100%;
-            height: 100%;
-            pointer-events: none;
-            z-index: 1000;
+            left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 10000;
+            display: block; /* 預設顯示 */
         }
-        .dash {
-            position: absolute;
-            font-size: 10px;
-            color: var(--hint-color);
-        }
+        .dash { position: absolute; font-size: 10px; color: rgba(0,0,0,0.04); }
 
-        /* 頁面切換 */
         #list-page { display: block; padding-top: 20px; }
         #content-page { display: none; position: relative; padding-top: 20px; }
 
-        /* 內容樣式 */
         .header { padding: 10px 20px; }
         h1 { font-size: 34px; margin: 5px 0; font-weight: 700; color: #000; }
-        .nav-bar { display: flex; align-items: center; padding: 10px 15px; color: var(--ios-gold); font-size: 17px; }
+        
+        /* 隱藏的切換按鈕：點擊導覽列切換「鎖定/解鎖」滑動 */
+        .nav-bar { 
+            display: flex; align-items: center; 
+            padding: 10px 15px; color: var(--ios-gold); 
+            font-size: 17px; position: relative; z-index: 10002;
+        }
+
         .note-item { padding: 12px 20px; border-bottom: 0.5px solid var(--ios-divider); margin-left: 20px; padding-left: 0; }
-        .note-title { font-weight: 600; font-size: 17px; }
-        .note-subtitle { font-size: 15px; color: #8e8e93; }
         .content-area { padding: 0 20px 120px 20px; }
         .animal-line { padding: 12px 0; border-bottom: 0.5px solid #efeff4; font-size: 17px; color: #333; }
 
-        /* 感應區邏輯 */
+        /* 感應區總層 */
         #secret-zones {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             z-index: 9999; display: flex; flex-direction: column;
-            opacity: 0; touch-action: none;
+            touch-action: none; /* 這裡會擋住捲動 */
         }
-        #zero-nine-zone { height: 25%; width: 100%; } /* 上方 0-9 區 */
+        #zero-nine-zone { height: 25%; width: 100%; }
         #grid-zone {
-            height: 60%; width: 100%;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr);
+            height: 75%; width: 100%;
+            display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+        }
+
+        /* 當進入展示模式時，隱藏感應層 */
+        .show-mode #secret-zones, .show-mode .edge-hint {
+            display: none !important;
         }
     </style>
 </head>
-<body>
+<body id="main-body">
 
     <div id="force-indicator"></div>
 
-    <div class="edge-hint">
+    <div class="edge-hint" id="hints">
         <div class="dash" style="top: 15%; left: 2px;">- 0</div>
         <div class="dash" style="top: 30%; left: 2px;">- 10</div>
-        <div class="dash" style="top: 50%; left: 2px;">- 40</div>
-        <div class="dash" style="top: 70%; left: 2px;">- 70</div>
-        <div class="dash" style="top: 30%; right: 2px;">-</div>
-        <div class="dash" style="top: 50%; right: 2px;">-</div>
-        <div class="dash" style="top: 70%; right: 2px;">-</div>
+        <div class="dash" style="top: 30%; right: 2px;">- 30</div>
+        <div class="dash" style="top: 55%; left: 2px;">- 40</div>
+        <div class="dash" style="top: 55%; right: 2px;">- 60</div>
+        <div class="dash" style="top: 80%; left: 2px;">- 70</div>
+        <div class="dash" style="top: 80%; right: 2px;">- 90</div>
     </div>
 
     <div id="list-page">
         <div class="header"><h1 style="color: var(--ios-gold);">備忘錄</h1></div>
         <div class="note-item" onclick="openNote()">
-            <div class="note-title">動物分類表</div>
-            <div class="note-subtitle">下午 2:30 1.獅子 2.老虎...</div>
+            <div style="font-weight: 600; font-size: 17px;">動物編號百科</div>
+            <div style="font-size: 15px; color: #8e8e93;">下午 2:30 1.獅子 2.老虎...</div>
         </div>
     </div>
 
     <div id="content-page">
-        <div class="nav-bar" onclick="goBack()">
+        <div class="nav-bar" onclick="toggleMode()">
             <span style="font-size: 28px; margin-right: 5px;">‹</span> 備忘錄
         </div>
+        
         <div class="content-area">
             <div id="animal-container"></div>
         </div>
@@ -126,7 +126,7 @@
         let currentTarget = null;
         let startY = 0;
         let baseNum = 0;
-        const sensitivity = 15;
+        let isShowMode = false; 
 
         function buildList() {
             const container = document.getElementById('animal-container');
@@ -140,16 +140,29 @@
             }
         }
 
+        // 切換模式的開關
+        function toggleMode() {
+            isShowMode = !isShowMode;
+            if (isShowMode) {
+                document.getElementById('main-body').classList.add('show-mode');
+                // 解鎖後可以滑動了
+            } else {
+                document.getElementById('main-body').classList.remove('show-mode');
+            }
+        }
+
         function openNote() {
             document.getElementById('list-page').style.display = 'none';
             document.getElementById('content-page').style.display = 'block';
+            isShowMode = false; // 進入時預設為設定模式
+            document.getElementById('main-body').classList.remove('show-mode');
             window.scrollTo(0, 0);
         }
 
         function goBack() {
-            document.getElementById('list-page').style.display = 'block';
-            document.getElementById('content-page').style.display = 'none';
-            document.getElementById('force-indicator').innerText = '';
+            // 這裡本來是回列表，但在魔術中，點擊這裡也可以當作「解鎖」
+            // 如果你想真的回列表，可以長按或雙擊，這裡先設為單擊解鎖
+            toggleMode();
         }
 
         const triggers = document.querySelectorAll('.trigger');
@@ -159,34 +172,30 @@
             el.addEventListener('touchstart', (e) => {
                 startY = e.touches[0].clientY;
                 baseNum = parseInt(el.getAttribute('data-base'));
-                currentTarget = baseNum;
-                indicator.innerText = currentTarget;
+                indicator.innerText = baseNum === 0 ? 1 : baseNum;
             });
 
             el.addEventListener('touchmove', (e) => {
                 let moveY = e.touches[0].clientY;
-                let diff = Math.floor((startY - moveY) / sensitivity);
+                let diff = Math.floor((startY - moveY) / 15);
                 if (diff < 0) diff = 0;
                 if (diff > 9) diff = 9;
                 
-                // 處理 0 的特殊情況(避免 0 變 00)
                 currentTarget = baseNum + diff;
-                if (currentTarget === 0) currentTarget = 1; // 0號沒動物，強制從1開始
+                if (currentTarget === 0) currentTarget = 1;
                 indicator.innerText = currentTarget;
             });
 
             el.addEventListener('touchend', () => {
-                // 放開瞬間固定
                 if (currentTarget) {
-                    // 先把之前的恢復（如果有多次操作的話）
                     buildList(); 
-                    // 執行強迫
                     const targetEl = document.getElementById(`animal-${currentTarget}`);
                     if (targetEl) {
                         targetEl.innerText = `${currentTarget}. 熊貓`;
                     }
                 }
-                setTimeout(() => { indicator.innerText = ''; }, 1500);
+                // 自動隱藏提示
+                setTimeout(() => { indicator.innerText = ''; }, 1000);
             });
         });
 
