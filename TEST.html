@@ -2,52 +2,45 @@
 <html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="備忘錄">
+    
     <title>備忘錄</title>
     <style>
         :root {
             --ios-gold: #d4a373;
             --ios-bg: #ffffff;
-            --ios-gray: #f2f2f7;
             --ios-divider: #c6c6c8;
         }
 
         body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif;
             margin: 0;
             padding: 0;
             background-color: var(--ios-bg);
             user-select: none;
             -webkit-user-select: none;
-            overflow-x: hidden;
-            /* 防止手機瀏覽器下拉刷新 */
-            overscroll-behavior-y: contain; 
+            overscroll-behavior-y: contain; /* 禁用下拉刷新 */
         }
 
-        /* iOS 狀態列 */
-        .status-bar {
-            height: 44px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 0 20px;
-            font-size: 15px;
-            font-weight: 600;
-            position: sticky;
-            top: 0;
-            background: rgba(255, 255, 255, 0.94);
-            backdrop-filter: blur(10px);
-            z-index: 1000;
-        }
-
+        /* 隱藏的數字提示器 */
         #force-indicator {
-            letter-spacing: -0.5px;
+            position: fixed;
+            top: 10px;
+            left: 15px;
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(0, 0, 0, 0.06); /* 極淡顏色，觀眾不易察覺 */
+            z-index: 1001;
         }
 
-        /* 列表頁 */
-        #list-page { display: block; }
+        /* 列表頁面 */
+        #list-page { display: block; padding-top: 20px; }
         .header { padding: 10px 20px; }
-        h1 { font-size: 34px; margin: 5px 0; font-weight: 700; }
+        h1 { font-size: 34px; margin: 5px 0; font-weight: 700; color: #000; }
 
         .note-item {
             padding: 12px 20px;
@@ -59,18 +52,19 @@
         .note-title { font-weight: 600; font-size: 17px; margin-bottom: 2px; }
         .note-subtitle { font-size: 15px; color: #8e8e93; }
 
-        /* 內容頁 */
-        #content-page { display: none; position: relative; }
+        /* 內容頁面 */
+        #content-page { display: none; position: relative; padding-top: 20px; }
         .nav-bar {
             display: flex;
             align-items: center;
             padding: 10px 15px;
             color: var(--ios-gold);
             font-size: 17px;
+            font-weight: 400;
         }
 
-        .content-area { padding: 0 20px 100px 20px; line-height: 1.5; }
-        .intro-text { font-size: 17px; margin: 15px 0; color: #000; }
+        .content-area { padding: 0 20px 120px 20px; }
+        .intro-text { font-size: 17px; margin: 15px 0; line-height: 1.5; color: #000; }
         
         .animal-line {
             padding: 12px 0;
@@ -79,57 +73,48 @@
             color: #333;
         }
 
-        /* 隱藏的九宮格 - 位於螢幕中下方，方便大拇指操作 */
+        /* 隱藏的九宮格感應區 (位於螢幕中下方) */
         #secret-grid {
             position: fixed;
-            bottom: 10%;
+            bottom: 50px;
             left: 0;
             width: 100%;
-            height: 50%;
+            height: 55%;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
             z-index: 9999;
-            opacity: 0; /* 完全透明 */
-            touch-action: none; /* 禁用預設觸控行為 */
+            opacity: 0;
+            touch-action: none;
         }
     </style>
 </head>
 <body>
 
-    <div class="status-bar">
-        <div id="force-indicator">9:41</div>
-        <div style="display: flex; gap: 5px; align-items: center;">
-            <span style="font-size: 12px;">📶</span>
-            <span style="font-size: 12px;">LTE</span>
-            <span style="font-size: 18px;">🔋</span>
-        </div>
-    </div>
+    <div id="force-indicator"></div>
 
     <div id="list-page">
         <div class="header">
-            <h1 style="color: #000;">備忘錄</h1>
+            <h1 style="color: var(--ios-gold);">備忘錄</h1>
         </div>
-        <div style="background: white;">
-            <div class="note-item" onclick="openNote()">
-                <div class="note-title">動物編號清單</div>
-                <div class="note-subtitle">下午 2:30 100種不同的生物...</div>
-            </div>
-            <div class="note-item">
-                <div class="note-title">表演注意事項</div>
-                <div class="note-subtitle">昨天 11:15 記得保持微笑...</div>
-            </div>
+        <div class="note-item" onclick="openNote()">
+            <div class="note-title">100種動物編碼表</div>
+            <div class="note-subtitle">下午 2:30 1.獅子 2.老虎 3.大象...</div>
+        </div>
+        <div class="note-item">
+            <div class="note-title">個人筆記</div>
+            <div class="note-subtitle">昨天 11:15 記得去取貨...</div>
         </div>
     </div>
 
     <div id="content-page">
         <div class="nav-bar" onclick="goBack()">
-            <span style="font-size: 24px; margin-right: 5px;">‹</span> 備忘錄
+            <span style="font-size: 28px; margin-right: 5px; margin-top: -2px;">‹</span> 備忘錄
         </div>
 
         <div class="content-area">
             <div class="intro-text">
-                這份清單包含了全世界最受歡迎的 100 種動物。每一種動物都有其獨特的編號，請觀眾隨意挑選一個數字。
+                這是一份完整的動物名錄，請隨意滑動選擇一個編號。
             </div>
             <div id="animal-container">
                 </div>
@@ -154,7 +139,7 @@
         let currentTarget = null;
         let startY = 0;
         let baseNum = 0;
-        const sensitivity = 15; // 每滑 15px 數字 +1
+        const sensitivity = 15; // 滑動 15px 數字 +1
 
         function buildList() {
             const container = document.getElementById('animal-container');
@@ -177,9 +162,9 @@
         function goBack() {
             document.getElementById('list-page').style.display = 'block';
             document.getElementById('content-page').style.display = 'none';
+            document.getElementById('force-indicator').innerText = ''; 
         }
 
-        // 九宮格邏輯
         const cells = document.querySelectorAll('.grid-cell');
         const indicator = document.getElementById('force-indicator');
 
@@ -187,37 +172,33 @@
             cell.addEventListener('touchstart', (e) => {
                 startY = e.touches[0].clientY;
                 baseNum = parseInt(cell.getAttribute('data-base'));
-                updateVisual(baseNum);
+                currentTarget = baseNum;
+                indicator.innerText = currentTarget;
             });
 
             cell.addEventListener('touchmove', (e) => {
                 let moveY = e.touches[0].clientY;
-                // 往上滑：startY > moveY，所以 (startY - moveY) 是正數
+                // 往上滑：startY > moveY
                 let diff = Math.floor((startY - moveY) / sensitivity);
                 
                 if (diff < 0) diff = 0;
                 if (diff > 9) diff = 9;
                 
                 currentTarget = baseNum + diff;
-                updateVisual(currentTarget);
+                indicator.innerText = currentTarget;
             });
 
             cell.addEventListener('touchend', () => {
                 if (currentTarget) {
-                    // 偷偷把目標數字改成 熊貓
                     const targetEl = document.getElementById(`animal-${currentTarget}`);
                     if (targetEl) {
                         targetEl.innerText = `${currentTarget}. 熊貓`;
                     }
                 }
-                indicator.innerText = "9:41"; // 結束後恢復正常時間
+                // 3秒後隱藏提示數字，或是保持極淡
+                setTimeout(() => { indicator.innerText = ''; }, 2000);
             });
         });
-
-        function updateVisual(num) {
-            // 偷偷顯示在左上角時間處
-            indicator.innerText = `9:${num}`;
-        }
 
         buildList();
     </script>
