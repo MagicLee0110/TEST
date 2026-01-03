@@ -3,289 +3,271 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iOS 模擬控制中心</title>
+    <title>iOS 通知中心模擬</title>
     <style>
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.2);
-            --glass-border: rgba(255, 255, 255, 0.1);
-            --active-blue: #007AFF;
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --card-bg: rgba(40, 40, 40, 0.4);
+            --font-main: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
         }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         body, html {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            overflow: hidden;
-            background-color: #000;
-        }
-
-        /* 模擬桌面背景 */
-        .iphone-screen {
-            position: relative;
-            width: 100%;
-            height: 100%;
-            background: url('https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=2070&auto=format&fit=crop') center/cover;
-            transition: transform 0.3s ease;
-        }
-
-        /* 控制中心遮罩層 */
-        .control-center-overlay {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            backdrop-filter: blur(30px);
-            -webkit-backdrop-filter: blur(30px);
-            display: flex;
-            flex-direction: column;
-            padding: 20px;
-            box-sizing: border-box;
+            margin: 0; padding: 0;
+            width: 100%; height: 100%;
+            font-family: var(--font-main);
             color: white;
-            z-index: 100;
+            overflow: hidden;
+            /* 模擬背景 */
+            background: linear-gradient(180deg, #1a152e 0%, #3a2b5e 50%, #1a152e 100%);
+            background-size: cover;
         }
 
-        /* 頂部狀態列 */
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 14px;
-            margin-bottom: 20px;
-            padding: 0 5px;
-        }
-
+        /* 狀態列 */
         .status-bar {
             display: flex;
             justify-content: space-between;
-            padding: 5px 10px;
-            font-size: 12px;
-            font-weight: 600;
-        }
-
-        /* 網格佈局 */
-        .grid-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            grid-gap: 15px;
-            margin-bottom: 15px;
-        }
-
-        .card {
-            background: var(--glass-bg);
-            border-radius: 20px;
-            padding: 15px;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            align-content: space-around;
-        }
-
-        /* 連線區塊 */
-        .connectivity {
-            height: 140px;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-        }
-
-        .icon-circle {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-
-        .icon-circle.active { background: var(--active-blue); }
-        .icon-circle.green { background: #4CD964; }
-        .icon-circle.orange { background: #FF9500; }
-
-        /* 播放器 */
-        .music-player {
-            height: 140px;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-        }
-
-        .music-player span { font-size: 14px; color: rgba(255,255,255,0.6); }
-
-        /* 圓形小按鈕 (旋轉鎖定/螢幕鏡像) */
-        .small-controls {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-gap: 15px;
-        }
-
-        .small-card {
-            background: var(--glass-bg);
-            border-radius: 20px;
-            height: 70px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-
-        /* 專注模式 */
-        .focus-mode {
-            grid-column: span 2;
-            background: var(--glass-bg);
-            border-radius: 20px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            padding: 0 20px;
+            padding: 15px 25px;
+            font-size: 14px;
             font-weight: 500;
         }
 
-        /* 滑動條區塊 (亮度/音量) */
-        .sliders-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-gap: 15px;
-            height: 150px;
-        }
-
-        .slider-wrapper {
-            background: var(--glass-bg);
-            border-radius: 25px;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column-reverse;
-        }
-
-        .slider-fill {
-            background: white;
-            width: 100%;
-            height: 60%; /* 模擬數值 */
-        }
-
-        .slider-icon {
-            position: absolute;
-            bottom: 15px;
-            width: 100%;
+        /* 時間日期區 */
+        .clock-container {
             text-align: center;
-            color: #888;
-            font-size: 20px;
-            mix-blend-mode: difference;
+            margin-top: 30px;
         }
 
-        /* 底部圓形按鈕 */
-        .bottom-actions {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            grid-gap: 15px;
-            margin-top: 15px;
+        .date-text {
+            font-size: 19px;
+            font-weight: 400;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
         }
 
-        .round-btn {
-            background: var(--glass-bg);
-            width: 65px;
-            height: 65px;
+        .time-text {
+            font-size: 95px;
+            font-weight: 200;
+            margin: 0;
+            letter-spacing: -2px;
+        }
+
+        /* 通知中心標題 */
+        .notification-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 40px 25px 15px;
+        }
+
+        .notification-header h2 {
+            font-size: 28px;
+            margin: 0;
+            font-weight: 600;
+        }
+
+        .close-btn {
+            width: 28px; height: 28px;
+            background: rgba(255,255,255,0.15);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 24px;
-            margin: 0 auto;
+            font-size: 14px;
         }
 
-        /* 關閉按鈕模擬 (點擊空白處關閉) */
-        .close-trigger {
+        /* 通知卡片列表 */
+        .notification-list {
+            padding: 0 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .notif-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .notif-top {
+            display: flex;
+            gap: 12px;
+        }
+
+        .notif-icon {
+            width: 38px; height: 38px;
+            border-radius: 8px;
+            background-size: cover;
+            position: relative;
+        }
+
+        .notif-badge {
             position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1;
+            top: -5px; right: -5px;
+            background: white; color: black;
+            font-size: 10px; font-weight: bold;
+            padding: 2px 4px; border-radius: 10px;
+        }
+
+        .notif-content { flex: 1; }
+
+        .notif-title-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+
+        .notif-time { font-weight: 400; opacity: 0.6; font-size: 13px; }
+
+        .notif-body {
+            font-size: 14px;
+            line-height: 1.4;
+            opacity: 0.9;
+        }
+
+        /* Dcard 專屬按鈕區 */
+        .notif-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+        }
+
+        .action-btn {
+            flex: 1;
+            background: rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 12px;
+            text-align: center;
+            font-size: 15px;
+        }
+
+        /* 底部按鈕 */
+        .bottom-controls {
+            position: absolute;
+            bottom: 50px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 45px;
+        }
+
+        .circle-tool {
+            width: 50px; height: 50px;
+            background: rgba(0,0,0,0.3);
+            backdrop-filter: blur(10px);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        /* Home Bar */
+        .home-bar {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px;
+            height: 5px;
+            background: white;
+            border-radius: 10px;
         }
     </style>
 </head>
 <body>
 
-    <div class="iphone-screen" id="homeScreen">
-        </div>
-
-    <div class="control-center-overlay" id="controlCenter">
-        <div class="close-trigger" onclick="toggleCC()"></div>
-
-        <div class="header">
-            <div style="font-size: 24px;">+</div>
-            <div style="font-size: 24px;">⏻</div>
-        </div>
-
-        <div class="status-bar">
-            <span>無 SIM 卡 🌐</span>
-            <span>93% 🔋</span>
-        </div>
-
-        <div class="grid-container">
-            <div class="card connectivity">
-                <div class="icon-circle">✈️</div>
-                <div class="icon-circle active">📡</div>
-                <div class="icon-circle active">📶</div>
-                <div class="icon-circle active">🌐</div>
-            </div>
-            <div class="card music-player">
-                <div style="font-size: 30px; margin-bottom: 5px;">🎵</div>
-                <span>未在播放</span>
-                <div style="margin-top: 10px; font-size: 20px;">⏮️ ⏸️ ⏭️</div>
-            </div>
-        </div>
-
-        <div class="grid-container">
-            <div class="small-controls">
-                <div class="small-card">🔓</div>
-                <div class="small-card">📺</div>
-            </div>
-            <div class="sliders-container">
-                <div class="slider-wrapper">
-                    <div class="slider-fill" style="height: 70%;"></div>
-                    <div class="slider-icon">☀️</div>
-                </div>
-                <div class="slider-wrapper">
-                    <div class="slider-fill" style="height: 40%;"></div>
-                    <div class="slider-icon">🔊</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="focus-mode">
-            🌙 專注模式 <span style="margin-left: auto;">↕️</span>
-        </div>
-
-        <div class="grid-container" style="margin-top:15px;">
-            <div class="card" style="height: 140px; flex-direction: column; justify-content: center; align-items: center;">
-                <div style="font-size: 40px;">🏠</div>
-                <div style="font-size: 12px; margin-top: 10px; color: rgba(255,255,255,0.6);">尚未設定家庭</div>
-            </div>
-            <div style="display: grid; grid-template-columns: 1fr 1fr; grid-gap: 15px;">
-                <div class="round-btn">🔦</div>
-                <div class="round-btn">⏱️</div>
-                <div class="round-btn">🔢</div>
-                <div class="round-btn">📷</div>
-            </div>
-        </div>
-
-        <div class="round-btn" style="margin: 20px 0 0 0; width: 50px; height: 50px; font-size: 18px;">🏁</div>
+    <div class="status-bar">
+        <div>台灣大哥大</div>
+        <div>📶 🔋 65</div>
     </div>
 
-    <script>
-        function toggleCC() {
-            const cc = document.getElementById('controlCenter');
-            cc.style.display = cc.style.display === 'none' ? 'flex' : 'none';
-        }
+    <div class="clock-container">
+        <div class="date-text">1月3日 週六 · 乙巳年冬月十五</div>
+        <h1 class="time-text" id="timeDisplay">2:38</h1>
+    </div>
 
-        // 模擬點擊背景可以回到桌面
-        document.getElementById('homeScreen').addEventListener('click', () => {
-            document.getElementById('controlCenter').style.display = 'flex';
-        });
+    <div class="notification-header">
+        <h2>通知中心</h2>
+        <div class="close-btn">✕</div>
+    </div>
+
+    <div class="notification-list">
+        <div class="notif-card">
+            <div class="notif-top">
+                <div class="notif-icon" style="background-color: #ff4500; display:flex; align-items:center; justify-content:center; font-weight:bold;">S
+                    <span class="notif-badge">23</span>
+                </div>
+                <div class="notif-content">
+                    <div class="notif-title-row">
+                        <span>您關注的賣家開始直播了！</span>
+                        <span class="notif-time">1小時前</span>
+                    </div>
+                    <div class="notif-body">觀看 Yomigirls 的直播：神美浩肯包🤩鈦享杯/PLAYBOY安撫被...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="notif-card">
+            <div class="notif-top">
+                <div class="notif-icon" style="background-color: #006aa6; display:flex; align-items:center; justify-content:center; font-weight:bold;">D
+                    <span class="notif-badge">19</span>
+                </div>
+                <div class="notif-content">
+                    <div class="notif-title-row">
+                        <span>你追蹤的「理財板」新文章</span>
+                        <span class="notif-time">2小時前</span>
+                    </div>
+                    <div class="notif-body">「台股瘋了 正二也瘋了」</div>
+                </div>
+            </div>
+            <div style="text-align:center; font-size: 13px; margin-top: 15px; opacity: 0.8;">要繼續接收「Dcard」App的通知嗎？</div>
+            <div class="notif-actions">
+                <div class="action-btn">繼續⋯</div>
+                <div class="action-btn">關閉⋯</div>
+            </div>
+        </div>
+
+        <div class="notif-card">
+            <div class="notif-top">
+                <div class="notif-icon" style="background-color: #00c300; display:flex; align-items:center; justify-content:center; font-weight:bold;">L
+                    <span class="notif-badge">2</span>
+                </div>
+                <div class="notif-content">
+                    <div class="notif-body">新一季優惠‼️人氣商品◤購好券享 30% 回饋⚡◢ 海底撈、瀧厚炙燒熟成牛排、蛋白盒子等超值餐券...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-controls">
+        <div class="circle-tool">🔦</div>
+        <div class="circle-tool">📷</div>
+    </div>
+
+    <div class="home-bar"></div>
+
+    <script>
+        // 更新時間功能
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes().toString().padStart(2, '0');
+            document.getElementById('timeDisplay').textContent = `${hours}:${minutes}`;
+        }
+        
+        // 如果想要讓時間跳動，可以取消下面註解
+        // setInterval(updateTime, 1000);
+        // updateTime();
     </script>
 </body>
 </html>
