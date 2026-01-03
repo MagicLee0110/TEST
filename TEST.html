@@ -3,188 +3,140 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    
     <meta name="theme-color" content="#1a152e">
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    
-    <title>iOS 通知中心 - 完美同步版</title>
+    <title>iOS Magic Center</title>
     <style>
         :root {
             --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-            --top-color: #1a152e; /* 頂部深紫色 */
+            --top-color: #1a152e;
             --main-gradient: linear-gradient(180deg, #1a152e 0%, #3a2b5e 50%, #1a152e 100%);
-            --card-bg: rgba(40, 40, 40, 0.4);
         }
 
-        /* 關鍵：繼承你成功的背景固定設定 */
         html, body {
-            margin: 0;
-            padding: 0;
-            width: 100%;
-            height: 100%;
+            margin: 0; padding: 0; width: 100%; height: 100%;
             background: var(--top-color);
             background-image: var(--main-gradient);
-            background-attachment: fixed; /* 確保背景不隨捲動移位 */
-            overflow-y: auto; /* 通知多時可捲動 */
-            overflow-x: hidden;
+            background-attachment: fixed;
+            overflow: hidden;
             font-family: var(--ios-font);
             color: white;
         }
 
-        /* 時間日期區：使用 env(safe-area-inset-top) 避開瀏海 */
+        /* 通知中心主畫面 */
+        #notification-center {
+            width: 100%; height: 100%;
+            position: relative;
+            transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+            z-index: 1;
+        }
+
         .clock-container {
             text-align: center;
             padding-top: calc(env(safe-area-inset-top) + 60px);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
 
-        .date-text {
-            font-size: 19px;
-            font-weight: 400;
-            letter-spacing: 0.5px;
-            margin-bottom: 5px;
-        }
+        .time-text { font-size: 95px; font-weight: 200; margin: 0; letter-spacing: -2px; }
+        .date-text { font-size: 19px; opacity: 0.9; }
 
-        .time-text {
-            font-size: 95px;
-            font-weight: 200;
-            margin: 0;
-            letter-spacing: -2px;
-        }
+        .notification-header { padding: 40px 25px 15px; font-size: 28px; font-weight: 600; }
 
-        /* 通知中心標題 */
-        .notification-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 40px 25px 15px;
-        }
-
-        .notification-header h2 {
-            font-size: 28px;
-            margin: 0;
-            font-weight: 600;
-        }
-
-        .close-btn {
-            width: 28px; height: 28px;
-            background: rgba(255,255,255,0.15);
-            border-radius: 50%;
-            display: flex;
-            align-items: center; justify-content: center; font-size: 14px;
-        }
-
-        /* 通知卡片清單 */
-        .notification-list {
-            padding: 0 15px 100px 15px; /* 底部留白避開 Home Bar */
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
+        /* 通知卡片 */
         .notif-card {
-            background: var(--card-bg);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border-radius: 24px;
-            padding: 15px;
-            display: flex;
-            flex-direction: column;
+            background: rgba(40, 40, 40, 0.4);
+            backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+            border-radius: 24px; padding: 15px; margin: 0 15px 10px;
+            display: flex; gap: 12px;
         }
 
-        .notif-top { display: flex; gap: 12px; }
-
-        .notif-icon {
-            width: 38px; height: 38px;
-            border-radius: 8px;
-            position: relative;
-            display: flex; align-items: center; justify-content: center; font-weight: bold;
-        }
-
-        .notif-badge {
+        /* 隱形六宮格感應區 */
+        .magic-grid {
             position: absolute;
-            top: -5px; right: -5px;
-            background: white; color: black;
-            font-size: 10px; font-weight: bold;
-            padding: 2px 4px; border-radius: 10px;
-        }
-
-        .notif-title-row {
-            display: flex; justify-content: space-between;
-            font-size: 15px; font-weight: 600; margin-bottom: 2px;
-        }
-
-        .notif-time { font-weight: 400; opacity: 0.6; font-size: 13px; }
-
-        .notif-body { font-size: 14px; line-height: 1.4; opacity: 0.9; }
-
-        .notif-actions { display: flex; gap: 8px; margin-top: 15px; }
-
-        .action-btn {
-            flex: 1; background: rgba(255,255,255,0.1);
-            border-radius: 12px; padding: 12px; text-align: center; font-size: 15px;
-        }
-
-        /* 底部 Home Bar */
-        .home-bar {
-            position: fixed;
-            bottom: 8px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 140px; height: 5px;
-            background: white;
-            border-radius: 10px;
+            bottom: 60px; /* 避開底部 Home Bar */
+            left: 0; width: 100%; height: 40%; /* 佔據下半部 */
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(2, 1fr);
             z-index: 10;
         }
+        .magic-btn { background: transparent; border: none; outline: none; }
+
+        /* 模擬備忘錄畫面 */
+        #memo-screen {
+            position: absolute;
+            top: 100%; /* 初始位置在畫面外下方 */
+            left: 0; width: 100%; height: 100%;
+            background: #fff; /* 備忘錄典型的白色底 */
+            color: #000;
+            z-index: 2;
+            transition: transform 0.6s cubic-bezier(0.25, 0.1, 0.25, 1);
+            display: flex; flex-direction: column;
+        }
+
+        /* 備忘錄頂部欄 */
+        .memo-header {
+            padding: calc(env(safe-area-inset-top) + 10px) 20px 10px;
+            display: flex; justify-content: space-between;
+            align-items: center; color: #d4a017; /* 備忘錄金黃色 */
+            font-size: 17px; border-bottom: 1px solid #eee;
+        }
+
+        .handwriting-area {
+            flex: 1; padding: 40px 20px;
+            /* 使用手寫感字體 */
+            font-family: "Cursive", "Segoe Print", "Bradley Hand", "Marker Felt", sans-serif;
+            font-size: 80px;
+            text-align: center;
+            display: flex; justify-content: center; align-items: flex-start;
+        }
+
+        /* 上滑動作 */
+        .active-memo #notification-center { transform: translateY(-100%); }
+        .active-memo #memo-screen { transform: translateY(-100%); }
+
+        .home-bar {
+            position: fixed; bottom: 8px; left: 50%;
+            transform: translateX(-50%); width: 140px; height: 5px;
+            background: white; border-radius: 10px; z-index: 20;
+            transition: background 0.3s;
+        }
+        .active-memo .home-bar { background: #ccc; }
     </style>
 </head>
-<body>
+<body id="body">
 
-    <div class="clock-container">
-        <div class="date-text" id="dateDisplay">1月3日 週六</div>
-        <h1 class="time-text" id="timeDisplay">00:00</h1>
-    </div>
-
-    <div class="notification-header">
-        <h2>通知中心</h2>
-        <div class="close-btn">✕</div>
-    </div>
-
-    <div class="notification-list">
+    <div id="notification-center">
+        <div class="clock-container">
+            <div class="date-text" id="dateDisplay">1月3日 週六</div>
+            <h1 class="time-text" id="timeDisplay">00:00</h1>
+        </div>
+        <div class="notification-header">通知中心</div>
         <div class="notif-card">
-            <div class="notif-top">
-                <div class="notif-icon" style="background-color: #ff4500;">S<span class="notif-badge">23</span></div>
-                <div class="notif-content" style="flex:1;">
-                    <div class="notif-title-row">
-                        <span>您關注的賣家開始直播了！</span>
-                        <span class="notif-time">1小時前</span>
-                    </div>
-                    <div class="notif-body">觀看 Yomigirls 的直播：神美浩肯包🤩...</div>
-                </div>
+            <div style="width:38px; height:38px; background:#ff4500; border-radius:8px;"></div>
+            <div>
+                <div style="font-weight:600;">備忘錄</div>
+                <div style="font-size:14px; opacity:0.8;">剛剛：這裡有一些重要筆記...</div>
             </div>
         </div>
 
-        <div class="notif-card">
-            <div class="notif-top">
-                <div class="notif-icon" style="background-color: #006aa6;">D<span class="notif-badge">19</span></div>
-                <div class="notif-content" style="flex:1;">
-                    <div class="notif-title-row">
-                        <span>你追蹤的「理財板」新文章</span>
-                        <span class="notif-time">2小時前</span>
-                    </div>
-                    <div class="notif-body">「台股瘋了 正二也瘋了」</div>
-                </div>
-            </div>
-            <div style="text-align:center; font-size: 13px; margin-top: 15px; opacity: 0.8;">要繼續接收「Dcard」App的通知嗎？</div>
-            <div class="notif-actions">
-                <div class="action-btn">繼續⋯</div>
-                <div class="action-btn">關閉⋯</div>
-            </div>
+        <div class="magic-grid">
+            <div class="magic-btn" onclick="openMemo(36)"></div>
+            <div class="magic-btn" onclick="openMemo(45)"></div>
+            <div class="magic-btn" onclick="openMemo(54)"></div>
+            <div class="magic-btn" onclick="openMemo(63)"></div>
+            <div class="magic-btn" onclick="openMemo(72)"></div>
+            <div class="magic-btn" onclick="openMemo(81)"></div>
         </div>
+    </div>
+
+    <div id="memo-screen" onclick="closeMemo()">
+        <div class="memo-header">
+            <span>＜ 備忘錄</span>
+            <span style="font-weight:600;">完成</span>
+        </div>
+        <div class="handwriting-area" id="handwritingNumber">
+            </div>
     </div>
 
     <div class="home-bar"></div>
@@ -195,14 +147,19 @@
             const hours = now.getHours();
             const minutes = now.getMinutes().toString().padStart(2, '0');
             document.getElementById('timeDisplay').textContent = `${hours}:${minutes}`;
-
             const month = now.getMonth() + 1;
             const date = now.getDate();
             const weekDays = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
-            const dayName = weekDays[now.getDay()];
-            
-            // 這裡模擬截圖中的文字格式
-            document.getElementById('dateDisplay').textContent = `${month}月${date}日 ${dayName} · 乙巳年冬月十五`;
+            document.getElementById('dateDisplay').textContent = `${month}月${date}日 ${weekDays[now.getDay()]} · 乙巳年冬月十五`;
+        }
+
+        function openMemo(num) {
+            document.getElementById('handwritingNumber').textContent = num;
+            document.getElementById('body').classList.add('active-memo');
+        }
+
+        function closeMemo() {
+            document.getElementById('body').classList.remove('active-memo');
         }
 
         setInterval(updateClock, 1000);
