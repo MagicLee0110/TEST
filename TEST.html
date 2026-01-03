@@ -2,13 +2,18 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>iOS 通知中心 - 動態時間版</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#1a152e">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    
+    <title>iOS 通知中心 - 完美全螢幕版</title>
     <style>
         :root {
             --glass-bg: rgba(255, 255, 255, 0.15);
             --card-bg: rgba(40, 40, 40, 0.4);
             --font-main: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+            --top-color: #1a152e; /* 定義頂部顏色 */
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -19,13 +24,15 @@
             font-family: var(--font-main);
             color: white;
             overflow: hidden;
-            background: linear-gradient(180deg, #1a152e 0%, #3a2b5e 50%, #1a152e 100%);
+            /* 確保背景顏色從最頂部開始 */
+            background: linear-gradient(180deg, var(--top-color) 0%, #3a2b5e 50%, var(--top-color) 100%);
             background-size: cover;
         }
 
+        /* 時間日期區 - 考量瀏海高度增加 padding-top */
         .clock-container {
             text-align: center;
-            margin-top: 60px;
+            padding-top: calc(env(safe-area-inset-top) + 40px);
         }
 
         .date-text {
@@ -60,9 +67,7 @@
             background: rgba(255,255,255,0.15);
             border-radius: 50%;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
+            align-items: center; justify-content: center; font-size: 14px;
         }
 
         .notification-list {
@@ -108,16 +113,13 @@
 
         .notif-body { font-size: 14px; line-height: 1.4; opacity: 0.9; }
 
-        .notif-actions { display: flex; gap: 8px; margin-top: 15px; }
-
-        .action-btn {
-            flex: 1; background: rgba(255,255,255,0.1);
-            border-radius: 12px; padding: 12px; text-align: center; font-size: 15px;
-        }
-
+        /* 底部 Home Bar */
         .home-bar {
-            position: absolute; bottom: 8px; left: 50%;
-            transform: translateX(-50%); width: 140px; height: 5px;
+            position: absolute;
+            bottom: calc(env(safe-area-inset-bottom) + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 140px; height: 5px;
             background: white; border-radius: 10px;
         }
     </style>
@@ -147,24 +149,6 @@
                 </div>
             </div>
         </div>
-
-        <div class="notif-card">
-            <div class="notif-top">
-                <div class="notif-icon" style="background-color: #006aa6;">D<span class="notif-badge">19</span></div>
-                <div class="notif-content" style="flex:1;">
-                    <div class="notif-title-row">
-                        <span>你追蹤的「理財板」新文章</span>
-                        <span class="notif-time">2小時前</span>
-                    </div>
-                    <div class="notif-body">「台股瘋了 正二也瘋了」</div>
-                </div>
-            </div>
-            <div style="text-align:center; font-size: 13px; margin-top: 15px; opacity: 0.8;">要繼續接收「Dcard」App的通知嗎？</div>
-            <div class="notif-actions">
-                <div class="action-btn">繼續⋯</div>
-                <div class="action-btn">關閉⋯</div>
-            </div>
-        </div>
     </div>
 
     <div class="home-bar"></div>
@@ -172,25 +156,19 @@
     <script>
         function updateClock() {
             const now = new Date();
-            
-            // 更新時間 (24小時制，如需12小時制可再調整)
             const hours = now.getHours();
             const minutes = now.getMinutes().toString().padStart(2, '0');
             document.getElementById('timeDisplay').textContent = `${hours}:${minutes}`;
 
-            // 更新日期與星期
             const month = now.getMonth() + 1;
             const date = now.getDate();
             const weekDays = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
             const dayName = weekDays[now.getDay()];
-            
-            // 這裡模擬截圖中的日期格式，農曆部分通常在模擬中可維持靜態或隱藏
             document.getElementById('dateDisplay').textContent = `${month}月${date}日 ${dayName} · 乙巳年冬月十五`;
         }
 
-        // 每秒檢查一次時間
         setInterval(updateClock, 1000);
-        updateClock(); // 初始化
+        updateClock();
     </script>
 </body>
 </html>
