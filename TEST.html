@@ -6,13 +6,10 @@
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>iOS Magic Dark</title>
+    <title>iOS Magic Dark - 6 Grid Fix</title>
     <style>
         :root {
             --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-            --bg-black: #000000;
-            --memo-black: #000000;
-            /* 漸層：從純黑開始向下延伸至深藍紫，再回到黑 */
             --main-gradient: linear-gradient(180deg, #000000 0%, #1a152e 40%, #000000 100%);
         }
 
@@ -20,17 +17,17 @@
             margin: 0; padding: 0; width: 100%; height: 100%;
             font-family: var(--ios-font);
             overflow: hidden;
-            background-color: var(--bg-black);
+            background-color: #000;
         }
 
-        /* --- 通知中心畫面 --- */
+        /* --- 通知中心 --- */
         #notification-center {
             width: 100%; height: 100%;
             background: var(--main-gradient);
             background-attachment: fixed;
-            display: block;
             position: relative;
             color: white;
+            display: block;
         }
 
         .clock-container {
@@ -42,7 +39,6 @@
 
         .notification-header { padding: 40px 25px 15px; font-size: 28px; font-weight: 600; }
 
-        /* 通知卡片樣式 */
         .notification-list { padding: 0 15px; }
         .notif-card {
             background: rgba(40, 40, 40, 0.4);
@@ -61,22 +57,26 @@
         .notif-actions { display: flex; gap: 8px; margin-top: 15px; }
         .action-btn { flex: 1; background: rgba(255,255,255,0.1); border-radius: 12px; padding: 12px; text-align: center; font-size: 15px; }
 
-        /* --- 隱形六宮格感應區 --- */
+        /* --- 隱形六宮格 (精確 2x3 分配) --- */
         .magic-grid {
             position: absolute;
-            bottom: 50px; left: 0; width: 100%; height: 45%;
+            bottom: 60px; left: 0; width: 100%; height: 45%;
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr); /* 橫向三列 */
+            grid-template-rows: repeat(2, 1fr);    /* 縱向兩列 */
             z-index: 100;
         }
+        .magic-grid div {
+            /* border: 1px solid rgba(255,255,255,0.1); */ /* 表演時可註解掉此行來隱藏格子 */
+            width: 100%; height: 100%;
+        }
 
-        /* --- 備忘錄畫面 (深色版) --- */
+        /* --- 備忘錄 --- */
         #memo-screen {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: var(--memo-black);
-            color: #ffffff;
+            background: #000;
+            color: #fff;
             display: none;
             flex-direction: column;
             z-index: 200;
@@ -85,24 +85,25 @@
         .memo-header {
             padding: calc(env(safe-area-inset-top) + 10px) 20px 10px;
             display: flex; justify-content: space-between;
-            align-items: center; 
-            color: #d4a017; /* 經典備忘錄金黃色 */
-            font-size: 17px;
+            align-items: center; color: #d4a017; font-size: 17px;
         }
 
+        /* 數字置中與放大 */
         .handwriting-area {
-            flex: 1; padding: 60px 20px;
-            /* 備忘錄深色模式下，手寫字體通常為白色 */
+            flex: 1;
+            display: flex;
+            justify-content: center; /* 水平置中 */
+            align-items: center;     /* 垂直置中 */
             font-family: "Cursive", "Bradley Hand", "Marker Felt", sans-serif;
-            font-size: 120px; text-align: center;
-            color: #ffffff;
+            font-size: 200px;        /* 數字放大 */
+            font-weight: bold;
+            margin-top: -50px;       /* 稍微往上一點，視覺上更平衡 */
         }
 
-        /* 底部 Home Bar */
         .home-bar {
             position: fixed; bottom: 8px; left: 50%;
             transform: translateX(-50%); width: 140px; height: 5px;
-            background: rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.4);
             border-radius: 10px; z-index: 300;
         }
     </style>
@@ -140,7 +141,7 @@
                     <div class="action-btn">繼續⋯</div><div class="action-btn">關閉⋯</div>
                 </div>
             </div>
-            </div>
+        </div>
 
         <div class="magic-grid">
             <div onclick="openMemo(36)"></div>
@@ -181,7 +182,6 @@
             numDisplay.textContent = num;
             notifScreen.style.display = 'none';
             memoScreen.style.display = 'flex';
-            // 頂部狀態列在此版本始終保持黑色，無需動態修改 meta
         }
 
         function closeMemo() {
