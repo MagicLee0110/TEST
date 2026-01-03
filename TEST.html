@@ -6,7 +6,7 @@
     <meta name="theme-color" content="#000000">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <title>iOS Magic Professional</title>
+    <title>iOS Magic Professional - Sketch Edition</title>
     <style>
         :root {
             --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
@@ -18,6 +18,7 @@
             font-family: var(--ios-font);
             overflow: hidden;
             background-color: #000;
+            touch-action: none; /* 防止書寫時螢幕跳動 */
         }
 
         /* --- 通知中心 --- */
@@ -38,6 +39,7 @@
             padding-top: calc(env(safe-area-inset-top) + 60px);
             user-select: none;
             -webkit-user-select: none;
+            cursor: pointer;
         }
         .time-text { font-size: 95px; font-weight: 200; margin: 0; letter-spacing: -2px; }
         .date-text { font-size: 19px; opacity: 0.9; }
@@ -53,18 +55,16 @@
         }
         .notif-top { display: flex; gap: 12px; }
         .notif-icon { width: 38px; height: 38px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: bold; position: relative; }
-        .notif-badge { position: absolute; top: -5px; right: -5px; background: white; color: black; font-size: 10px; font-weight: bold; padding: 2px 4px; border-radius: 10px; }
         .notif-content { flex: 1; }
         .notif-title-row { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; }
-        .notif-time { font-weight: 400; opacity: 0.6; font-size: 13px; }
         .notif-body { font-size: 14px; line-height: 1.4; opacity: 0.9; }
 
-        /* --- 隱形九宮格 (3x3) --- */
+        /* --- 九宮格 --- */
         .magic-area {
             flex: 1;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            grid-template-rows: repeat(3, 1fr); /* 改為三列 */
+            grid-template-rows: repeat(3, 1fr);
             z-index: 999;
             margin-bottom: 40px;
         }
@@ -77,21 +77,38 @@
             background: #000; color: #fff;
             display: none; flex-direction: column; z-index: 2000;
         }
-        .memo-header { padding: calc(env(safe-area-inset-top) + 10px) 20px 10px; display: flex; justify-content: space-between; align-items: center; color: #d4a017; font-size: 17px; }
-        .handwriting-area { flex: 1; display: flex; justify-content: center; align-items: center; font-family: "Cursive", "Bradley Hand", "Marker Felt", sans-serif; font-size: 200px; font-weight: bold; padding-bottom: 50px; }
+        .memo-header { padding: calc(env(safe-area-inset-top) + 10px) 20px 10px; display: flex; justify-content: space-between; align-items: center; color: #d4a017; font-size: 17px; z-index: 2002; }
+        
+        .memo-content-area {
+            flex: 1; position: relative; width: 100%; overflow: hidden;
+            display: flex; justify-content: center; align-items: center;
+        }
+        
+        /* 預設數字顯示 */
+        #handwritingNumber {
+            font-family: "Cursive", "Bradley Hand", "Marker Felt", sans-serif;
+            font-size: 200px; font-weight: bold; color: white;
+            z-index: 2001;
+        }
 
-        /* --- 後台設定畫面 --- */
+        /* 真實手寫畫布 */
+        #sketchCanvas {
+            position: absolute; top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 2003;
+            cursor: crosshair;
+        }
+
+        /* --- 後台 --- */
         #backstage-screen {
-            position: absolute;
-            top: 0; left: 0; width: 100%; height: 100%;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); color: white;
             display: none; flex-direction: column; z-index: 3000;
             padding: calc(env(safe-area-inset-top) + 20px) 20px;
             box-sizing: border-box; overflow-y: auto;
         }
-        .backstage-title { font-size: 24px; font-weight: bold; margin-bottom: 20px; text-align: center; }
         .grid-inputs { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 30px; }
-        .grid-inputs input { background: #222; border: 1px solid #444; color: white; padding: 15px 5px; border-radius: 8px; text-align: center; font-size: 18px; width: 100%; box-sizing: border-box; }
+        .grid-inputs input { background: #222; border: 1px solid #444; color: white; padding: 15px 5px; border-radius: 8px; text-align: center; font-size: 18px; width: 100%; }
         .save-btn { background: #d4a017; color: black; border: none; padding: 15px; border-radius: 12px; font-size: 18px; font-weight: bold; width: 100%; }
 
         .home-bar { position: fixed; bottom: 8px; left: 50%; transform: translateX(-50%); width: 140px; height: 5px; background: rgba(255, 255, 255, 0.4); border-radius: 10px; z-index: 4000; }
@@ -101,7 +118,7 @@
 
     <div id="notification-center">
         <div class="top-content">
-            <div class="clock-container" id="clockZone">
+            <div class="clock-container" id="clockZone" onclick="openMemo(null)">
                 <div class="date-text" id="dateDisplay">1月3日 週六</div>
                 <h1 class="time-text" id="timeDisplay">15:02</h1>
             </div>
@@ -109,18 +126,18 @@
             <div class="notification-list">
                 <div class="notif-card">
                     <div class="notif-top">
-                        <div class="notif-icon" style="background-color: #ff4500;">S<span class="notif-badge">23</span></div>
+                        <div style="width:38px; height:38px; background:#ff4500; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold;">S</div>
                         <div class="notif-content">
-                            <div class="notif-title-row"><span>您關注的賣家開始直播了！</span><span class="notif-time">1小時前</span></div>
+                            <div class="notif-title-row"><span>您關注的賣家開始直播了！</span><span style="opacity:0.6; font-size:13px;">1小時前</span></div>
                             <div class="notif-body">觀看 Yomigirls 的直播：神美浩肯包🤩...</div>
                         </div>
                     </div>
                 </div>
                 <div class="notif-card">
                     <div class="notif-top">
-                        <div class="notif-icon" style="background-color: #006aa6;">D<span class="notif-badge">19</span></div>
+                        <div style="width:38px; height:38px; background:#006aa6; border-radius:8px; display:flex; align-items:center; justify-content:center; font-weight:bold;">D</div>
                         <div class="notif-content">
-                            <div class="notif-title-row"><span>你追蹤的「理財板」新文章</span><span class="notif-time">2小時前</span></div>
+                            <div class="notif-title-row"><span>你追蹤的「理財板」新文章</span><span style="opacity:0.6; font-size:13px;">2小時前</span></div>
                             <div class="notif-body">「台股瘋了 正二也瘋了」</div>
                         </div>
                     </div>
@@ -128,83 +145,123 @@
             </div>
         </div>
 
-        <div class="magic-area" id="magicGrid">
-            <div class="magic-btn" onclick="triggerMagic(0)"></div>
-            <div class="magic-btn" onclick="triggerMagic(1)"></div>
-            <div class="magic-btn" onclick="triggerMagic(2)"></div>
-            <div class="magic-btn" onclick="triggerMagic(3)"></div>
-            <div class="magic-btn" onclick="triggerMagic(4)"></div>
-            <div class="magic-btn" onclick="triggerMagic(5)"></div>
-            <div class="magic-btn" onclick="triggerMagic(6)"></div>
-            <div class="magic-btn" onclick="triggerMagic(7)"></div>
-            <div class="magic-btn" onclick="triggerMagic(8)"></div>
+        <div class="magic-area">
+            <div class="magic-btn" onclick="openMemo(0)"></div>
+            <div class="magic-btn" onclick="openMemo(1)"></div>
+            <div class="magic-btn" onclick="openMemo(2)"></div>
+            <div class="magic-btn" onclick="openMemo(3)"></div>
+            <div class="magic-btn" onclick="openMemo(4)"></div>
+            <div class="magic-btn" onclick="openMemo(5)"></div>
+            <div class="magic-btn" onclick="openMemo(6)"></div>
+            <div class="magic-btn" onclick="openMemo(7)"></div>
+            <div class="magic-btn" onclick="openMemo(8)"></div>
         </div>
         <div class="home-bar"></div>
     </div>
 
-    <div id="memo-screen" onclick="closeMemo()">
-        <div class="memo-header"><span>＜ 備忘錄</span><span style="font-weight:600;">完成</span></div>
-        <div class="handwriting-area" id="handwritingNumber"></div>
+    <div id="memo-screen">
+        <div class="memo-header">
+            <span onclick="closeMemo()">＜ 備忘錄</span>
+            <span style="font-weight:600;" onclick="closeMemo()">完成</span>
+        </div>
+        <div class="memo-content-area">
+            <div id="handwritingNumber"></div>
+            <canvas id="sketchCanvas"></canvas>
+        </div>
         <div class="home-bar"></div>
     </div>
 
     <div id="backstage-screen">
-        <div class="backstage-title">九宮格內容設定</div>
-        <div class="grid-inputs" id="inputContainer">
-            </div>
+        <div style="font-size:24px; font-weight:bold; margin-bottom:20px; text-align:center;">九宮格預設值</div>
+        <div class="grid-inputs" id="inputContainer"></div>
         <button class="save-btn" onclick="saveSettings()">儲存並返回</button>
-        <p style="color: #666; font-size: 14px; text-align: center; margin-top: 20px;">提示：點擊儲存後，長按通知中心時間可再次進入此畫面。</p>
     </div>
 
     <script>
-        // 預設數字
-        let magicValues = ["11", "22", "33", "44", "55", "66", "77", "88", "99"];
-        
-        // 初始化：讀取儲存的資料或生成輸入框
-        const inputContainer = document.getElementById('inputContainer');
+        let magicValues = ["36", "45", "54", "63", "72", "81", "90", "12", "07"];
         const savedData = localStorage.getItem('magicNumbers');
-        if (savedData) {
-            magicValues = JSON.parse(savedData);
-        }
+        if (savedData) magicValues = JSON.parse(savedData);
 
-        magicValues.forEach((val, index) => {
+        const inputContainer = document.getElementById('inputContainer');
+        magicValues.forEach((val, i) => {
             const input = document.createElement('input');
-            input.type = 'text';
-            input.value = val;
-            input.id = `input-${index}`;
+            input.type = 'text'; input.value = val; input.id = `input-${i}`;
             inputContainer.appendChild(input);
         });
 
-        // 長按檢測
-        let timer;
+        // 長按檢測 (進入後台)
+        let pressTimer;
         const clockZone = document.getElementById('clockZone');
-        
-        clockZone.addEventListener('touchstart', () => {
-            timer = setTimeout(() => {
-                document.getElementById('backstage-screen').style.display = 'flex';
-            }, 1500); // 長按 1.5 秒進入後台
-        });
-
-        clockZone.addEventListener('touchend', () => clearTimeout(timer));
-        clockZone.addEventListener('mousedown', () => { // 支援電腦測試
-            timer = setTimeout(() => {
+        clockZone.addEventListener('touchstart', (e) => {
+            pressTimer = setTimeout(() => {
+                e.stopPropagation();
                 document.getElementById('backstage-screen').style.display = 'flex';
             }, 1500);
         });
-        clockZone.addEventListener('mouseup', () => clearTimeout(timer));
+        clockZone.addEventListener('touchend', () => clearTimeout(pressTimer));
 
         function saveSettings() {
-            for (let i = 0; i < 9; i++) {
-                magicValues[i] = document.getElementById(`input-${i}`).value;
-            }
+            for (let i = 0; i < 9; i++) magicValues[i] = document.getElementById(`input-${i}`).value;
             localStorage.setItem('magicNumbers', JSON.stringify(magicValues));
             document.getElementById('backstage-screen').style.display = 'none';
         }
 
-        function triggerMagic(index) {
-            document.getElementById('handwritingNumber').textContent = magicValues[index];
+        // --- 備忘錄與畫布邏輯 ---
+        const canvas = document.getElementById('sketchCanvas');
+        const ctx = canvas.getContext('2d');
+        let drawing = false;
+
+        function initCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            ctx.strokeStyle = "white";
+            ctx.lineWidth = 4;
+            ctx.lineCap = "round";
+            ctx.lineJoin = "round";
+        }
+        window.addEventListener('resize', initCanvas);
+        initCanvas();
+
+        function startDrawing(e) {
+            drawing = true;
+            draw(e);
+        }
+        function stopDrawing() { 
+            drawing = false; 
+            ctx.beginPath(); 
+        }
+        function draw(e) {
+            if (!drawing) return;
+            const x = e.touches ? e.touches[0].clientX : e.clientX;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(x, y);
+        }
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        window.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e); });
+        canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); });
+        canvas.addEventListener('touchend', stopDrawing);
+
+        function openMemo(index) {
             document.getElementById('notification-center').style.display = 'none';
             document.getElementById('memo-screen').style.display = 'flex';
+            
+            if (index === null) {
+                // 真實手寫模式
+                document.getElementById('handwritingNumber').style.display = 'none';
+                canvas.style.display = 'block';
+                ctx.clearRect(0, 0, canvas.width, canvas.height); // 清空畫布
+            } else {
+                // 預設數字模式
+                document.getElementById('handwritingNumber').textContent = magicValues[index];
+                document.getElementById('handwritingNumber').style.display = 'block';
+                canvas.style.display = 'none';
+            }
         }
 
         function closeMemo() {
@@ -214,13 +271,10 @@
 
         function updateClock() {
             const now = new Date();
-            const hours = now.getHours().toString().padStart(2, '0');
-            const minutes = now.getMinutes().toString().padStart(2, '0');
-            document.getElementById('timeDisplay').textContent = `${hours}:${minutes}`;
+            document.getElementById('timeDisplay').textContent = now.getHours().toString().padStart(2, '0') + ":" + now.getMinutes().toString().padStart(2, '0');
             const weekDays = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
             document.getElementById('dateDisplay').textContent = `${now.getMonth() + 1}月${now.getDate()}日 ${weekDays[now.getDay()]} · 乙巳年冬月十五`;
         }
-
         setInterval(updateClock, 1000);
         updateClock();
     </script>
