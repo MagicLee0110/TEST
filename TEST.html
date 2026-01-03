@@ -1,38 +1,45 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    
     <meta name="theme-color" content="#1a152e">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     
-    <title>iOS 通知中心 - 完美全螢幕版</title>
+    <title>iOS 通知中心 - 完美同步版</title>
     <style>
         :root {
-            --glass-bg: rgba(255, 255, 255, 0.15);
+            --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+            --top-color: #1a152e; /* 頂部深紫色 */
+            --main-gradient: linear-gradient(180deg, #1a152e 0%, #3a2b5e 50%, #1a152e 100%);
             --card-bg: rgba(40, 40, 40, 0.4);
-            --font-main: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
-            --top-color: #1a152e; /* 定義頂部顏色 */
         }
 
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-
-        body, html {
-            margin: 0; padding: 0;
-            width: 100%; height: 100%;
-            font-family: var(--font-main);
+        /* 關鍵：繼承你成功的背景固定設定 */
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--top-color);
+            background-image: var(--main-gradient);
+            background-attachment: fixed; /* 確保背景不隨捲動移位 */
+            overflow-y: auto; /* 通知多時可捲動 */
+            overflow-x: hidden;
+            font-family: var(--ios-font);
             color: white;
-            overflow: hidden;
-            /* 確保背景顏色從最頂部開始 */
-            background: linear-gradient(180deg, var(--top-color) 0%, #3a2b5e 50%, var(--top-color) 100%);
-            background-size: cover;
         }
 
-        /* 時間日期區 - 考量瀏海高度增加 padding-top */
+        /* 時間日期區：使用 env(safe-area-inset-top) 避開瀏海 */
         .clock-container {
             text-align: center;
-            padding-top: calc(env(safe-area-inset-top) + 40px);
+            padding-top: calc(env(safe-area-inset-top) + 60px);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .date-text {
@@ -49,6 +56,7 @@
             letter-spacing: -2px;
         }
 
+        /* 通知中心標題 */
         .notification-header {
             display: flex;
             justify-content: space-between;
@@ -70,8 +78,9 @@
             align-items: center; justify-content: center; font-size: 14px;
         }
 
+        /* 通知卡片清單 */
         .notification-list {
-            padding: 0 15px;
+            padding: 0 15px 100px 15px; /* 底部留白避開 Home Bar */
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -113,14 +122,23 @@
 
         .notif-body { font-size: 14px; line-height: 1.4; opacity: 0.9; }
 
+        .notif-actions { display: flex; gap: 8px; margin-top: 15px; }
+
+        .action-btn {
+            flex: 1; background: rgba(255,255,255,0.1);
+            border-radius: 12px; padding: 12px; text-align: center; font-size: 15px;
+        }
+
         /* 底部 Home Bar */
         .home-bar {
-            position: absolute;
-            bottom: calc(env(safe-area-inset-bottom) + 8px);
+            position: fixed;
+            bottom: 8px;
             left: 50%;
             transform: translateX(-50%);
             width: 140px; height: 5px;
-            background: white; border-radius: 10px;
+            background: white;
+            border-radius: 10px;
+            z-index: 10;
         }
     </style>
 </head>
@@ -149,6 +167,24 @@
                 </div>
             </div>
         </div>
+
+        <div class="notif-card">
+            <div class="notif-top">
+                <div class="notif-icon" style="background-color: #006aa6;">D<span class="notif-badge">19</span></div>
+                <div class="notif-content" style="flex:1;">
+                    <div class="notif-title-row">
+                        <span>你追蹤的「理財板」新文章</span>
+                        <span class="notif-time">2小時前</span>
+                    </div>
+                    <div class="notif-body">「台股瘋了 正二也瘋了」</div>
+                </div>
+            </div>
+            <div style="text-align:center; font-size: 13px; margin-top: 15px; opacity: 0.8;">要繼續接收「Dcard」App的通知嗎？</div>
+            <div class="notif-actions">
+                <div class="action-btn">繼續⋯</div>
+                <div class="action-btn">關閉⋯</div>
+            </div>
+        </div>
     </div>
 
     <div class="home-bar"></div>
@@ -164,6 +200,8 @@
             const date = now.getDate();
             const weekDays = ["週日", "週一", "週二", "週三", "週四", "週五", "週六"];
             const dayName = weekDays[now.getDay()];
+            
+            // 這裡模擬截圖中的文字格式
             document.getElementById('dateDisplay').textContent = `${month}月${date}日 ${dayName} · 乙巳年冬月十五`;
         }
 
