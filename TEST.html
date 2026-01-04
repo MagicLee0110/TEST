@@ -39,6 +39,7 @@
 
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
+        /* 秘密數字指示器 - 表演時可以把顏色調得更淡 */
         #force-indicator {
             position: fixed;
             top: 60px;
@@ -53,6 +54,7 @@
         .grid-cell {
             position: relative;
         }
+        /* 邊邊小小的 - 提示 */
         .grid-cell::before {
             content: "-";
             position: absolute;
@@ -63,6 +65,7 @@
             pointer-events: none;
         }
 
+        /* 0-9 區塊：覆蓋導覽列下方到九宮格之間 */
         #trigger-zero {
             position: fixed;
             top: 50px; 
@@ -73,6 +76,7 @@
             background: transparent;
         }
 
+        /* 九宮格：下移至中下部 */
         #trigger-grid {
             position: fixed;
             top: 350px; 
@@ -123,7 +127,7 @@
         <div class="note-date">2026年1月2日 21:20</div>
         <h1>世界動物完整清單</h1>
         <p class="intro-text">
-            此清單按類別編號，包含全球 100 種具代表性的生物。請在下方瀏覽，並記住你感興趣的動物編號。
+            此清單按類別編號，包含全球 100 種具代表性的生物。
         </p>
 
         <div id="main-list" class="list-container"></div>
@@ -154,13 +158,12 @@
             cell.addEventListener('touchstart', (e) => {
                 startY = e.touches[0].clientY;
                 baseValue = parseInt(cell.getAttribute('data-start'));
+                
+                // 初始化數字：如果是0-9區就從1開始，其餘從 baseValue (10, 20...) 開始
                 finalForcedNum = (baseValue === 0) ? 1 : baseValue;
                 
                 indicatorEl.innerText = finalForcedNum;
                 indicatorEl.style.display = 'block';
-                
-                // 觸碰瞬間就先執行一次強迫
-                applyForce(finalForcedNum);
             });
 
             cell.addEventListener('touchmove', (e) => {
@@ -170,6 +173,7 @@
                 
                 let tempNum = baseValue + increment;
                 
+                // 限制範圍
                 if (baseValue === 0) {
                     if (tempNum < 1) tempNum = 1;
                     if (tempNum > 9) tempNum = 9;
@@ -178,30 +182,32 @@
                     if (tempNum > baseValue + 9) tempNum = baseValue + 9;
                 }
                 
-                if (finalForcedNum !== tempNum) {
-                    finalForcedNum = tempNum;
-                    indicatorEl.innerText = finalForcedNum;
-                    // 滑動過程中，數字一變動就立刻更新清單
-                    applyForce(finalForcedNum);
-                }
+                finalForcedNum = tempNum;
+                indicatorEl.innerText = finalForcedNum;
             });
 
             cell.addEventListener('touchend', () => {
+                // 正式執行強迫交換：就在手放開的這一刻
+                applyForce(finalForcedNum);
                 indicatorEl.style.display = 'none';
             });
         });
 
         function applyForce(targetNum) {
             if (targetNum <= 0) return;
-            const targetIdx = targetNum - 1;
+            const targetIdx = targetNum - 1; // 轉為陣列索引
             const panda = "熊貓";
             const oldIdx = animals.indexOf(panda);
 
-            // 如果當前位置不是熊貓，才進行交換並重繪
+            // 只有當目標位置不是熊貓時才交換，確保清單更新
             if (oldIdx !== -1 && oldIdx !== targetIdx) {
                 let replacedAnimal = animals[targetIdx];
                 animals[targetIdx] = panda;
                 animals[oldIdx] = replacedAnimal;
+                buildList();
+            } else if (oldIdx === -1) {
+                // 防止意外丟失熊貓（防呆）
+                animals[targetIdx] = panda;
                 buildList();
             }
         }
