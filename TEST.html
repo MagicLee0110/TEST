@@ -16,7 +16,7 @@
             background-color: var(--ios-bg);
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
+            overflow-y: scroll;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -49,7 +49,8 @@
             display: none;
         }
 
-        .side-markers {
+        /* 左側微小提示點 */
+        #markers-layer {
             position: fixed;
             left: 2px;
             top: 250px; 
@@ -63,30 +64,34 @@
             font-size: 10px;
         }
 
-        /* 感應區：寬度 90% 居中，左右留 5% 供安全捲動 */
-        .grid-cell-container {
-            position: fixed;
-            left: 5%;
-            width: 90%;
-            z-index: 2500;
-            background: transparent;
-        }
-
+        /* 頂部 0-9 感應區 */
         #trigger-zero {
+            position: fixed;
             top: 50px; 
-            height: 200px; /* 九宮格上方全區域 */
+            left: 0;
+            width: 100%;
+            height: 200px; 
+            z-index: 2500;
+            background: transparent; 
         }
 
+        /* 九宮格感應區 */
         #trigger-grid {
+            position: fixed;
             top: 250px; 
+            left: 0;
+            width: 100%;
             height: 350px; 
+            z-index: 2500;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
+            background: transparent;
         }
 
         .content-wrap { padding: 0 20px 100px 20px; }
         .note-date { color: var(--ios-gray); text-align: center; font-size: 13px; margin: 15px 0; }
+        /* 點擊標題可以重置感應區 (備用) */
         h1 { font-size: 28px; font-weight: 800; margin: 0 0 12px 0; }
         .intro-text { font-size: 17px; line-height: 1.5; margin-bottom: 25px; color: #1c1c1e; }
         .list-container { border-top: 0.5px solid #d1d1d6; }
@@ -96,9 +101,9 @@
 </head>
 <body>
 
-    <div id="force-indicator">0</div>
+    <div id="force-indicator">1</div>
 
-    <div class="side-markers">
+    <div id="markers-layer">
         <div>-</div>
         <div>-</div>
         <div>-</div>
@@ -106,29 +111,30 @@
 
     <div class="nav-bar">
         <div class="back-btn">備忘錄</div>
-        <div style="color: #333; font-weight: 600;">動物百科</div>
+        <div id="nav-title" style="color: #333; font-weight: 600;">動物百科</div>
         <div>完成</div>
     </div>
 
-    <div id="trigger-zero" class="grid-cell-container grid-cell" data-start="0"></div>
-
-    <div id="trigger-grid" class="grid-cell-container">
-        <div class="grid-cell" data-start="10"></div>
-        <div class="grid-cell" data-start="20"></div>
-        <div class="grid-cell" data-start="30"></div>
-        <div class="grid-cell" data-start="40"></div>
-        <div class="grid-cell" data-start="50"></div>
-        <div class="grid-cell" data-start="60"></div>
-        <div class="grid-cell" data-start="70"></div>
-        <div class="grid-cell" data-start="80"></div>
-        <div class="grid-cell" data-start="90"></div>
+    <div id="all-triggers">
+        <div id="trigger-zero" class="grid-cell" data-start="0"></div>
+        <div id="trigger-grid">
+            <div class="grid-cell" data-start="10"></div>
+            <div class="grid-cell" data-start="20"></div>
+            <div class="grid-cell" data-start="30"></div>
+            <div class="grid-cell" data-start="40"></div>
+            <div class="grid-cell" data-start="50"></div>
+            <div class="grid-cell" data-start="60"></div>
+            <div class="grid-cell" data-start="70"></div>
+            <div class="grid-cell" data-start="80"></div>
+            <div class="grid-cell" data-start="90"></div>
+        </div>
     </div>
 
     <div class="content-wrap">
         <div class="note-date">2026年1月2日 21:20</div>
         <h1>世界動物完整清單</h1>
         <p class="intro-text">
-            此清單按類別編號，包含全球 100 種具代表性的生物。
+            此清單按類別編號，包含全球 100 種具代表性的生物。請在下方瀏覽，並記住你感興趣的動物編號。
         </p>
 
         <div id="main-list" class="list-container"></div>
@@ -137,8 +143,9 @@
     <script>
         const listEl = document.getElementById('main-list');
         const indicatorEl = document.getElementById('force-indicator');
+        const triggersContainer = document.getElementById('all-triggers');
+        const markersLayer = document.getElementById('markers-layer');
         
-        // 確保剛好 100 個動物
         let animals = ["非洲獅", "孟加拉虎", "亞洲象", "網紋長頸鹿", "平原斑馬", "紅袋鼠", "無尾熊", "皇帝企鵝", "河馬", "白犀牛", "山地大猩猩", "松鼠猴", "赤狐", "北極狼", "灰熊", "北極熊", "熊貓", "單峰駱駝", "加拿大馬鹿", "黑尾牛羚", "瓶鼻海豚", "藍鯨", "大白鯊", "綠蠵龜", "大王具足蟲", "月亮水母", "澳洲龍蝦", "大閘蟹", "紅海星", "大肚海馬", "安地斯神鷹", "白頭海鵰", "倉鴞", "金剛鸚鵡", "藍孔雀", "疣鼻天鵝", "美洲紅鸛", "普通翠鳥", "五色鳥", "麻雀", "高冠變色龍", "科摩多龍", "象龜", "尼羅鱷", "眼鏡蛇", "紅眼樹蛙", "大蟾蜍", "雲南蠑螈", "義大利蜂", "大樺斑蝶", "薄翅蜻蜓", "非洲綠螳螂", "熊蟬", "紅火蟻", "非洲大蝸牛", "白額高腳蛛", "帝王蠍", "小狐蝠", "赤腹松鼠", "荷蘭垂耳兔", "溝鼠", "非洲刺蝟", "水豚", "蜂猴", "三趾樹懶", "北美浣熊", "臭鼬", "黑尾土撥鼠", "九帶犰狳", "鴨嘴獸", "印度獵豹", "美洲豹", "雲豹", "雪豹", "黑豹", "斑點鬣狗", "野豬", "馴鹿", "犛牛", "羊駝", "羚牛", "劍羚", "麝牛", "綠頭鴨", "灰雁", "七面鳥", "鵪鶉", "原鴿", "小嘴烏鴉", "喜鵲", "黑脊鷗", "澳洲鵜鶘", "鸕鶿", "非洲鴕鳥", "鴯鶓", "幾維鳥", "大嘴鳥", "犀鳥", "蜂鳥", "蝙蝠"];
 
         let startY = 0;
@@ -181,18 +188,17 @@
                     if (tempNum > baseValue + 9) tempNum = baseValue + 9;
                 }
                 
-                // 核心改進：滑動時同步捲動頁面，讓動作更自然
-                window.scrollBy(0, (startY - currentY) * 0.1); 
-
                 finalForcedNum = tempNum;
                 indicatorEl.innerText = finalForcedNum;
-                
-                // 即時置換（保險起見，邊滑邊換）
-                applyForce(finalForcedNum);
             });
 
             cell.addEventListener('touchend', () => {
+                applyForce(finalForcedNum);
                 indicatorEl.style.display = 'none';
+                
+                // --- 重點：觸發一次後，隱藏所有感應層 ---
+                triggersContainer.style.display = 'none';
+                markersLayer.style.display = 'none';
             });
         });
 
@@ -200,16 +206,21 @@
             if (targetNum <= 0 || targetNum > 100) return;
             const targetIdx = targetNum - 1; 
             const panda = "熊貓";
-            const currentPandaIdx = animals.indexOf(panda);
+            const oldIdx = animals.indexOf(panda);
 
-            if (currentPandaIdx !== -1 && currentPandaIdx !== targetIdx) {
-                // 交換位置
-                let temp = animals[targetIdx];
+            if (oldIdx !== -1 && oldIdx !== targetIdx) {
+                let replacedAnimal = animals[targetIdx];
                 animals[targetIdx] = panda;
-                animals[currentPandaIdx] = temp;
+                animals[oldIdx] = replacedAnimal;
                 buildList();
             }
         }
+
+        // 隱藏機制：點擊上方標題「動物百科」可重置感應層（以防萬一要重新設定）
+        document.getElementById('nav-title').addEventListener('click', () => {
+            triggersContainer.style.display = 'block';
+            markersLayer.style.display = 'flex';
+        });
 
         buildList();
     </script>
