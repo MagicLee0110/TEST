@@ -17,6 +17,7 @@
             margin: 0;
             padding: 0;
             overflow-y: scroll;
+            /* 允許選取，或者根據需求保持 none 以免露出馬腳 */
             user-select: none;
             -webkit-user-select: none;
         }
@@ -38,34 +39,34 @@
 
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
-        /* 秘密數字指示器 - 恢復顯示 (半透明黑色供表演者辨識) */
+        /* 秘密數字指示器：完全透明，僅供開發者偵錯（如需完全消失可設為 none） */
         #force-indicator {
             position: fixed;
             top: 60px;
             left: 10px;
             font-size: 11px;
-            color: rgba(0, 0, 0, 0.15); /* 極淡的顏色，表演者看得到即可 */
+            color: transparent; 
             z-index: 4000;
             pointer-events: none;
             display: none;
         }
 
-        /* 0-9 頂部感應區 - 完全隱形 */
+        /* 0-9 頂部感應區 (全寬一格) - 已設為透明 */
         #trigger-zero {
             position: fixed;
-            top: 50px;
+            top: 50px; 
             left: 0;
             width: 100%;
             height: 60px; 
             z-index: 2500;
-            background: transparent;
+            background: transparent; 
             border: none;
         }
 
-        /* 10-99 九宮格感應區 - 完全隱形 */
+        /* 10-99 九宮格感應區 - 已設為透明 */
         #trigger-grid {
             position: fixed;
-            top: 150px;
+            top: 150px; 
             left: 0;
             width: 100%;
             height: 350px; 
@@ -129,7 +130,7 @@
         let startY = 0;
         let baseValue = 0;
         let finalForcedNum = 0;
-        const sensitivity = 15;
+        const sensitivity = 15; 
 
         function buildList() {
             listEl.innerHTML = animals.map((a, i) => `
@@ -147,14 +148,14 @@
                 baseValue = parseInt(cell.getAttribute('data-start'));
                 finalForcedNum = baseValue;
                 
-                // 顯示數字供表演者參考
                 indicatorEl.innerText = (finalForcedNum === 0) ? 1 : finalForcedNum;
-                indicatorEl.style.display = 'block';
+                // 為了完全隱形，我們不顯示 indicator
+                // indicatorEl.style.display = 'block'; 
             });
 
             cell.addEventListener('touchmove', (e) => {
                 let currentY = e.touches[0].clientY;
-                let distance = startY - currentY;
+                let distance = startY - currentY; 
                 let increment = Math.floor(distance / sensitivity);
                 
                 let tempNum = baseValue + increment;
@@ -173,7 +174,7 @@
 
             cell.addEventListener('touchend', () => {
                 applyForce(finalForcedNum);
-                indicatorEl.style.display = 'none'; // 手放開後隱藏
+                indicatorEl.style.display = 'none';
             });
         });
 
