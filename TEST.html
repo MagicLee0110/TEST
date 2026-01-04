@@ -38,19 +38,34 @@
 
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
-        /* 秘密數字指示器：保持極淡，只有表演者看得到 */
+        /* 秘密數字指示器 */
         #force-indicator {
             position: fixed;
             top: 60px;
             left: 10px;
             font-size: 11px;
-            color: rgba(0, 0, 0, 0.1); 
+            color: rgba(0, 0, 0, 0.08); 
             z-index: 4000;
             pointer-events: none;
             display: none;
         }
 
-        /* 0-9 頂部感應區：完全隱形 */
+        /* 左側微小位置提示符 */
+        .side-markers {
+            position: fixed;
+            left: 2px;
+            top: 250px; /* 與 trigger-grid 同步 */
+            height: 350px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-around;
+            z-index: 4000;
+            pointer-events: none;
+            color: rgba(0, 0, 0, 0.1); /* 極淡顏色 */
+            font-size: 10px;
+        }
+
+        /* 0-9 頂部感應區 */
         #trigger-zero {
             position: fixed;
             top: 50px; 
@@ -59,13 +74,12 @@
             height: 60px; 
             z-index: 2500;
             background: transparent; 
-            border: none;
         }
 
-        /* 10-99 九宮格感應區：完全隱形，還原原始位置 150px */
+        /* 10-99 九宮格感應區 (下移至 250px) */
         #trigger-grid {
             position: fixed;
-            top: 150px; 
+            top: 250px; 
             left: 0;
             width: 100%;
             height: 350px; 
@@ -74,7 +88,6 @@
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
             background: transparent;
-            border: none;
         }
 
         .content-wrap { padding: 0 20px 100px 20px; }
@@ -89,6 +102,12 @@
 <body>
 
     <div id="force-indicator">0</div>
+
+    <div class="side-markers">
+        <div>-</div>
+        <div>-</div>
+        <div>-</div>
+    </div>
 
     <div class="nav-bar">
         <div class="back-btn">備忘錄</div>
@@ -182,7 +201,6 @@
             const panda = "熊貓";
             const oldIdx = animals.indexOf(panda);
 
-            // 當放開手指時，將熊貓換到目標編號位置
             if (oldIdx !== -1 && oldIdx !== targetIdx) {
                 let replacedAnimal = animals[targetIdx];
                 animals[targetIdx] = panda;
