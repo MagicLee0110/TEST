@@ -9,7 +9,7 @@
             --ios-yellow: #ffb100;
             --ios-bg: #ffffff;
             --ios-gray: #8e8e93;
-            --hint-color: rgba(0, 0, 0, 0.08); 
+            --hint-color: rgba(0, 0, 0, 0.08); /* 極淡的提示色，僅表演者可見 */
         }
 
         body {
@@ -39,47 +39,32 @@
 
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
-        /* 秘密數字指示器 - 表演時可以把顏色調得更淡 */
         #force-indicator {
             position: fixed;
             top: 60px;
             left: 10px;
             font-size: 11px;
-            color: rgba(0, 0, 0, 0.05); 
+            color: rgba(0, 0, 0, 0.1); 
             z-index: 4000;
             pointer-events: none;
             display: none;
         }
 
-        .grid-cell {
-            position: relative;
-        }
-        /* 邊邊小小的 - 提示 */
-        .grid-cell::before {
-            content: "-";
-            position: absolute;
-            top: 2px;
-            left: 5px;
-            font-size: 12px;
-            color: var(--hint-color);
-            pointer-events: none;
-        }
-
-        /* 0-9 區塊：覆蓋導覽列下方到九宮格之間 */
+        /* 0-9 區域：填滿上方空間 */
         #trigger-zero {
             position: fixed;
             top: 50px; 
             left: 0;
             width: 100%;
-            height: 300px; 
+            height: 270px; /* 延伸至九宮格上方 */
             z-index: 2500;
             background: transparent;
         }
 
-        /* 九宮格：下移至中下部 */
+        /* 10-99 九宮格區域：下移 */
         #trigger-grid {
             position: fixed;
-            top: 350px; 
+            top: 320px; 
             left: 0;
             width: 100%;
             height: 360px; 
@@ -88,6 +73,16 @@
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
             background: transparent;
+        }
+
+        /* 小小的 - 提示標記 */
+        .grid-cell::before, #trigger-zero::before {
+            content: "-";
+            position: absolute;
+            top: 0;
+            left: 2px;
+            font-size: 8px;
+            color: var(--hint-color);
         }
 
         .content-wrap { padding: 0 20px 100px 20px; }
@@ -112,22 +107,22 @@
     <div id="trigger-zero" class="grid-cell" data-start="0"></div>
 
     <div id="trigger-grid">
-        <div class="grid-cell" data-start="10"></div>
-        <div class="grid-cell" data-start="20"></div>
-        <div class="grid-cell" data-start="30"></div>
-        <div class="grid-cell" data-start="40"></div>
-        <div class="grid-cell" data-start="50"></div>
-        <div class="grid-cell" data-start="60"></div>
-        <div class="grid-cell" data-start="70"></div>
-        <div class="grid-cell" data-start="80"></div>
-        <div class="grid-cell" data-start="90"></div>
+        <div class="grid-cell" style="position:relative;" data-start="10"></div>
+        <div class="grid-cell" style="position:relative;" data-start="20"></div>
+        <div class="grid-cell" style="position:relative;" data-start="30"></div>
+        <div class="grid-cell" style="position:relative;" data-start="40"></div>
+        <div class="grid-cell" style="position:relative;" data-start="50"></div>
+        <div class="grid-cell" style="position:relative;" data-start="60"></div>
+        <div class="grid-cell" style="position:relative;" data-start="70"></div>
+        <div class="grid-cell" style="position:relative;" data-start="80"></div>
+        <div class="grid-cell" style="position:relative;" data-start="90"></div>
     </div>
 
     <div class="content-wrap">
         <div class="note-date">2026年1月2日 21:20</div>
         <h1>世界動物完整清單</h1>
         <p class="intro-text">
-            此清單按類別編號，包含全球 100 種具代表性的生物。
+            此清單按類別編號，包含全球 100 種具代表性的生物。請在下方瀏覽，並記住你感興趣的動物編號。
         </p>
 
         <div id="main-list" class="list-container"></div>
@@ -158,11 +153,9 @@
             cell.addEventListener('touchstart', (e) => {
                 startY = e.touches[0].clientY;
                 baseValue = parseInt(cell.getAttribute('data-start'));
+                finalForcedNum = baseValue;
                 
-                // 初始化數字：如果是0-9區就從1開始，其餘從 baseValue (10, 20...) 開始
-                finalForcedNum = (baseValue === 0) ? 1 : baseValue;
-                
-                indicatorEl.innerText = finalForcedNum;
+                indicatorEl.innerText = (finalForcedNum === 0) ? 1 : finalForcedNum;
                 indicatorEl.style.display = 'block';
             });
 
@@ -173,7 +166,6 @@
                 
                 let tempNum = baseValue + increment;
                 
-                // 限制範圍
                 if (baseValue === 0) {
                     if (tempNum < 1) tempNum = 1;
                     if (tempNum > 9) tempNum = 9;
@@ -187,7 +179,6 @@
             });
 
             cell.addEventListener('touchend', () => {
-                // 正式執行強迫交換：就在手放開的這一刻
                 applyForce(finalForcedNum);
                 indicatorEl.style.display = 'none';
             });
@@ -195,19 +186,14 @@
 
         function applyForce(targetNum) {
             if (targetNum <= 0) return;
-            const targetIdx = targetNum - 1; // 轉為陣列索引
+            const targetIdx = targetNum - 1;
             const panda = "熊貓";
             const oldIdx = animals.indexOf(panda);
 
-            // 只有當目標位置不是熊貓時才交換，確保清單更新
             if (oldIdx !== -1 && oldIdx !== targetIdx) {
                 let replacedAnimal = animals[targetIdx];
                 animals[targetIdx] = panda;
                 animals[oldIdx] = replacedAnimal;
-                buildList();
-            } else if (oldIdx === -1) {
-                // 防止意外丟失熊貓（防呆）
-                animals[targetIdx] = panda;
                 buildList();
             }
         }
