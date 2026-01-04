@@ -38,7 +38,7 @@
 
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
-        /* 秘密數字指示器 - 極淡顏色 */
+        /* 秘密數字指示器 (僅觸摸時顯示，極淡顏色) */
         #force-indicator {
             position: fixed;
             top: 60px;
@@ -50,22 +50,22 @@
             display: none;
         }
 
-        /* 0-9 頂部感應區 (透明，僅留極細點狀邊界) */
+        /* 0-9 頂部感應區 - 已改為完全透明 */
         #trigger-zero {
             position: fixed;
-            top: 50px; 
+            top: 50px;
             left: 0;
             width: 100%;
             height: 60px; 
             z-index: 2500;
-            background: transparent; 
-            border-bottom: 1px dotted rgba(0,0,0,0.05);
+            background: transparent;
+            border: none;
         }
 
-        /* 10-99 九宮格感應區 (位置下移，透明點狀邊界) */
+        /* 10-99 九宮格感應區 - 已移至螢幕下方並完全透明 */
         #trigger-grid {
             position: fixed;
-            top: 500px; /* 往下移動 */
+            top: 500px; /* 往下移動到中下部 */
             left: 0;
             width: 100%;
             height: 300px; 
@@ -74,11 +74,7 @@
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
             background: transparent;
-            border: 1px dotted rgba(0,0,0,0.05); /* 邊邊點點提示 */
-        }
-
-        .grid-cell {
-            border: 0.5px dotted rgba(0,0,0,0.03); /* 內部格子點點提示 */
+            border: none;
         }
 
         .content-wrap { padding: 0 20px 100px 20px; }
