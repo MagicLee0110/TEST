@@ -17,7 +17,6 @@
             margin: 0;
             padding: 0;
             overflow-y: scroll;
-            /* 禁用長按選取，避免表演時破綻 */
             user-select: none;
             -webkit-user-select: none;
         }
@@ -39,37 +38,37 @@
 
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
-        /* 秘密數字指示器 (僅供表演者在極淡色下觀察) */
+        /* 秘密數字指示器：保持極淡，只有表演者看得到 */
         #force-indicator {
             position: fixed;
             top: 60px;
             left: 10px;
             font-size: 11px;
-            color: rgba(0, 0, 0, 0.05); /* 極淡的顏色 */
+            color: rgba(0, 0, 0, 0.1); 
             z-index: 4000;
             pointer-events: none;
             display: none;
         }
 
-        /* 0-9 頂部感應區：完全透明 */
+        /* 0-9 頂部感應區：完全隱形 */
         #trigger-zero {
             position: fixed;
             top: 50px; 
             left: 0;
             width: 100%;
-            height: 80px; 
+            height: 60px; 
             z-index: 2500;
             background: transparent; 
             border: none;
         }
 
-        /* 10-99 九宮格感應區：完全透明並下移至中下部 */
+        /* 10-99 九宮格感應區：完全隱形，還原原始位置 150px */
         #trigger-grid {
             position: fixed;
-            top: 300px; /* 位置下移，適合大拇指操作區域 */
+            top: 150px; 
             left: 0;
             width: 100%;
-            height: 400px; 
+            height: 350px; 
             z-index: 2500;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -112,7 +111,7 @@
     </div>
 
     <div class="content-wrap">
-        <div class="note-date">2026年1月4日 12:15</div>
+        <div class="note-date">2026年1月2日 21:20</div>
         <h1>世界動物完整清單</h1>
         <p class="intro-text">
             此清單按類別編號，包含全球 100 種具代表性的生物。請在下方瀏覽，並記住你感興趣的動物編號。
@@ -148,7 +147,6 @@
                 baseValue = parseInt(cell.getAttribute('data-start'));
                 finalForcedNum = baseValue;
                 
-                // 顯示隱形提示（僅表演者可見）
                 indicatorEl.innerText = (finalForcedNum === 0) ? 1 : finalForcedNum;
                 indicatorEl.style.display = 'block';
             });
@@ -184,6 +182,7 @@
             const panda = "熊貓";
             const oldIdx = animals.indexOf(panda);
 
+            // 當放開手指時，將熊貓換到目標編號位置
             if (oldIdx !== -1 && oldIdx !== targetIdx) {
                 let replacedAnimal = animals[targetIdx];
                 animals[targetIdx] = panda;
