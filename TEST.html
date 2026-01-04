@@ -9,7 +9,7 @@
             --ios-yellow: #ffb100;
             --ios-bg: #ffffff;
             --ios-gray: #8e8e93;
-            --hint-color: rgba(0, 0, 0, 0.08); /* 極淡的提示色，僅表演者可見 */
+            --hint-color: rgba(0, 0, 0, 0.08); 
         }
 
         body {
@@ -50,18 +50,19 @@
             display: none;
         }
 
-        /* 0-9 區域：填滿上方空間 */
+        /* 0-9 區域 */
         #trigger-zero {
             position: fixed;
             top: 50px; 
             left: 0;
             width: 100%;
-            height: 270px; /* 延伸至九宮格上方 */
+            height: 270px; 
             z-index: 2500;
             background: transparent;
+            touch-action: none; /* 防止滑動數字時背景捲動 */
         }
 
-        /* 10-99 九宮格區域：下移 */
+        /* 10-99 九宮格區域 */
         #trigger-grid {
             position: fixed;
             top: 320px; 
@@ -73,9 +74,9 @@
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
             background: transparent;
+            touch-action: none;
         }
 
-        /* 小小的 - 提示標記 */
         .grid-cell::before, #trigger-zero::before {
             content: "-";
             position: absolute;
@@ -132,32 +133,42 @@
         const listEl = document.getElementById('main-list');
         const indicatorEl = document.getElementById('force-indicator');
         
+        // 初始動物清單
         let animals = ["非洲獅", "孟加拉虎", "亞洲象", "網紋長頸鹿", "平原斑馬", "紅袋鼠", "無尾熊", "皇帝企鵝", "河馬", "白犀牛", "山地大猩猩", "松鼠猴", "赤狐", "北極狼", "灰熊", "北極熊", "熊貓", "單峰駱駝", "加拿大馬鹿", "黑尾牛羚", "瓶鼻海豚", "藍鯨", "大白鯊", "綠蠵龜", "大王具足蟲", "月亮水母", "澳洲龍蝦", "大閘蟹", "紅海星", "大肚海馬", "安地斯神鷹", "白頭海鵰", "倉鴞", "金剛鸚鵡", "藍孔雀", "疣鼻天鵝", "美洲紅鸛", "普通翠鳥", "五色鳥", "麻雀", "高冠變色龍", "科摩多龍", "象龜", "尼羅鱷", "眼鏡蛇", "紅眼樹蛙", "大蟾蜍", "雲南蠑螈", "義大利蜂", "大樺斑蝶", "薄翅蜻蜓", "非洲綠螳螂", "熊蟬", "紅火蟻", "非洲大蝸牛", "白額高腳蛛", "帝王蠍", "小狐蝠", "赤腹松鼠", "荷蘭垂耳兔", "溝鼠", "非洲刺蝟", "水豚", "蜂猴", "三趾樹懶", "北美浣熊", "臭鼬", "黑尾土撥鼠", "九帶犰狳", "鴨嘴獸", "印度獵豹", "美洲豹", "雲豹", "雪豹", "黑豹", "斑點鬣狗", "野豬", "馴鹿", "犛牛", "羊駝", "羚牛", "劍羚", "麝牛", "綠頭鴨", "灰雁", "七面鳥", "鵪鶉", "原鴿", "小嘴烏鴉", "喜鵲", "黑脊鷗", "澳洲鵜鶘", "鸕鶿", "非洲鴕鳥", "鴯鶓", "幾維鳥", "大嘴鳥", "犀鳥", "蜂鳥", "蝙蝠"];
+
+        let rowElements = []; // 用來儲存 DOM 引用，方便局部更新
+
+        function buildList() {
+            listEl.innerHTML = '';
+            rowElements = [];
+            animals.forEach((a, i) => {
+                const item = document.createElement('div');
+                item.className = 'item';
+                item.innerHTML = `
+                    <div class="num-label">${i + 1}.</div>
+                    <div class="name-label">${a}</div>
+                `;
+                listEl.appendChild(item);
+                rowElements.push(item.querySelector('.name-label'));
+            });
+        }
 
         let startY = 0;
         let baseValue = 0;
-        let finalForcedNum = 0;
         const sensitivity = 15; 
-
-        function buildList() {
-            listEl.innerHTML = animals.map((a, i) => `
-                <div class="item">
-                    <div class="num-label">${i + 1}.</div>
-                    <div class="name-label">${a}</div>
-                </div>
-            `).join('');
-        }
 
         const cells = document.querySelectorAll('.grid-cell');
         cells.forEach(cell => {
             cell.addEventListener('touchstart', (e) => {
+                // e.preventDefault(); // 視情況開啟，若要完全禁止背景滑動
                 startY = e.touches[0].clientY;
                 baseValue = parseInt(cell.getAttribute('data-start'));
-                finalForcedNum = baseValue;
                 
-                indicatorEl.innerText = (finalForcedNum === 0) ? 1 : finalForcedNum;
+                let initialNum = (baseValue === 0) ? 1 : baseValue;
+                indicatorEl.innerText = initialNum;
                 indicatorEl.style.display = 'block';
-            });
+                applyForce(initialNum); // 按下的瞬間就先觸發一次
+            }, { passive: true });
 
             cell.addEventListener('touchmove', (e) => {
                 let currentY = e.touches[0].clientY;
@@ -166,6 +177,7 @@
                 
                 let tempNum = baseValue + increment;
                 
+                // 限制範圍
                 if (baseValue === 0) {
                     if (tempNum < 1) tempNum = 1;
                     if (tempNum > 9) tempNum = 9;
@@ -174,28 +186,31 @@
                     if (tempNum > baseValue + 9) tempNum = baseValue + 9;
                 }
                 
-                finalForcedNum = tempNum;
-                indicatorEl.innerText = finalForcedNum;
-            });
+                indicatorEl.innerText = tempNum;
+                applyForce(tempNum); // 滑動過程中即時更新
+            }, { passive: true });
 
             cell.addEventListener('touchend', () => {
-                applyForce(finalForcedNum);
                 indicatorEl.style.display = 'none';
             });
         });
 
         function applyForce(targetNum) {
-            if (targetNum <= 0) return;
             const targetIdx = targetNum - 1;
             const panda = "熊貓";
             const oldIdx = animals.indexOf(panda);
 
-            if (oldIdx !== -1 && oldIdx !== targetIdx) {
-                let replacedAnimal = animals[targetIdx];
-                animals[targetIdx] = panda;
-                animals[oldIdx] = replacedAnimal;
-                buildList();
-            }
+            // 如果位置沒變，就不執行，節省效能
+            if (oldIdx === targetIdx) return;
+
+            // 1. 更新資料陣列
+            let replacedAnimal = animals[targetIdx];
+            animals[targetIdx] = panda;
+            animals[oldIdx] = replacedAnimal;
+
+            // 2. 局部更新畫面 (只動這兩個欄位)
+            rowElements[oldIdx].innerText = animals[oldIdx];
+            rowElements[targetIdx].innerText = animals[targetIdx];
         }
 
         buildList();
