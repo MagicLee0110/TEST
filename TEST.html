@@ -9,7 +9,6 @@
             --ios-yellow: #ffb100;
             --ios-bg: #ffffff;
             --ios-gray: #8e8e93;
-            --ios-border: #d1d1d6;
         }
 
         body {
@@ -17,12 +16,12 @@
             background-color: var(--ios-bg);
             margin: 0;
             padding: 0;
-            overflow-x: hidden;
+            overflow-y: scroll;
+            /* 禁用長按選取，避免表演時破綻 */
             user-select: none;
             -webkit-user-select: none;
         }
 
-        /* 導覽列 */
         .nav-bar {
             display: flex;
             justify-content: space-between;
@@ -35,47 +34,39 @@
             background: rgba(255, 255, 255, 0.94);
             backdrop-filter: blur(20px);
             z-index: 3000;
-            border-bottom: 0.5px solid var(--ios-border);
+            border-bottom: 0.5px solid #d1d1d6;
         }
+
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
-        /* 秘密數字指示器 (極淡，僅表演者可見) */
+        /* 秘密數字指示器 (僅供表演者在極淡色下觀察) */
         #force-indicator {
             position: fixed;
             top: 60px;
             left: 10px;
-            font-size: 12px;
-            color: rgba(0, 0, 0, 0.05); 
+            font-size: 11px;
+            color: rgba(0, 0, 0, 0.05); /* 極淡的顏色 */
             z-index: 4000;
             pointer-events: none;
             display: none;
         }
 
-        /* 邊緣點點提示 (極淡) */
-        .edge-hint {
-            position: fixed;
-            left: 0;
-            width: 3px;
-            border-left: 1px dashed rgba(0,0,0,0.08);
-            z-index: 2600;
-            pointer-events: none;
-        }
-
-        /* 0-9 感應區 (頂部) */
+        /* 0-9 頂部感應區：完全透明 */
         #trigger-zero {
             position: fixed;
-            top: 100px;
+            top: 50px; 
             left: 0;
             width: 100%;
-            height: 80px;
+            height: 80px; 
             z-index: 2500;
-            background: transparent;
+            background: transparent; 
+            border: none;
         }
 
-        /* 10-99 九宮格感應區 (下移至螢幕中下部) */
+        /* 10-99 九宮格感應區：完全透明並下移至中下部 */
         #trigger-grid {
             position: fixed;
-            top: 300px; /* 往下移動 */
+            top: 300px; /* 位置下移，適合大拇指操作區域 */
             left: 0;
             width: 100%;
             height: 400px; 
@@ -84,40 +75,30 @@
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
             background: transparent;
+            border: none;
         }
 
-        /* 內容區塊 */
         .content-wrap { padding: 0 20px 100px 20px; }
         .note-date { color: var(--ios-gray); text-align: center; font-size: 13px; margin: 15px 0; }
         h1 { font-size: 28px; font-weight: 800; margin: 0 0 12px 0; }
         .intro-text { font-size: 17px; line-height: 1.5; margin-bottom: 25px; color: #1c1c1e; }
-        
-        .list-container { border-top: 0.5px solid var(--ios-border); }
-        .item { 
-            display: flex; 
-            padding: 14px 0; 
-            border-bottom: 0.5px solid var(--ios-border); 
-            font-size: 17px; 
-            background: white;
-        }
-        .num-label { width: 45px; color: var(--ios-gray); flex-shrink: 0; }
-        .name-label { color: #000; }
+        .list-container { border-top: 0.5px solid #d1d1d6; }
+        .item { display: flex; padding: 12px 0; border-bottom: 0.5px solid #d1d1d6; font-size: 17px; }
+        .num-label { width: 45px; color: var(--ios-gray); }
     </style>
 </head>
 <body>
 
     <div id="force-indicator">0</div>
 
-    <div class="edge-hint" style="top: 100px; height: 80px;"></div>
-    <div class="edge-hint" style="top: 300px; height: 400px;"></div>
-
     <div class="nav-bar">
         <div class="back-btn">備忘錄</div>
         <div style="color: #333; font-weight: 600;">動物百科</div>
-        <div style="font-weight: 600;">完成</div>
+        <div>完成</div>
     </div>
 
     <div id="trigger-zero" class="grid-cell" data-start="0"></div>
+
     <div id="trigger-grid">
         <div class="grid-cell" data-start="10"></div>
         <div class="grid-cell" data-start="20"></div>
@@ -131,10 +112,10 @@
     </div>
 
     <div class="content-wrap">
-        <div class="note-date">2026年1月4日 11:00</div>
-        <h1>全球動物清單</h1>
+        <div class="note-date">2026年1月4日 12:15</div>
+        <h1>世界動物完整清單</h1>
         <p class="intro-text">
-            這份清單收錄了自然界中 100 種最具代表性的動物。從陸地上的大型哺乳類到深海中的奇特生物，請隨意瀏覽並挑選一個你感興趣的編號。
+            此清單按類別編號，包含全球 100 種具代表性的生物。請在下方瀏覽，並記住你感興趣的動物編號。
         </p>
 
         <div id="main-list" class="list-container"></div>
@@ -144,13 +125,12 @@
         const listEl = document.getElementById('main-list');
         const indicatorEl = document.getElementById('force-indicator');
         
-        // 100 種動物清單
-        let animals = ["非洲獅", "孟加拉虎", "亞洲象", "網紋長頸鹿", "平原斑馬", "紅袋鼠", "無尾熊", "皇帝企鵝", "河馬", "白犀牛", "山地大猩猩", "松鼠猴", "赤狐", "北極狼", "灰熊", "北極熊", "梅花鹿", "單峰駱駝", "加拿大馬鹿", "黑尾牛羚", "瓶鼻海豚", "藍鯨", "大白鯊", "綠蠵龜", "大王具足蟲", "月亮水母", "澳洲龍蝦", "大閘蟹", "紅海星", "大肚海馬", "安地斯神鷹", "白頭海鵰", "倉鴞", "金剛鸚鵡", "藍孔雀", "疣鼻天鵝", "美洲紅鸛", "普通翠鳥", "五色鳥", "麻雀", "高冠變色龍", "科摩多龍", "象龜", "尼羅鱷", "眼鏡蛇", "紅眼樹蛙", "大蟾蜍", "雲南蠑螈", "義大利蜂", "大樺斑蝶", "薄翅蜻蜓", "非洲綠螳螂", "熊蟬", "紅火蟻", "非洲大蝸牛", "白額高腳蛛", "帝王蠍", "小狐蝠", "赤腹松鼠", "荷蘭垂耳兔", "溝鼠", "非洲刺蝟", "水豚", "蜂猴", "三趾樹懶", "北美浣熊", "臭鼬", "黑尾土撥鼠", "九帶犰狳", "鴨嘴獸", "印度獵豹", "美洲豹", "雲豹", "雪豹", "黑豹", "斑點鬣狗", "野豬", "馴鹿", "犛牛", "羊駝", "羚牛", "劍羚", "麝牛", "綠頭鴨", "灰雁", "七面鳥", "鵪鶉", "原鴿", "小嘴烏鴉", "喜鵲", "黑脊鷗", "澳洲鵜鶘", "鸕鶿", "非洲鴕鳥", "鴯鶓", "幾維鳥", "大嘴鳥", "犀鳥", "蜂鳥", "蝙蝠"];
+        let animals = ["非洲獅", "孟加拉虎", "亞洲象", "網紋長頸鹿", "平原斑馬", "紅袋鼠", "無尾熊", "皇帝企鵝", "河馬", "白犀牛", "山地大猩猩", "松鼠猴", "赤狐", "北極狼", "灰熊", "北極熊", "熊貓", "單峰駱駝", "加拿大馬鹿", "黑尾牛羚", "瓶鼻海豚", "藍鯨", "大白鯊", "綠蠵龜", "大王具足蟲", "月亮水母", "澳洲龍蝦", "大閘蟹", "紅海星", "大肚海馬", "安地斯神鷹", "白頭海鵰", "倉鴞", "金剛鸚鵡", "藍孔雀", "疣鼻天鵝", "美洲紅鸛", "普通翠鳥", "五色鳥", "麻雀", "高冠變色龍", "科摩多龍", "象龜", "尼羅鱷", "眼鏡蛇", "紅眼樹蛙", "大蟾蜍", "雲南蠑螈", "義大利蜂", "大樺斑蝶", "薄翅蜻蜓", "非洲綠螳螂", "熊蟬", "紅火蟻", "非洲大蝸牛", "白額高腳蛛", "帝王蠍", "小狐蝠", "赤腹松鼠", "荷蘭垂耳兔", "溝鼠", "非洲刺蝟", "水豚", "蜂猴", "三趾樹懶", "北美浣熊", "臭鼬", "黑尾土撥鼠", "九帶犰狳", "鴨嘴獸", "印度獵豹", "美洲豹", "雲豹", "雪豹", "黑豹", "斑點鬣狗", "野豬", "馴鹿", "犛牛", "羊駝", "羚牛", "劍羚", "麝牛", "綠頭鴨", "灰雁", "七面鳥", "鵪鶉", "原鴿", "小嘴烏鴉", "喜鵲", "黑脊鷗", "澳洲鵜鶘", "鸕鶿", "非洲鴕鳥", "鴯鶓", "幾維鳥", "大嘴鳥", "犀鳥", "蜂鳥", "蝙蝠"];
 
         let startY = 0;
         let baseValue = 0;
         let finalForcedNum = 0;
-        const sensitivity = 15; // 每滑動 15 像素數字變動 1
+        const sensitivity = 15; 
 
         function buildList() {
             listEl.innerHTML = animals.map((a, i) => `
@@ -166,27 +146,26 @@
             cell.addEventListener('touchstart', (e) => {
                 startY = e.touches[0].clientY;
                 baseValue = parseInt(cell.getAttribute('data-start'));
-                finalForcedNum = (baseValue === 0) ? 1 : baseValue;
+                finalForcedNum = baseValue;
                 
-                indicatorEl.innerText = finalForcedNum;
+                // 顯示隱形提示（僅表演者可見）
+                indicatorEl.innerText = (finalForcedNum === 0) ? 1 : finalForcedNum;
                 indicatorEl.style.display = 'block';
             });
 
             cell.addEventListener('touchmove', (e) => {
-                e.preventDefault(); // 防止頁面滾動
                 let currentY = e.touches[0].clientY;
                 let distance = startY - currentY; 
                 let increment = Math.floor(distance / sensitivity);
                 
                 let tempNum = baseValue + increment;
                 
-                // 限制範圍
                 if (baseValue === 0) {
                     if (tempNum < 1) tempNum = 1;
                     if (tempNum > 9) tempNum = 9;
                 } else {
                     if (tempNum < baseValue) tempNum = baseValue;
-                    if (tempNum > baseValue + 9) tempNum = (baseValue + 9 > 100) ? 100 : baseValue + 9;
+                    if (tempNum > baseValue + 9) tempNum = baseValue + 9;
                 }
                 
                 finalForcedNum = tempNum;
@@ -203,21 +182,12 @@
             if (targetNum <= 0) return;
             const targetIdx = targetNum - 1;
             const panda = "熊貓";
-            
-            // 找出熊貓現在在哪裡
-            let oldIdx = animals.indexOf(panda);
-            
-            // 如果熊貓不在清單內（初始狀態），或者位置需要更換
-            if (oldIdx !== targetIdx) {
-                // 如果熊貓原本不在清單中，找一個動物換掉它
-                if (oldIdx === -1) {
-                    animals[targetIdx] = panda;
-                } else {
-                    // 互換位置
-                    let replacedAnimal = animals[targetIdx];
-                    animals[targetIdx] = panda;
-                    animals[oldIdx] = replacedAnimal;
-                }
+            const oldIdx = animals.indexOf(panda);
+
+            if (oldIdx !== -1 && oldIdx !== targetIdx) {
+                let replacedAnimal = animals[targetIdx];
+                animals[targetIdx] = panda;
+                animals[oldIdx] = replacedAnimal;
                 buildList();
             }
         }
