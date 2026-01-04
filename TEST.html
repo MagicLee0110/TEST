@@ -38,7 +38,7 @@
 
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
-        /* 秘密數字指示器 */
+        /* 秘密數字指示器：極淡，僅供表演者看 */
         #force-indicator {
             position: fixed;
             top: 60px;
@@ -50,33 +50,33 @@
             display: none;
         }
 
-        /* 左側微小位置提示符 */
+        /* 左側定位點 */
         .side-markers {
             position: fixed;
-            left: 2px;
-            top: 250px; /* 與 trigger-grid 同步 */
+            left: 3px;
+            top: 250px; 
             height: 350px;
             display: flex;
             flex-direction: column;
             justify-content: space-around;
             z-index: 4000;
             pointer-events: none;
-            color: rgba(0, 0, 0, 0.1); /* 極淡顏色 */
+            color: rgba(0, 0, 0, 0.1);
             font-size: 10px;
         }
 
-        /* 0-9 頂部感應區 */
+        /* 0-9 感應區：涵蓋九宮格以上所有區域 */
         #trigger-zero {
             position: fixed;
             top: 50px; 
             left: 0;
             width: 100%;
-            height: 60px; 
+            height: 200px; /* 從 50px 到 250px */
             z-index: 2500;
             background: transparent; 
         }
 
-        /* 10-99 九宮格感應區 (下移至 250px) */
+        /* 10-99 九宮格感應區：下移 */
         #trigger-grid {
             position: fixed;
             top: 250px; 
@@ -166,6 +166,7 @@
                 baseValue = parseInt(cell.getAttribute('data-start'));
                 finalForcedNum = baseValue;
                 
+                // 修正 0-9 的初始顯示
                 indicatorEl.innerText = (finalForcedNum === 0) ? 1 : finalForcedNum;
                 indicatorEl.style.display = 'block';
             });
@@ -197,10 +198,11 @@
 
         function applyForce(targetNum) {
             if (targetNum <= 0) return;
-            const targetIdx = targetNum - 1;
+            const targetIdx = targetNum - 1; 
             const panda = "熊貓";
             const oldIdx = animals.indexOf(panda);
 
+            // 當放開手指時，立即將熊貓換到目標位置並重新渲染清單
             if (oldIdx !== -1 && oldIdx !== targetIdx) {
                 let replacedAnimal = animals[targetIdx];
                 animals[targetIdx] = panda;
