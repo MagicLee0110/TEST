@@ -16,7 +16,7 @@
             background-color: var(--ios-bg);
             margin: 0;
             padding: 0;
-            overflow-y: scroll;
+            overflow-x: hidden;
             user-select: none;
             -webkit-user-select: none;
         }
@@ -38,7 +38,6 @@
 
         .back-btn::before { content: "〈 "; font-weight: 600; }
 
-        /* 秘密數字指示器：極淡，僅供表演者看 */
         #force-indicator {
             position: fixed;
             top: 60px;
@@ -50,10 +49,9 @@
             display: none;
         }
 
-        /* 左側定位點 */
         .side-markers {
             position: fixed;
-            left: 3px;
+            left: 2px;
             top: 250px; 
             height: 350px;
             display: flex;
@@ -65,29 +63,26 @@
             font-size: 10px;
         }
 
-        /* 0-9 感應區：涵蓋九宮格以上所有區域 */
-        #trigger-zero {
+        /* 感應區：寬度 90% 居中，左右留 5% 供安全捲動 */
+        .grid-cell-container {
             position: fixed;
-            top: 50px; 
-            left: 0;
-            width: 100%;
-            height: 200px; /* 從 50px 到 250px */
+            left: 5%;
+            width: 90%;
             z-index: 2500;
-            background: transparent; 
+            background: transparent;
         }
 
-        /* 10-99 九宮格感應區：下移 */
+        #trigger-zero {
+            top: 50px; 
+            height: 200px; /* 九宮格上方全區域 */
+        }
+
         #trigger-grid {
-            position: fixed;
             top: 250px; 
-            left: 0;
-            width: 100%;
             height: 350px; 
-            z-index: 2500;
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             grid-template-rows: repeat(3, 1fr);
-            background: transparent;
         }
 
         .content-wrap { padding: 0 20px 100px 20px; }
@@ -115,9 +110,9 @@
         <div>完成</div>
     </div>
 
-    <div id="trigger-zero" class="grid-cell" data-start="0"></div>
+    <div id="trigger-zero" class="grid-cell-container grid-cell" data-start="0"></div>
 
-    <div id="trigger-grid">
+    <div id="trigger-grid" class="grid-cell-container">
         <div class="grid-cell" data-start="10"></div>
         <div class="grid-cell" data-start="20"></div>
         <div class="grid-cell" data-start="30"></div>
@@ -133,7 +128,7 @@
         <div class="note-date">2026年1月2日 21:20</div>
         <h1>世界動物完整清單</h1>
         <p class="intro-text">
-            此清單按類別編號，包含全球 100 種具代表性的生物。請在下方瀏覽，並記住你感興趣的動物編號。
+            此清單按類別編號，包含全球 100 種具代表性的生物。
         </p>
 
         <div id="main-list" class="list-container"></div>
@@ -143,6 +138,7 @@
         const listEl = document.getElementById('main-list');
         const indicatorEl = document.getElementById('force-indicator');
         
+        // 確保剛好 100 個動物
         let animals = ["非洲獅", "孟加拉虎", "亞洲象", "網紋長頸鹿", "平原斑馬", "紅袋鼠", "無尾熊", "皇帝企鵝", "河馬", "白犀牛", "山地大猩猩", "松鼠猴", "赤狐", "北極狼", "灰熊", "北極熊", "熊貓", "單峰駱駝", "加拿大馬鹿", "黑尾牛羚", "瓶鼻海豚", "藍鯨", "大白鯊", "綠蠵龜", "大王具足蟲", "月亮水母", "澳洲龍蝦", "大閘蟹", "紅海星", "大肚海馬", "安地斯神鷹", "白頭海鵰", "倉鴞", "金剛鸚鵡", "藍孔雀", "疣鼻天鵝", "美洲紅鸛", "普通翠鳥", "五色鳥", "麻雀", "高冠變色龍", "科摩多龍", "象龜", "尼羅鱷", "眼鏡蛇", "紅眼樹蛙", "大蟾蜍", "雲南蠑螈", "義大利蜂", "大樺斑蝶", "薄翅蜻蜓", "非洲綠螳螂", "熊蟬", "紅火蟻", "非洲大蝸牛", "白額高腳蛛", "帝王蠍", "小狐蝠", "赤腹松鼠", "荷蘭垂耳兔", "溝鼠", "非洲刺蝟", "水豚", "蜂猴", "三趾樹懶", "北美浣熊", "臭鼬", "黑尾土撥鼠", "九帶犰狳", "鴨嘴獸", "印度獵豹", "美洲豹", "雲豹", "雪豹", "黑豹", "斑點鬣狗", "野豬", "馴鹿", "犛牛", "羊駝", "羚牛", "劍羚", "麝牛", "綠頭鴨", "灰雁", "七面鳥", "鵪鶉", "原鴿", "小嘴烏鴉", "喜鵲", "黑脊鷗", "澳洲鵜鶘", "鸕鶿", "非洲鴕鳥", "鴯鶓", "幾維鳥", "大嘴鳥", "犀鳥", "蜂鳥", "蝙蝠"];
 
         let startY = 0;
@@ -164,10 +160,9 @@
             cell.addEventListener('touchstart', (e) => {
                 startY = e.touches[0].clientY;
                 baseValue = parseInt(cell.getAttribute('data-start'));
-                finalForcedNum = baseValue;
+                finalForcedNum = (baseValue === 0) ? 1 : baseValue;
                 
-                // 修正 0-9 的初始顯示
-                indicatorEl.innerText = (finalForcedNum === 0) ? 1 : finalForcedNum;
+                indicatorEl.innerText = finalForcedNum;
                 indicatorEl.style.display = 'block';
             });
 
@@ -186,27 +181,32 @@
                     if (tempNum > baseValue + 9) tempNum = baseValue + 9;
                 }
                 
+                // 核心改進：滑動時同步捲動頁面，讓動作更自然
+                window.scrollBy(0, (startY - currentY) * 0.1); 
+
                 finalForcedNum = tempNum;
                 indicatorEl.innerText = finalForcedNum;
+                
+                // 即時置換（保險起見，邊滑邊換）
+                applyForce(finalForcedNum);
             });
 
             cell.addEventListener('touchend', () => {
-                applyForce(finalForcedNum);
                 indicatorEl.style.display = 'none';
             });
         });
 
         function applyForce(targetNum) {
-            if (targetNum <= 0) return;
+            if (targetNum <= 0 || targetNum > 100) return;
             const targetIdx = targetNum - 1; 
             const panda = "熊貓";
-            const oldIdx = animals.indexOf(panda);
+            const currentPandaIdx = animals.indexOf(panda);
 
-            // 當放開手指時，立即將熊貓換到目標位置並重新渲染清單
-            if (oldIdx !== -1 && oldIdx !== targetIdx) {
-                let replacedAnimal = animals[targetIdx];
+            if (currentPandaIdx !== -1 && currentPandaIdx !== targetIdx) {
+                // 交換位置
+                let temp = animals[targetIdx];
                 animals[targetIdx] = panda;
-                animals[oldIdx] = replacedAnimal;
+                animals[currentPandaIdx] = temp;
                 buildList();
             }
         }
