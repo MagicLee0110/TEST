@@ -7,10 +7,10 @@
     <style>
         :root {
             --ios-yellow: #ffb100;
-            --ios-bg: #000000; /* 背景變更為黑色 */
-            --ios-item-bg: #1c1c1e; /* 列表項目的深灰色 */
+            --ios-bg: #000000;
+            --ios-item-bg: #1c1c1e;
             --ios-gray: #8e8e93;
-            --ios-sep: #38383a; /* 深色模式的分割線 */
+            --ios-sep: #38383a;
             --ios-text: #ffffff;
         }
 
@@ -25,7 +25,6 @@
             -webkit-user-select: none;
         }
 
-        /* 隱藏捲動條，讓畫面更乾淨 */
         ::-webkit-scrollbar { display: none; }
 
         /* --- 首頁樣式 --- */
@@ -84,7 +83,7 @@
             top: 60px;
             left: 10px;
             font-size: 11px;
-            color: rgba(255, 255, 255, 0.1); /* 深色背景下微調指示器顏色 */
+            color: rgba(255, 255, 255, 0.1); 
             z-index: 4000;
             pointer-events: none;
             display: none;
@@ -100,12 +99,11 @@
             justify-content: space-around;
             z-index: 4000;
             pointer-events: none;
-            color: rgba(255, 255, 255, 0.15); /* 提示點稍微亮一點點 */
+            color: rgba(255, 255, 255, 0.15); 
             font-size: 10px;
             display: none;
         }
 
-        /* 隱形感應區容器 */
         #all-triggers { display: none; }
         #trigger-zero {
             position: fixed;
@@ -124,7 +122,7 @@
 
         .content-wrap { padding: 0 20px 100px 20px; background: #000; }
         .note-date { color: var(--ios-gray); text-align: center; font-size: 13px; margin: 15px 0; }
-        .intro-text { font-size: 17px; line-height: 1.5; margin-bottom: 25px; color: #ebebf5; }
+        .intro-text { font-size: 16px; line-height: 1.6; margin-bottom: 30px; color: #ebebf5; border-left: 2px solid var(--ios-yellow); padding-left: 15px; }
         .list-container { border-top: 0.5px solid var(--ios-sep); }
         .item { display: flex; padding: 12px 0; border-bottom: 0.5px solid var(--ios-sep); font-size: 17px; color: #fff; }
         .num-label { width: 45px; color: var(--ios-gray); }
@@ -139,8 +137,8 @@
         <div class="search-bar">搜尋</div>
         <div class="note-list">
             <div class="note-item" onclick="openNote()">
-                <div class="title">世界動物完整清單</div>
-                <div class="info">21:20 <span>此清單按類別編號...</span></div>
+                <div class="title">世紀百種生物行為觀察計畫</div>
+                <div class="info">21:20 <span>由GBRA科學團隊歷時十年...</span></div>
             </div>
             <div class="note-item">
                 <div class="title">購物清單</div>
@@ -149,10 +147,6 @@
             <div class="note-item">
                 <div class="title">工作筆記</div>
                 <div class="info">星期三 <span>確認下週會議時間...</span></div>
-            </div>
-            <div class="note-item">
-                <div class="title">帳號密碼備份</div>
-                <div class="info">2025/12/20 <span>請勿隨意向外人透露...</span></div>
             </div>
         </div>
     </div>
@@ -165,7 +159,7 @@
 
         <div class="nav-bar">
             <div class="back-btn" onclick="closeNote()">備忘錄</div>
-            <div id="nav-title" style="color: #fff; font-weight: 600;">動物百科</div>
+            <div id="nav-title" style="color: #fff; font-weight: 600;">研究報告</div>
             <div style="font-size: 22px; color: var(--ios-yellow);">⋯</div>
         </div>
 
@@ -186,9 +180,11 @@
 
         <div class="content-wrap">
             <div class="note-date">2026年1月2日 21:20</div>
-            <h1 style="font-size: 28px; font-weight: 800; margin: 0 0 12px 0; color: #fff;">世界動物完整清單</h1>
+            <h1 style="font-size: 26px; font-weight: 800; margin: 0 0 15px 0; color: #fff;">世紀百種生物行為觀察計畫</h1>
             <p class="intro-text">
-                此清單按類別編號，包含全球 100 種具代表性的生物。請在下方瀏覽，並記住你感興趣的動物編號。
+                本清單由全球生物多樣性聯盟（GBRA）科學團隊建立。研究人員歷時十年，跨越七大洲追蹤並記錄了 100 種具代表性生物的基因序列與遷徙行為。
+                <br><br>
+                科學家發現，物種編號之間存在著某種隱形的演化聯結。請從下方 1 到 100 的樣本中隨機觀察，並記住你最感興趣的一個編號。
             </p>
             <div id="main-list" class="list-container"></div>
         </div>
